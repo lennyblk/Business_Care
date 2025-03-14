@@ -80,6 +80,61 @@
                     </div>
                 </div>
 
+                <div class="employee-fields">
+                    <div class="mb-3">
+                        <label for="first_name" class="form-label">Prénom</label>
+                        <input type="text" id="first_name" name="first_name" class="form-control @error('first_name') is-invalid @enderror">
+                        @error('first_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="last_name" class="form-label">Nom</label>
+                        <input type="text" id="last_name" name="last_name" class="form-control @error('last_name') is-invalid @enderror">
+                        @error('last_name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="position" class="form-label">Poste</label>
+                        <input type="text" id="position" name="position" class="form-control @error('position') is-invalid @enderror">
+                        @error('position')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="company_id" class="form-label">ID de la société</label>
+                        <input type="number" id="company_id" name="company_id" class="form-control @error('company_id') is-invalid @enderror">
+                        @error('company_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="provider-fields">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nom</label>
+                        <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror">
+                        @error('name')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"></textarea>
+                        @error('description')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="domains" class="form-label">Domaines</label>
+                        <input type="text" id="domains" name="domains" class="form-control @error('domains') is-invalid @enderror">
+                        @error('domains')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary w-100 py-2">S'inscrire</button>
             </form>
         </div>
@@ -91,17 +146,25 @@
     document.addEventListener('DOMContentLoaded', function() {
         const userTypeSelect = document.getElementById('user_type');
         const companyFields = document.querySelector('.company-fields');
+        const employeeFields = document.querySelector('.employee-fields');
+        const providerFields = document.querySelector('.provider-fields');
 
-        function toggleCompanyFields() {
+        function toggleFields() {
+            companyFields.style.display = 'none';
+            employeeFields.style.display = 'none';
+            providerFields.style.display = 'none';
+
             if (userTypeSelect.value === 'societe') {
                 companyFields.style.display = 'block';
-            } else {
-                companyFields.style.display = 'none';
+            } else if (userTypeSelect.value === 'employe') {
+                employeeFields.style.display = 'block';
+            } else if (userTypeSelect.value === 'prestataire') {
+                providerFields.style.display = 'block';
             }
         }
 
-        toggleCompanyFields(); // Initial state
-        userTypeSelect.addEventListener('change', toggleCompanyFields);
+        toggleFields(); // Initial state
+        userTypeSelect.addEventListener('change', toggleFields);
     });
 </script>
 @endpush
