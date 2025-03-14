@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PageController;
+use App\Http\Controllers\ServiceController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -16,7 +17,10 @@ Route::get('/communities', [PageController::class, 'communities'])->name('commun
 Route::get('/contracts', [PageController::class, 'contracts'])->name('contracts');
 Route::get('/events', [PageController::class, 'events'])->name('events');
 Route::get('/medical', [PageController::class, 'medical'])->name('medical');
-Route::get('/services', [PageController::class, 'services'])->name('services');
+Route::get('/services', function () {
+    return view('services');
+})->name('services');
+Route::get('/service/{id}', [ServiceController::class, 'show'])->name('service.show');
 
 // Auth routes
 Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
@@ -27,8 +31,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Dashboards
 Route::middleware(['auth.check'])->group(function () {
-    Route::get('/dashboard/client', [DashboardController::class, 'client'])->name('dashboard.client');
-    Route::get('/dashboard/employee', [DashboardController::class, 'employee'])->name('dashboard.employee');
-    Route::get('/dashboard/provider', [DashboardController::class, 'provider'])->name('dashboard.provider');
-    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])->name('dashboard.admin');
+    Route::get('/dashboard/client', [DashboardController::class, 'client'])->name('dashboards.client');
+    Route::get('/dashboards/employee', [DashboardController::class, 'employee'])->name('dashboards.employee');
+    Route::get('/dashboards/provider', [DashboardController::class, 'provider'])->name('dashboards.provider');
+    Route::get('/dashboards/admin', [DashboardController::class, 'admin'])->name('dashboards.admin');
 });
