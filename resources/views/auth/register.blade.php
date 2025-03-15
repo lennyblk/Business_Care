@@ -180,7 +180,7 @@
                         <input type="number" id="tarif_horaire" name="tarif_horaire" class="form-control" step="0.01">
                     </div>
                 </div>
-
+//test
                 <button type="submit" class="btn btn-primary w-100 py-2">S'inscrire</button>
             </form>
         </div>
