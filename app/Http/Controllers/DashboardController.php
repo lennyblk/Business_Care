@@ -12,7 +12,9 @@ class DashboardController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth');
+        \Log::info('DashboardController constructeur');
+        // Retirer ce middleware car nous utilisons notre propre système d'authentification
+        // $this->middleware('auth');
     }
 
     /**
@@ -20,9 +22,18 @@ class DashboardController extends Controller
      */
     public function client()
     {
-        // Vous pouvez ajouter ici la logique pour charger les données spécifiques au client
-        // Par exemple: $data = User::find(Auth::id())->clientData();
+        \Log::info('Tentative d\'accès au dashboard client', [
+            'session_data' => [
+                'user_type' => session('user_type'),
+                'user_id' => session('user_id')
+            ]
+        ]);
 
+        if (session('user_type') !== 'societe') {
+            return redirect()->route('dashboard.' . session('user_type'));
+        }
+        
+        \Log::info('Accès autorisé au dashboard client');
         return view('dashboards.client');
     }
 
@@ -31,7 +42,22 @@ class DashboardController extends Controller
      */
     public function employee()
     {
-        // Logique pour les employés
+        \Log::info('Tentative d\'accès au dashboard employé', [
+            'session_data' => [
+                'user_type' => session('user_type'),
+                'user_id' => session('user_id'),
+                'user_email' => session('user_email')
+            ]
+        ]);
+
+        if (session('user_type') !== 'employe') {
+            \Log::warning('Accès refusé au dashboard employé', [
+                'user_type' => session('user_type')
+            ]);
+            return redirect()->route('dashboard.' . session('user_type'));
+        }
+
+        \Log::info('Accès autorisé au dashboard employé');
         return view('dashboards.employee');
     }
 
@@ -40,7 +66,18 @@ class DashboardController extends Controller
      */
     public function provider()
     {
-        // Logique pour les prestataires
+        \Log::info('Tentative d\'accès au dashboard prestataire', [
+            'session_data' => [
+                'user_type' => session('user_type'),
+                'user_id' => session('user_id')
+            ]
+        ]);
+
+        if (session('user_type') !== 'prestataire') {
+            return redirect()->route('dashboard.' . session('user_type'));
+        }
+
+        \Log::info('Accès autorisé au dashboard prestataire');
         return view('dashboards.provider');
     }
 

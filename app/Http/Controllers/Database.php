@@ -13,11 +13,11 @@ class Database
     {
         if (self::$instance === null) {
             try {
-                $host = env('DB_HOST', 'localhost');
-                $port = env('DB_PORT', '3308');
+                $host = env('DB_HOST', '127.0.0.1');
+                $port = env('DB_PORT', '3306');
                 $database = env('DB_DATABASE', 'businesscare');
                 $username = env('DB_USERNAME', 'root');
-                $password = env('DB_PASSWORD', 'root');
+                $password = env('DB_PASSWORD', '');
 
                 $dsn = "mysql:host={$host};port={$port};dbname={$database};charset=utf8mb4";
 
@@ -29,7 +29,9 @@ class Database
 
                 self::$instance = new PDO($dsn, $username, $password, $options);
             } catch (PDOException $e) {
-                die("Erreur de connexion à la base de données : " . $e->getMessage());
+                throw new PDOException("Erreur de connexion à la base de données : " . $e->getMessage() . 
+                    "\nVérifiez vos paramètres de connexion dans le fichier .env" . 
+                    "\nHost: $host, Port: $port, Database: $database");
             }
         }
 

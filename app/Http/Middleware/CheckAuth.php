@@ -9,30 +9,37 @@ class CheckAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Vérifiez si l'utilisateur est connecté
-        if (!session('is_logged_in')) {
-            return redirect()->route('login')->withErrors(['message' => 'Veuillez vous connecter pour accéder à cette page']);
+        // Vérifier si l'utilisateur est connecté via la session
+        if (!session()->has('user_id')) {
+            return redirect()->route('login');
         }
 
-        // Vérifiez le type d'utilisateur pour les routes spécifiques
+        // Récupérer le type d'utilisateur depuis la session
         $userType = session('user_type');
         $route = $request->route()->getName();
 
-        // S'assurer que l'utilisateur accède à son propre tableau de bord
-        if ($route === 'dashboard.client' && $userType !== 'societe') {
-            return redirect()->route("dashboard.{$userType}");
-        }
+        // Vérifier les permissions selon le type d'utilisateur
+        switch ($userType) {
+            case 'societe':
+                if (!str_starts_with($route, 'dashboard.client')) {
+                    return redirect()->route('dashboard.client');
+                }
+                break;
 
-        if ($route === 'dashboard.employee' && $userType !== 'employe') {
-            return redirect()->route("dashboard.{$userType}");
-        }
+            case 'employe':
+                if (!str_starts_with($route, 'dashboard.employee')) {
+                    return redirect()->route('dashboard.employee');
+                }
+                break;
 
-        if ($route === 'dashboard.provider' && $userType !== 'prestataire') {
-            return redirect()->route("dashboard.{$userType}");
-        }
+            case 'prestataire':
+                if (!str_starts_with($route, 'dashboard.provider')) {
+                    return redirect()->route('dashboard.provider');
+                }
+                break;
 
-        if ($route === 'dashboard.admin' && $userType !== 'admin') {
-            return redirect()->route("dashboard.{$userType}");
+            default:
+                return redirect()->route('login');
         }
 
         return $next($request);

@@ -3,6 +3,38 @@
 @section('title', 'Accueil')
 
 @section('content')
+<div class="container">
+    <h1 class="mt-5">Bienvenue sur Business Care</h1>
+    <p class="lead">Améliorez la qualité de vie au travail de vos collaborateurs.</p>
+
+    @php
+        try {
+            // Utilisation de la classe Database
+            $pdo = \App\Http\Controllers\Database::getConnection();
+            echo '<div class="alert alert-success">
+                    <h4>Connexion à la base de données réussie</h4>
+                    <p>Host: ' . env('DB_HOST') . '</p>
+                    <p>Port: ' . env('DB_PORT') . '</p>
+                    <p>Database: ' . env('DB_DATABASE') . '</p>
+                  </div>';
+        } catch (PDOException $e) {
+            echo '<div class="alert alert-danger">
+                    <h4>Échec de la connexion à la base de données</h4>
+                    <p>Erreur : ' . $e->getMessage() . '</p>
+                    <p>Code d\'erreur : ' . $e->getCode() . '</p>
+                    <hr>
+                    <p>Vérifiez les paramètres suivants dans votre fichier .env :</p>
+                    <ul>
+                        <li>DB_HOST: ' . env('DB_HOST') . '</li>
+                        <li>DB_PORT: ' . env('DB_PORT') . '</li>
+                        <li>DB_DATABASE: ' . env('DB_DATABASE') . '</li>
+                        <li>DB_USERNAME: ' . env('DB_USERNAME') . '</li>
+                    </ul>
+                  </div>';
+        }
+    @endphp
+</div>
+
 <div class="w-100">
     <!-- Hero Section avec fond bleu clair -->
     <section class="w-100 bg-light py-5">
@@ -62,7 +94,7 @@
     <section class="container py-5">
         <div class="row text-center">
             <div class="col-md-3">
-                <div class="display-5 fw-bold text-primary">98%</div>
+                <div class="display-5 fw-bold text-primary">98%</                </div>
                 <div class="text-secondary">Satisfaction client</div>
             </div>
             <div class="col-md-3">

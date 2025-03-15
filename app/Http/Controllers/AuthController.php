@@ -25,8 +25,7 @@ class AuthController extends Controller
             $tableMap = [
                 'societe' => 'company',
                 'employe' => 'employee',
-                'prestataire' => 'provider',
-                'admin' => 'admin'
+                'prestataire' => 'provider'
             ];
 
             $table = $tableMap[$userType] ?? null;
@@ -55,39 +54,76 @@ class AuthController extends Controller
     // Traitement de la connexion
     public function login(Request $request)
     {
-        // Validation des données
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-            'user_type' => 'required|in:societe,employe,prestataire,admin',
-        ]);
-
-        $email = $request->input('email');
-        $password = $request->input('password');
-        $userType = $request->input('user_type');
-
         try {
-            $user = $this->validateCredentials($email, $password, $userType);
+            $validatedData = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required',
+                'company_name' => 'required_if:user_type,societe,employe'
+            ]);
 
-            if ($user) {
-                // Stockez les informations utilisateur en session
+            $pdo = Database::getConnection();
+
+            // Vérifier d'abord dans la table admin
+            if ($request->user_type === 'admin') {
+                $stmt = $pdo->prepare("SELECT id, email, password, name, 'admin' as type FROM admin WHERE email = :email");
+                $stmt->execute(['email' => $validatedData['email']]);
+                $user = $stmt->fetch();
+            } 
+            // Vérifier dans la table company
+            else if ($request->user_type === 'societe') {
+                $stmt = $pdo->prepare("SELECT id, email, password, 'societe' as type FROM company WHERE email = :email AND name = :company_name");
+                $stmt->execute([
+                    'email' => $validatedData['email'],
+                    'company_name' => $validatedData['company_name']
+                ]);
+                $user = $stmt->fetch();
+            }
+            // Vérifier dans la table employee
+            else if ($request->user_type === 'employe') {
+                $stmt = $pdo->prepare("
+                    SELECT e.id, e.email, e.password, 'employe' as type, e.company_id 
+                    FROM employee e 
+                    JOIN company c ON e.company_id = c.id 
+                    WHERE e.email = :email AND c.name = :company_name
+                ");
+                $stmt->execute([
+                    'email' => $validatedData['email'],
+                    'company_name' => $validatedData['company_name']
+                ]);
+                $user = $stmt->fetch();
+            }
+            // Vérifier dans la table provider
+            else {
+                $stmt = $pdo->prepare("SELECT id, email, password, 'prestataire' as type FROM provider WHERE email = :email");
+                $stmt->execute(['email' => $validatedData['email']]);
+                $user = $stmt->fetch();
+            }
+
+            if ($user && password_verify($validatedData['password'], $user['password'])) {
                 session([
                     'user_id' => $user['id'],
                     'user_email' => $user['email'],
-                    'user_type' => $userType,
-                    'is_logged_in' => true
+                    'user_type' => $user['type'],
+                    'company_id' => $user['company_id'] ?? null
                 ]);
 
-                // Redirection selon le type d'utilisateur
-                switch ($userType) {
+                \Log::info('Connexion réussie', [
+                    'user_id' => $user['id'],
+                    'user_type' => $user['type'],
+                    'company_id' => $user['company_id'] ?? null
+                ]);
+
+                switch ($user['type']) {
+                    case 'admin':
+                        return redirect()->route('dashboard.admin');
                     case 'societe':
                         return redirect()->route('dashboard.client');
                     case 'employe':
                         return redirect()->route('dashboard.employee');
                     case 'prestataire':
                         return redirect()->route('dashboard.provider');
-                    case 'admin':
-                        return redirect()->route('dashboard.admin');
+                    default:
+                        return redirect()->route('home');
                 }
             }
 
@@ -95,7 +131,11 @@ class AuthController extends Controller
             return back()->withErrors(['email' => 'Identifiants invalides'])->withInput();
 
         } catch (\Exception $e) {
-            return back()->withErrors(['email' => 'Une erreur est survenue: ' . $e->getMessage()])->withInput();
+            \Log::error('Erreur de connexion', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withErrors(['email' => 'Une erreur est survenue : ' . $e->getMessage()])->withInput();
         }
     }
 
@@ -115,107 +155,234 @@ class AuthController extends Controller
     // Traitement de l'inscription
     public function register(Request $request)
     {
-        // Validation des données améliorée
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|min:8|confirmed',
-            'user_type' => 'required|in:societe,employe,prestataire',
-            // Pour les sociétés
-            'company_name' => 'required_if:user_type,societe',
-            'address' => 'required_if:user_type,societe',
-            'phone' => 'required_if:user_type,societe',
-            // Pour les employés
-            'first_name' => 'required_if:user_type,employe',
-            'last_name' => 'required_if:user_type,employe',
-            'position' => 'required_if:user_type,employe',
-            'company_id' => 'required_if:user_type,employe|numeric',
-            // Pour les prestataires
-            'name' => 'required_if:user_type,prestataire',
-            'description' => 'required_if:user_type,prestataire',
-            'domains' => 'required_if:user_type,prestataire',
-        ]);
-
         try {
+            \Log::info('Données brutes reçues', [
+                'all_data' => $request->all()
+            ]);
+
+            // Validation des données
+            $validatedData = $request->validate([
+                'email' => 'required|email',
+                'password' => 'required|min:6',
+                'user_type' => 'required|in:societe,employe,prestataire',
+                
+                // Validation société
+                'company_name' => 'required_if:user_type,societe',
+                'address' => 'required_if:user_type,societe',
+                'code_postal' => 'required_if:user_type,societe',
+                'ville' => 'required_if:user_type,societe',
+                'phone' => 'required_if:user_type,societe',
+                'siret' => 'nullable|digits:14',  // Exactement 14 chiffres
+                
+                // Validation employé
+                'first_name' => 'required_if:user_type,employe',
+                'last_name' => 'required_if:user_type,employe',
+                'position' => 'required_if:user_type,employe',
+                'departement' => 'nullable',
+                'telephone' => 'nullable',
+                
+                // Validation prestataire
+                'name' => 'required_if:user_type,prestataire',
+                'prenom' => 'required_if:user_type,prestataire',
+                'specialite' => 'required_if:user_type,prestataire',
+                'bio' => 'nullable',
+                'tarif_horaire' => 'nullable|numeric|min:0'
+            ], [
+                'siret.digits' => 'Le numéro SIRET doit contenir exactement 14 chiffres',
+            ]);
+
             $pdo = Database::getConnection();
+            $pdo->beginTransaction();
 
-            // Vérifiez si l'email existe déjà
-            $checkEmail = $pdo->prepare("SELECT email FROM employee WHERE email = :email
-                                        UNION SELECT email FROM company WHERE email = :email
-                                        UNION SELECT email FROM provider WHERE email = :email
-                                        UNION SELECT email FROM admin WHERE email = :email");
-            $checkEmail->execute(['email' => $request->email]);
+            try {
+                $hashedPassword = password_hash($request->password, PASSWORD_DEFAULT);
 
-            if ($checkEmail->rowCount() > 0) {
-                return back()->withErrors(['email' => 'Cet email est déjà utilisé'])->withInput();
-            }
-
-            // Hashage du mot de passe
-            $hashedPassword = password_hash($request->password, PASSWORD_DEFAULT);
-
-            // Insertion selon le type d'utilisateur
-            switch ($request->user_type) {
-                case 'societe':
-                    $stmt = $pdo->prepare("INSERT INTO company (name, address, phone, email, password, plan, creation_date)
-                                        VALUES (:name, :address, :phone, :email, :password, 'Starter', CURDATE())");
-                    $stmt->execute([
-                        'name' => $request->company_name,
-                        'address' => $request->address,
-                        'phone' => $request->phone,
-                        'email' => $request->email,
-                        'password' => $hashedPassword
-                    ]);
-                    break;
-
-                case 'employe':
-                    $stmt = $pdo->prepare("INSERT INTO employee (company_id, first_name, last_name, email, password, position, hire_date, subscription)
-                                        VALUES (:company_id, :first_name, :last_name, :email, :password, :position, CURDATE(), 'Starter')");
-                    $stmt->execute([
-                        'company_id' => $request->company_id,
-                        'first_name' => $request->first_name,
-                        'last_name' => $request->last_name,
-                        'email' => $request->email,
-                        'password' => $hashedPassword,
-                        'position' => $request->position
-                    ]);
-                    break;
-
-                case 'prestataire':
-                    $stmt = $pdo->prepare("INSERT INTO provider (name, email, password, description, rating, domains)
-                                        VALUES (:name, :email, :password, :description, 0, :domains)");
-                    $stmt->execute([
-                        'name' => $request->name,
-                        'email' => $request->email,
-                        'password' => $hashedPassword,
-                        'description' => $request->description,
-                        'domains' => $request->domains
-                    ]);
-                    break;
-            }
-
-            // Vérifiez si l'insertion a réussi
-            if ($stmt->rowCount() > 0) {
-                // Stockez les informations utilisateur en session
-                session([
-                    'user_email' => $request->email,
-                    'user_type' => $request->user_type,
-                    'is_logged_in' => true
-                ]);
-
-                // Redirection selon le type d'utilisateur
                 switch ($request->user_type) {
                     case 'societe':
-                        return redirect()->route('dashboard.client');
+                        $stmt = $pdo->prepare("
+                            INSERT INTO company (
+                                name, 
+                                address, 
+                                code_postal,
+                                ville,
+                                pays,
+                                phone, 
+                                email, 
+                                siret,
+                                password, 
+                                creation_date,
+                                formule_abonnement,
+                                statut_compte,
+                                date_debut_contrat
+                            ) 
+                            VALUES (
+                                :name, 
+                                :address, 
+                                :code_postal,
+                                :ville,
+                                'France',
+                                :phone, 
+                                :email, 
+                                :siret,
+                                :password, 
+                                CURDATE(),
+                                'Starter',
+                                'Actif',
+                                CURDATE()
+                            )
+                        ");
+
+                        $params = [
+                            'name' => $validatedData['company_name'],
+                            'address' => $validatedData['address'],
+                            'code_postal' => $validatedData['code_postal'],
+                            'ville' => $validatedData['ville'],
+                            'phone' => $validatedData['phone'],
+                            'email' => $validatedData['email'],
+                            'siret' => $validatedData['siret'] ?? null,
+                            'password' => $hashedPassword
+                        ];
+
+                        break;
+
                     case 'employe':
-                        return redirect()->route('dashboard.employee');
+                        $stmt = $pdo->prepare("
+                            INSERT INTO employee (
+                                company_id,
+                                first_name,
+                                last_name,
+                                email,
+                                telephone,
+                                position,
+                                departement,
+                                date_creation_compte,
+                                password,
+                                preferences_langue
+                            ) 
+                            VALUES (
+                                :company_id,
+                                :first_name,
+                                :last_name,
+                                :email,
+                                :telephone,
+                                :position,
+                                :departement,
+                                CURDATE(),
+                                :password,
+                                'fr'
+                            )
+                        ");
+
+                        // Récupérer l'ID de la société
+                        $companyStmt = $pdo->prepare("SELECT id FROM company WHERE name = :company_name LIMIT 1");
+                        $companyStmt->execute(['company_name' => $validatedData['company_name']]);
+                        $company = $companyStmt->fetch();
+
+                        if (!$company) {
+                            throw new \Exception('Entreprise non trouvée');
+                        }
+
+                        $params = [
+                            'company_id' => $company['id'],
+                            'first_name' => $validatedData['first_name'],
+                            'last_name' => $validatedData['last_name'],
+                            'email' => $validatedData['email'],
+                            'telephone' => $validatedData['telephone'] ?? null,
+                            'position' => $validatedData['position'],
+                            'departement' => $validatedData['departement'] ?? null,
+                            'password' => $hashedPassword
+                        ];
+
+                        break;
+
                     case 'prestataire':
-                        return redirect()->route('dashboard.provider');
+                        $stmt = $pdo->prepare("
+                            INSERT INTO provider (
+                                last_name,
+                                first_name,
+                                domains,
+                                email,
+                                telephone,
+                                password,
+                                description,
+                                tarif_horaire
+                            ) 
+                            VALUES (
+                                :last_name,
+                                :first_name,
+                                :domains,
+                                :email,
+                                :telephone,
+                                :password,
+                                :description,
+                                :tarif_horaire
+                            )
+                        ");
+
+                        $params = [
+                            'last_name' => $validatedData['name'],
+                            'first_name' => $validatedData['prenom'],
+                            'domains' => $validatedData['specialite'],
+                            'email' => $validatedData['email'],
+                            'telephone' => $validatedData['telephone'],
+                            'password' => $hashedPassword,
+                            'description' => $validatedData['bio'] ?? null,
+                            'tarif_horaire' => $validatedData['tarif_horaire'] ?? null
+                        ];
+
+                        break;
                 }
-            } else {
-                return back()->withErrors(['error' => 'Une erreur est survenue lors de l\'inscription. Veuillez réessayer.'])->withInput();
+
+                $success = $stmt->execute($params);
+
+                if ($success) {
+                    $pdo->commit();
+                    $userId = $pdo->lastInsertId();
+                    
+                    // Stocker les informations en session
+                    session([
+                        'user_id' => $userId,
+                        'user_email' => $validatedData['email'],
+                        'user_type' => $request->user_type
+                    ]);
+
+                    \Log::info('Inscription réussie, session créée', [
+                        'user_id' => $userId,
+                        'user_type' => $request->user_type
+                    ]);
+
+                    // Redirection selon le type d'utilisateur
+                    switch ($request->user_type) {
+                        case 'societe':
+                            return redirect()->route('dashboard.client');
+                        case 'employe':
+                            return redirect()->route('dashboard.employee');
+                        case 'prestataire':
+                            return redirect()->route('dashboard.provider');
+                        default:
+                            return redirect()->route('home');
+                    }
+                }
+
+                \Log::error('Échec de l\'insertion', ['success' => $success]);
+                $pdo->rollBack();
+                return back()->withErrors(['error' => 'Échec de l\'inscription'])->withInput();
+
+            } catch (\PDOException $e) {
+                $pdo->rollBack();
+                \Log::error('Erreur PDO', [
+                    'message' => $e->getMessage(),
+                    'code' => $e->getCode()
+                ]);
+                throw $e;
             }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'Une erreur est survenue lors de l\'inscription: ' . $e->getMessage()])->withInput();
+            \Log::error('Erreur générale', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withErrors(['error' => 'Une erreur est survenue : ' . $e->getMessage()])->withInput();
         }
     }
 }

@@ -30,9 +30,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Dashboards
-Route::middleware(['auth.check'])->group(function () {
-    Route::get('/dashboard/client', [DashboardController::class, 'client'])->name('dashboards.client');
-    Route::get('/dashboards/employee', [DashboardController::class, 'employee'])->name('dashboards.employee');
-    Route::get('/dashboards/provider', [DashboardController::class, 'provider'])->name('dashboards.provider');
-    Route::get('/dashboards/admin', [DashboardController::class, 'admin'])->name('dashboards.admin');
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/dashboard/client', [DashboardController::class, 'client'])->name('dashboard.client');
+    Route::get('/dashboard/employee', [DashboardController::class, 'employee'])->name('dashboard.employee');
+    Route::get('/dashboard/provider', [DashboardController::class, 'provider'])->name('dashboard.provider');
+    Route::get('/dashboard/admin', [DashboardController::class, 'admin'])->name('dashboard.admin');
 });

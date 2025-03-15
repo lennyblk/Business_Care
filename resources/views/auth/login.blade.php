@@ -13,11 +13,11 @@
                 @csrf
                 <div class="mb-3">
                     <label for="user_type" class="form-label">Type utilisateur</label>
-                    <select id="user_type" name="user_type" class="form-select @error('user_type') is-invalid @enderror">
+                    <select id="user_type" name="user_type" class="form-control" required>
                         <option value="societe">Société</option>
                         <option value="employe">Employé</option>
                         <option value="prestataire">Prestataire</option>
-                        <option value="admin">Admin</option>
+                        <option value="admin">Administrateur</option>
                     </select>
                     @error('user_type')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -32,18 +32,18 @@
                     @enderror
                 </div>
 
-                <div class="mb-3">
-                    <label for="password" class="form-label">Mot de passe</label>
-                    <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
-                    @error('password')
+                <div class="mb-3 company-field">
+                    <label for="company_name" class="form-label">Nom de la société</label>
+                    <input type="text" id="company_name" name="company_name" class="form-control @error('company_name') is-invalid @enderror">
+                    @error('company_name')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
 
-                <div class="mb-3 company-name-field">
-                    <label for="company_name" class="form-label">Nom de la société</label>
-                    <input type="text" id="company_name" name="company_name" class="form-control @error('company_name') is-invalid @enderror">
-                    @error('company_name')
+                <div class="mb-3">
+                    <label for="password" class="form-label">Mot de passe</label>
+                    <input type="password" id="password" name="password" class="form-control @error('password') is-invalid @enderror" required>
+                    @error('password')
                         <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
@@ -70,18 +70,23 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const userTypeSelect = document.getElementById('user_type');
-        const companyNameField = document.querySelector('.company-name-field');
+        const companyField = document.querySelector('.company-field');
 
-        function toggleCompanyField() {
-            if (userTypeSelect.value === 'societe') {
-                companyNameField.style.display = 'block';
+        function toggleFields() {
+            const userType = userTypeSelect.value;
+            
+            // Gestion du champ société
+            if (userType === 'societe' || userType === 'employe') {
+                companyField.style.display = 'block';
+                companyField.querySelector('input').required = true;
             } else {
-                companyNameField.style.display = 'none';
+                companyField.style.display = 'none';
+                companyField.querySelector('input').required = false;
             }
         }
 
-        toggleCompanyField(); // Initial state
-        userTypeSelect.addEventListener('change', toggleCompanyField);
+        toggleFields(); // État initial
+        userTypeSelect.addEventListener('change', toggleFields);
     });
 </script>
 @endpush

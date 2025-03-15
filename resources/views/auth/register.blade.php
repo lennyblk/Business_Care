@@ -56,82 +56,128 @@
                     <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required>
                 </div>
 
+                <!-- Section société -->
                 <div class="company-fields">
                     <div class="mb-3">
-                        <label for="company_name" class="form-label">Nom de la société</label>
-                        <input type="text" id="company_name" name="company_name" class="form-control @error('company_name') is-invalid @enderror">
-                        @error('company_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label for="company_name" class="form-label">Nom de la société *</label>
+                        <input type="text" id="company_name" name="company_name" class="form-control" required>
                     </div>
+                    
                     <div class="mb-3">
-                        <label for="address" class="form-label">Adresse</label>
-                        <input type="text" id="address" name="address" class="form-control @error('address') is-invalid @enderror">
-                        @error('address')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label for="address" class="form-label">Adresse *</label>
+                        <input type="text" id="address" name="address" class="form-control" required>
                     </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="code_postal" class="form-label">Code postal *</label>
+                                <input type="text" id="code_postal" name="code_postal" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label for="ville" class="form-label">Ville *</label>
+                                <input type="text" id="ville" name="ville" class="form-control" required>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="mb-3">
-                        <label for="phone" class="form-label">Téléphone</label>
-                        <input type="tel" id="phone" name="phone" class="form-control @error('phone') is-invalid @enderror">
-                        @error('phone')
+                        <label for="phone" class="form-label">Téléphone *</label>
+                        <input type="tel" id="phone" name="phone" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="siret" class="form-label">SIRET</label>
+                        <input type="text" 
+                               id="siret" 
+                               name="siret" 
+                               class="form-control @error('siret') is-invalid @enderror" 
+                               pattern="[0-9]{14}"
+                               minlength="14"
+                               maxlength="14"
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               title="Le numéro SIRET doit contenir exactement 14 chiffres">
+                        @error('siret')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                <div class="employee-fields">
-                    <div class="mb-3">
-                        <label for="first_name" class="form-label">Prénom</label>
-                        <input type="text" id="first_name" name="first_name" class="form-control @error('first_name') is-invalid @enderror">
-                        @error('first_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                <!-- Section employé -->
+                <div class="employee-fields" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label">Prénom *</label>
+                                <input type="text" id="first_name" name="first_name" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label">Nom *</label>
+                                <input type="text" id="last_name" name="last_name" class="form-control" required>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="mb-3">
-                        <label for="last_name" class="form-label">Nom</label>
-                        <input type="text" id="last_name" name="last_name" class="form-control @error('last_name') is-invalid @enderror">
-                        @error('last_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label for="company_name" class="form-label">Nom de l'entreprise *</label>
+                        <input type="text" id="company_name" name="company_name" class="form-control" required>
                     </div>
+
                     <div class="mb-3">
-                        <label for="position" class="form-label">Poste</label>
-                        <input type="text" id="position" name="position" class="form-control @error('position') is-invalid @enderror">
-                        @error('position')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label for="position" class="form-label">Poste *</label>
+                        <input type="text" id="position" name="position" class="form-control" required>
                     </div>
+
                     <div class="mb-3">
-                        <label for="company_id" class="form-label">ID de la société</label>
-                        <input type="number" id="company_id" name="company_id" class="form-control @error('company_id') is-invalid @enderror">
-                        @error('company_id')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label for="departement" class="form-label">Département</label>
+                        <input type="text" id="departement" name="departement" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="telephone" class="form-label">Téléphone</label>
+                        <input type="tel" id="telephone" name="telephone" class="form-control">
                     </div>
                 </div>
 
-                <div class="provider-fields">
-                    <div class="mb-3">
-                        <label for="name" class="form-label">Nom</label>
-                        <input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror">
-                        @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                <!-- Section prestataire -->
+                <div class="provider-fields" style="display: none;">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Nom *</label>
+                                <input type="text" id="name" name="name" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="prenom" class="form-label">Prénom *</label>
+                                <input type="text" id="prenom" name="prenom" class="form-control" required>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="mb-3">
-                        <label for="description" class="form-label">Description</label>
-                        <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"></textarea>
-                        @error('description')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label for="specialite" class="form-label">Spécialité *</label>
+                        <input type="text" id="specialite" name="specialite" class="form-control" required>
                     </div>
+
                     <div class="mb-3">
-                        <label for="domains" class="form-label">Domaines</label>
-                        <input type="text" id="domains" name="domains" class="form-control @error('domains') is-invalid @enderror">
-                        @error('domains')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label for="telephone" class="form-label">Téléphone *</label>
+                        <input type="tel" id="telephone" name="telephone" class="form-control" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea id="bio" name="bio" class="form-control" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="tarif_horaire" class="form-label">Tarif horaire (€)</label>
+                        <input type="number" id="tarif_horaire" name="tarif_horaire" class="form-control" step="0.01">
                     </div>
                 </div>
 
@@ -150,21 +196,66 @@
         const providerFields = document.querySelector('.provider-fields');
 
         function toggleFields() {
+            // Masquer tous les champs
             companyFields.style.display = 'none';
             employeeFields.style.display = 'none';
             providerFields.style.display = 'none';
 
-            if (userTypeSelect.value === 'societe') {
-                companyFields.style.display = 'block';
-            } else if (userTypeSelect.value === 'employe') {
-                employeeFields.style.display = 'block';
-            } else if (userTypeSelect.value === 'prestataire') {
-                providerFields.style.display = 'block';
+            // Désactiver tous les champs required
+            document.querySelectorAll('.company-fields input, .employee-fields input, .provider-fields input').forEach(input => {
+                input.required = false;
+                input.disabled = true;  // Désactiver les champs cachés
+            });
+
+            // Afficher et activer les champs appropriés
+            switch(userTypeSelect.value) {
+                case 'societe':
+                    companyFields.style.display = 'block';
+                    companyFields.querySelectorAll('input').forEach(input => {
+                        input.required = true;
+                        input.disabled = false;
+                    });
+                    break;
+                case 'employe':
+                    employeeFields.style.display = 'block';
+                    employeeFields.querySelectorAll('input').forEach(input => {
+                        input.required = true;
+                        input.disabled = false;
+                    });
+                    break;
+                case 'prestataire':
+                    providerFields.style.display = 'block';
+                    providerFields.querySelectorAll('input').forEach(input => {
+                        input.required = true;
+                        input.disabled = false;
+                    });
+                    break;
             }
         }
 
-        toggleFields(); // Initial state
+        toggleFields(); // État initial
         userTypeSelect.addEventListener('change', toggleFields);
+    });
+
+    document.getElementById('siret').addEventListener('input', function(e) {
+        let value = e.target.value;
+        
+        // Ne garder que les chiffres
+        value = value.replace(/[^0-9]/g, '');
+        
+        // Limiter à 14 chiffres
+        if (value.length > 14) {
+            value = value.slice(0, 14);
+        }
+        
+        e.target.value = value;
+        
+        // Validation visuelle
+        if (value.length > 0 && value.length !== 14) {
+            e.target.setCustomValidity('Le numéro SIRET doit contenir exactement 14 chiffres');
+        } else {
+            e.target.setCustomValidity('');
+        }
     });
 </script>
 @endpush
