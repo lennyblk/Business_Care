@@ -92,7 +92,7 @@ class AuthController extends Controller
                 ]);
                 $user = $stmt->fetch();
             }
-            // Vérifier dans la table provider
+            // Vérifier dans la table provider ok
             else {
                 $stmt = $pdo->prepare("SELECT id, email, password, 'prestataire' as type FROM provider WHERE email = :email");
                 $stmt->execute(['email' => $validatedData['email']]);
