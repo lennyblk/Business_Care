@@ -62,12 +62,12 @@
                         <label for="company_name" class="form-label">Nom de la société *</label>
                         <input type="text" id="company_name" name="company_name" class="form-control" required>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label for="address" class="form-label">Adresse *</label>
                         <input type="text" id="address" name="address" class="form-control" required>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-3">
@@ -90,10 +90,10 @@
 
                     <div class="mb-3">
                         <label for="siret" class="form-label">SIRET</label>
-                        <input type="text" 
-                               id="siret" 
-                               name="siret" 
-                               class="form-control @error('siret') is-invalid @enderror" 
+                        <input type="text"
+                               id="siret"
+                               name="siret"
+                               class="form-control @error('siret') is-invalid @enderror"
                                pattern="[0-9]{14}"
                                minlength="14"
                                maxlength="14"
@@ -180,7 +180,6 @@
                         <input type="number" id="tarif_horaire" name="tarif_horaire" class="form-control" step="0.01">
                     </div>
                 </div>
-//test
                 <button type="submit" class="btn btn-primary w-100 py-2">S'inscrire</button>
             </form>
         </div>
@@ -239,17 +238,17 @@
 
     document.getElementById('siret').addEventListener('input', function(e) {
         let value = e.target.value;
-        
+
         // Ne garder que les chiffres
         value = value.replace(/[^0-9]/g, '');
-        
+
         // Limiter à 14 chiffres
         if (value.length > 14) {
             value = value.slice(0, 14);
         }
-        
+
         e.target.value = value;
-        
+
         // Validation visuelle
         if (value.length > 0 && value.length !== 14) {
             e.target.setCustomValidity('Le numéro SIRET doit contenir exactement 14 chiffres');

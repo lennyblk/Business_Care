@@ -24,27 +24,30 @@
                 </ul>
 
                 <div class="navbar-nav">
-                    @auth
+                    @if(session()->has('user_id'))
                         <!-- Menu déroulant pour l'utilisateur connecté -->
                         <div class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                {{ Auth::user()->name }} <!-- Affiche le nom de l'utilisateur -->
+                                {{ session('user_name') }} <!-- Affiche le nom de l'utilisateur -->
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                                 <!-- Lien vers le tableau de bord (adapté au type d'utilisateur) -->
-                                @if(Auth::user()->user_type === 'admin')
+                                @if(session('user_type') === 'admin')
                                     <li><a class="dropdown-item" href="{{ route('dashboard.admin') }}">Tableau de bord</a></li>
-                                @elseif(Auth::user()->user_type === 'client')
+                                @elseif(session('user_type') === 'societe')
                                     <li><a class="dropdown-item" href="{{ route('dashboard.client') }}">Tableau de bord</a></li>
-                                @elseif(Auth::user()->user_type === 'employe')
+                                @elseif(session('user_type') === 'employe')
                                     <li><a class="dropdown-item" href="{{ route('dashboard.employee') }}">Tableau de bord</a></li>
-                                @elseif(Auth::user()->user_type === 'prestataire')
+                                @elseif(session('user_type') === 'prestataire')
                                     <li><a class="dropdown-item" href="{{ route('dashboard.provider') }}">Tableau de bord</a></li>
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
-                                <!-- Lien de déconnexion (GET) -->
+                                <!-- Lien de déconnexion -->
                                 <li>
-                                <a class="dropdown-item" href="{{ route('logout') }}" onclick="return confirm('Êtes-vous sûr de vouloir vous déconnecter ?')">Déconnexion</a>
+                                    <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Déconnexion</a>
+                                    <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                        @csrf
+                                    </form>
                                 </li>
                             </ul>
                         </div>
@@ -52,7 +55,7 @@
                         <!-- Liens pour les utilisateurs non connectés -->
                         <a href="{{ route('login') }}" class="nav-link">Connexion</a>
                         <a href="{{ route('register') }}" class="nav-link">Inscription</a>
-                    @endauth
+                    @endif
                 </div>
             </div>
         </div>

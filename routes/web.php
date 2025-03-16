@@ -9,6 +9,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminProviderController;
+use App\Http\Controllers\AdminEmployeeController; // Ajouter l'importation du contrÃ´leur AdminEmployeeController
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -29,8 +30,7 @@ Route::get('/login', [AuthController::class, 'loginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
-Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
-
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Dashboards
 Route::middleware(['check.auth'])->group(function () {
     Route::get('/dashboard/client', [DashboardController::class, 'client'])->name('dashboard.client');
@@ -62,5 +62,18 @@ Route::middleware(['check.auth'])->group(function () {
         Route::get('/{id}/edit', [AdminProviderController::class, 'edit'])->name('admin.prestataires.edit');
         Route::put('/{id}', [AdminProviderController::class, 'update'])->name('admin.prestataires.update');
         Route::delete('/{id}', [AdminProviderController::class, 'destroy'])->name('admin.prestataires.destroy');
+    });
+});
+
+// Employees
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/gestion_admin/salaries')->group(function () {
+        Route::get('/', [AdminEmployeeController::class, 'index'])->name('admin.salaries.index');
+        Route::get('/create', [AdminEmployeeController::class, 'create'])->name('admin.salaries.create');
+        Route::post('/', [AdminEmployeeController::class, 'store'])->name('admin.salaries.store');
+        Route::get('/{id}', [AdminEmployeeController::class, 'show'])->name('admin.salaries.show');
+        Route::get('/{id}/edit', [AdminEmployeeController::class, 'edit'])->name('admin.salaries.edit');
+        Route::put('/{id}', [AdminEmployeeController::class, 'update'])->name('admin.salaries.update');
+        Route::delete('/{id}', [AdminEmployeeController::class, 'destroy'])->name('admin.salaries.destroy');
     });
 });

@@ -79,10 +79,10 @@ class AuthController extends Controller
                 $stmt = $pdo->prepare("SELECT id, email, password, name, 'admin' as type FROM admin WHERE email = :email");
                 $stmt->execute(['email' => $validatedData['email']]);
                 $user = $stmt->fetch();
-            } 
+            }
             // Vérifier dans la table company
             else if ($request->user_type === 'societe') {
-                $stmt = $pdo->prepare("SELECT id, email, password, 'societe' as type FROM company WHERE email = :email AND name = :company_name");
+                $stmt = $pdo->prepare("SELECT id, email, password, name, 'societe' as type FROM company WHERE email = :email AND name = :company_name");
                 $stmt->execute([
                     'email' => $validatedData['email'],
                     'company_name' => $validatedData['company_name']
@@ -92,9 +92,9 @@ class AuthController extends Controller
             // Vérifier dans la table employee
             else if ($request->user_type === 'employe') {
                 $stmt = $pdo->prepare("
-                    SELECT e.id, e.email, e.password, 'employe' as type, e.company_id 
-                    FROM employee e 
-                    JOIN company c ON e.company_id = c.id 
+                    SELECT e.id, e.email, e.password, e.first_name, e.last_name, 'employe' as type, e.company_id
+                    FROM employee e
+                    JOIN company c ON e.company_id = c.id
                     WHERE e.email = :email AND c.name = :company_name
                 ");
                 $stmt->execute([
@@ -105,7 +105,7 @@ class AuthController extends Controller
             }
             // Vérifier dans la table provider
             else {
-                $stmt = $pdo->prepare("SELECT id, email, password, 'prestataire' as type FROM provider WHERE email = :email");
+                $stmt = $pdo->prepare("SELECT id, email, password, first_name, last_name, 'prestataire' as type FROM provider WHERE email = :email");
                 $stmt->execute(['email' => $validatedData['email']]);
                 $user = $stmt->fetch();
             }
@@ -117,6 +117,7 @@ class AuthController extends Controller
                         session([
                             'user_id' => $user['id'],
                             'user_email' => $user['email'],
+                            'user_name' => $user['name'],
                             'user_type' => $user['type'],
                             'company_id' => $user['company_id'] ?? null
                         ]);
@@ -135,6 +136,7 @@ class AuthController extends Controller
                         session([
                             'user_id' => $user['id'],
                             'user_email' => $user['email'],
+                            'user_name' => $user['first_name'] . ' ' . $user['last_name'],
                             'user_type' => $user['type'],
                             'company_id' => $user['company_id'] ?? null
                         ]);
@@ -197,7 +199,7 @@ class AuthController extends Controller
                 'email' => 'required|email',
                 'password' => 'required|min:6',
                 'user_type' => 'required|in:societe,employe,prestataire',
-                
+
                 // Validation société
                 'company_name' => 'required_if:user_type,societe',
                 'address' => 'required_if:user_type,societe',
@@ -205,14 +207,14 @@ class AuthController extends Controller
                 'ville' => 'required_if:user_type,societe',
                 'phone' => 'required_if:user_type,societe',
                 'siret' => 'nullable|digits:14',  // Exactement 14 chiffres
-                
+
                 // Validation employé
                 'first_name' => 'required_if:user_type,employe',
                 'last_name' => 'required_if:user_type,employe',
                 'position' => 'required_if:user_type,employe',
                 'departement' => 'nullable',
                 'telephone' => 'nullable',
-                
+
                 // Validation prestataire
                 'name' => 'required_if:user_type,prestataire',
                 'prenom' => 'required_if:user_type,prestataire',
@@ -233,30 +235,30 @@ class AuthController extends Controller
                     case 'societe':
                         $stmt = $pdo->prepare("
                             INSERT INTO company (
-                                name, 
-                                address, 
+                                name,
+                                address,
                                 code_postal,
                                 ville,
                                 pays,
-                                phone, 
-                                email, 
+                                phone,
+                                email,
                                 siret,
-                                password, 
+                                password,
                                 creation_date,
                                 formule_abonnement,
                                 statut_compte,
                                 date_debut_contrat
-                            ) 
+                            )
                             VALUES (
-                                :name, 
-                                :address, 
+                                :name,
+                                :address,
                                 :code_postal,
                                 :ville,
                                 'France',
-                                :phone, 
-                                :email, 
+                                :phone,
+                                :email,
                                 :siret,
-                                :password, 
+                                :password,
                                 CURDATE(),
                                 'Starter',
                                 'Actif',
@@ -290,7 +292,7 @@ class AuthController extends Controller
                                 date_creation_compte,
                                 password,
                                 preferences_langue
-                            ) 
+                            )
                             VALUES (
                                 :company_id,
                                 :first_name,
@@ -338,7 +340,7 @@ class AuthController extends Controller
                                 password,
                                 description,
                                 tarif_horaire
-                            ) 
+                            )
                             VALUES (
                                 :last_name,
                                 :first_name,
@@ -370,11 +372,12 @@ class AuthController extends Controller
                 if ($success) {
                     $pdo->commit();
                     $userId = $pdo->lastInsertId();
-                    
+
                     // Stocker les informations en session
                     session([
                         'user_id' => $userId,
                         'user_email' => $validatedData['email'],
+                        'user_name' => $params['first_name'] . ' ' . $params['last_name'] ?? $params['name'],
                         'user_type' => $request->user_type
                     ]);
 
@@ -408,9 +411,8 @@ class AuthController extends Controller
                 ]);
                 throw $e;
             }
-
         } catch (\Exception $e) {
-            \Log::error('Erreur générale', [
+            \Log::error('Erreur de traitement de l\'inscription', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
