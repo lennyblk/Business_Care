@@ -25,7 +25,8 @@ class AuthController extends Controller
             $tableMap = [
                 'societe' => 'company',
                 'employe' => 'employee',
-                'prestataire' => 'provider'
+                'prestataire' => 'provider',
+                'admin' => 'admin'
             ];
 
             $table = $tableMap[$userType] ?? null;
@@ -39,8 +40,18 @@ class AuthController extends Controller
             $user = $stmt->fetch();
 
             // Vérifiez si l'utilisateur existe et si le mot de passe correspond
-            if ($user && password_verify($password, $user['password'])) {
-                return $user;
+            if ($user) {
+                if ($userType === 'admin') {
+                    // Vérification du mot de passe en clair pour l'administrateur
+                    if ($password === $user['password']) {
+                        return $user;
+                    }
+                } else {
+                    // Vérification du mot de passe haché pour les autres utilisateurs
+                    if (password_verify($password, $user['password'])) {
+                        return $user;
+                    }
+                }
             }
 
             return null;
@@ -92,38 +103,59 @@ class AuthController extends Controller
                 ]);
                 $user = $stmt->fetch();
             }
-            // Vérifier dans la table provider ok
+            // Vérifier dans la table provider
             else {
                 $stmt = $pdo->prepare("SELECT id, email, password, 'prestataire' as type FROM provider WHERE email = :email");
                 $stmt->execute(['email' => $validatedData['email']]);
                 $user = $stmt->fetch();
             }
 
-            if ($user && password_verify($validatedData['password'], $user['password'])) {
-                session([
-                    'user_id' => $user['id'],
-                    'user_email' => $user['email'],
-                    'user_type' => $user['type'],
-                    'company_id' => $user['company_id'] ?? null
-                ]);
+            if ($user) {
+                if ($request->user_type === 'admin') {
+                    // Vérification du mot de passe en clair pour l'administrateur
+                    if ($validatedData['password'] === $user['password']) {
+                        session([
+                            'user_id' => $user['id'],
+                            'user_email' => $user['email'],
+                            'user_type' => $user['type'],
+                            'company_id' => $user['company_id'] ?? null
+                        ]);
 
-                \Log::info('Connexion réussie', [
-                    'user_id' => $user['id'],
-                    'user_type' => $user['type'],
-                    'company_id' => $user['company_id'] ?? null
-                ]);
+                        \Log::info('Connexion réussie', [
+                            'user_id' => $user['id'],
+                            'user_type' => $user['type'],
+                            'company_id' => $user['company_id'] ?? null
+                        ]);
 
-                switch ($user['type']) {
-                    case 'admin':
                         return redirect()->route('dashboard.admin');
-                    case 'societe':
-                        return redirect()->route('dashboard.client');
-                    case 'employe':
-                        return redirect()->route('dashboard.employee');
-                    case 'prestataire':
-                        return redirect()->route('dashboard.provider');
-                    default:
-                        return redirect()->route('home');
+                    }
+                } else {
+                    // Vérification du mot de passe haché pour les autres utilisateurs
+                    if (password_verify($validatedData['password'], $user['password'])) {
+                        session([
+                            'user_id' => $user['id'],
+                            'user_email' => $user['email'],
+                            'user_type' => $user['type'],
+                            'company_id' => $user['company_id'] ?? null
+                        ]);
+
+                        \Log::info('Connexion réussie', [
+                            'user_id' => $user['id'],
+                            'user_type' => $user['type'],
+                            'company_id' => $user['company_id'] ?? null
+                        ]);
+
+                        switch ($user['type']) {
+                            case 'societe':
+                                return redirect()->route('dashboard.client');
+                            case 'employe':
+                                return redirect()->route('dashboard.employee');
+                            case 'prestataire':
+                                return redirect()->route('dashboard.provider');
+                            default:
+                                return redirect()->route('home');
+                        }
+                    }
                 }
             }
 

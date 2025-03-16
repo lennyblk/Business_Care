@@ -38,6 +38,12 @@ class CheckAuth
                 }
                 break;
 
+            case 'admin':
+                if (!str_starts_with($route, 'dashboard.admin')) {
+                    return redirect()->route('dashboard.admin');
+                }
+                break;
+
             default:
                 return redirect()->route('login');
         }
