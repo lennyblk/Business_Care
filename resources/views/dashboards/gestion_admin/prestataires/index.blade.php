@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h1>Gestion des prestataires</h1>
+    <h1 class="mb-5">Gestion des prestataires</h1>
     <a href="{{ route('admin.prestataires.create') }}" class="btn btn-primary">Ajouter un prestataire</a>
     <table class="table">
         <thead>
