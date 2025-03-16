@@ -2,12 +2,6 @@
 
 @section('title', 'Tableau de bord Administrateur')
 
-@auth
-    <p>Utilisateur connecté : {{ Auth::user()->name }}</p>
-@else
-    <p>Utilisateur non connecté</p>
-@endauth
-
 @section('content')
 <div class="container py-4">
     <div class="row">

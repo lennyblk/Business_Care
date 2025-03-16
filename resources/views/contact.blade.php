@@ -6,7 +6,7 @@
 <div class="w-100">
     <section class="w-100 py-5">
         <div class="container">
-            <h1 class="display-5 fw-bold text-center mb-5">Contactez nous</h1>
+            <h1 class="display-5 fw-bold text-center mb-5">Contactez-nous</h1>
 
             @if(session('success'))
                 <div class="alert alert-success">
