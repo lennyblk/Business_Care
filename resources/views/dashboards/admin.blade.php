@@ -15,6 +15,7 @@
                     <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
                     <a href="#" class="list-group-item list-group-item-action">Gestion utilisateurs</a>
                     <a href="{{ route('admin.company') }}" class="list-group-item list-group-item-action">Entreprises</a>
+                    <a href="{{ route('admin.salaries.index') }}" class="list-group-item list-group-item-action">Salariés</a>
                     <a href="{{ route('admin.prestataires.index') }}" class="list-group-item list-group-item-action">Prestataires</a>
                     <a href="#" class="list-group-item list-group-item-action">Configuration</a>
                 </div>

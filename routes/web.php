@@ -9,7 +9,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminProviderController;
-use App\Http\Controllers\AdminEmployeeController; // Ajouter l'importation du contrÃ´leur AdminEmployeeController
+use App\Http\Controllers\AdminEmployeeController; // Ajouter l'importation du contrôleur AdminEmployeeController
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');

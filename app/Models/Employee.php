@@ -15,6 +15,7 @@ class Employee extends Model
         'date_creation_compte', 'password', 'derniere_connexion', 'preferences_langue', 'id_carte_nfc'
     ];
     protected $hidden = ['password'];
+    public $timestamps = false;
 
     public function company()
     {
