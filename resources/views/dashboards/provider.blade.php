@@ -137,3 +137,13 @@
                             </div>
                             <div>
                                 <button class="btn btn-sm btn-success me-1">Accepter</button>
+                                <button class="btn btn-sm btn-danger">Refuser</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

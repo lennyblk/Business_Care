@@ -11,7 +11,7 @@ class CheckAuth
     {
         // Vérifier si l'utilisateur est connecté via la session
         if (!session()->has('user_id')) {
-            return redirect()->route('login');
+            return redirect()->route('login')->withErrors(['error' => 'Vous devez être connecté pour accéder à cette page.']);
         }
 
         // Récupérer le type d'utilisateur depuis la session
@@ -22,30 +22,31 @@ class CheckAuth
         switch ($userType) {
             case 'societe':
                 if (!str_starts_with($route, 'dashboard.client')) {
-                    return redirect()->route('dashboard.client');
+                    return redirect()->route('dashboard.client')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 
             case 'employe':
                 if (!str_starts_with($route, 'dashboard.employee')) {
-                    return redirect()->route('dashboard.employee');
+                    return redirect()->route('dashboard.employee')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 
             case 'prestataire':
                 if (!str_starts_with($route, 'dashboard.provider')) {
-                    return redirect()->route('dashboard.provider');
+                    return redirect()->route('dashboard.provider')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 
             case 'admin':
-                if (!str_starts_with($route, 'dashboard.admin')) {
-                    return redirect()->route('dashboard.admin');
+                // Autoriser l'accès aux routes admin.company
+                if (!str_starts_with($route, 'dashboard.admin') && !str_starts_with($route, 'admin.company') && !str_starts_with($route, 'admin.prestataires')) {
+                    return redirect()->route('dashboard.admin')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 
             default:
-                return redirect()->route('login');
+                return redirect()->route('login')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
         }
 
         return $next($request);

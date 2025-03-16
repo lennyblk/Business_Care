@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-
 class DashboardController extends Controller
 {
     /**
@@ -32,7 +31,7 @@ class DashboardController extends Controller
         if (session('user_type') !== 'societe') {
             return redirect()->route('dashboard.' . session('user_type'));
         }
-        
+
         \Log::info('Accès autorisé au dashboard client');
         return view('dashboards.client');
     }

@@ -1,6 +1,12 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Tableau de bord Administrateur')
+
+@auth
+    <p>Utilisateur connecté : {{ Auth::user()->name }}</p>
+@else
+    <p>Utilisateur non connecté</p>
+@endauth
 
 @section('content')
 <div class="container py-4">
@@ -14,8 +20,8 @@
                 <div class="list-group list-group-flush">
                     <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
                     <a href="#" class="list-group-item list-group-item-action">Gestion utilisateurs</a>
-                    <a href="#" class="list-group-item list-group-item-action">Entreprises</a>
-                    <a href="#" class="list-group-item list-group-item-action">Prestataires</a>
+                    <a href="{{ route('admin.company') }}" class="list-group-item list-group-item-action">Entreprises</a>
+                    <a href="{{ route('admin.prestataires.index') }}" class="list-group-item list-group-item-action">Prestataires</a>
                     <a href="#" class="list-group-item list-group-item-action">Configuration</a>
                 </div>
             </div>
