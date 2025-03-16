@@ -42,13 +42,14 @@ Route::middleware(['check.auth'])->group(function () {
 // Admin routes ---------------------------------------------------------
 // Company
 Route::middleware(['check.auth'])->group(function () {
-    Route::get('/dashboard/gestion_admin/company', [AdminCompanyController::class, 'index'])->name('admin.company');
-    Route::get('/dashboard/gestion_admin/company/create', [AdminCompanyController::class, 'create'])->name('admin.company.create');
-    Route::post('/dashboard/gestion_admin/company', [AdminCompanyController::class, 'store'])->name('admin.company.store');
-    Route::get('/dashboard/gestion_admin/company/{id}', [AdminCompanyController::class, 'show'])->name('admin.company.show');
-    Route::get('/dashboard/gestion_admin/company/{id}/edit', [AdminCompanyController::class, 'edit'])->name('admin.company.edit');
-    Route::put('/dashboard/gestion_admin/company/{id}', [AdminCompanyController::class, 'update'])->name('admin.company.update');
-    Route::delete('/dashboard/gestion_admin/company/{id}', [AdminCompanyController::class, 'destroy'])->name('admin.company.destroy');
+    Route::get('/dashboard/gestion_admin/entreprises', [AdminCompanyController::class, 'index'])->name('admin.company');
+    Route::get('/dashboard/gestion_admin/entreprises/create', [AdminCompanyController::class, 'create'])->name('admin.company.create');
+    Route::post('/dashboard/gestion_admin/entreprises', [AdminCompanyController::class, 'store'])->name('admin.company.store');
+    Route::get('/dashboard/gestion_admin/entreprises/{id}', [AdminCompanyController::class, 'show'])->name('admin.company.show');
+    Route::get('/dashboard/gestion_admin/entreprises/{id}/edit', [AdminCompanyController::class, 'edit'])->name('admin.company.edit');
+    Route::put('/dashboard/gestion_admin/entreprises/{id}', [AdminCompanyController::class, 'update'])->name('admin.company.update');
+    Route::delete('/dashboard/gestion_admin/entreprises/{id}', [AdminCompanyController::class, 'destroy'])->name('admin.company.destroy');
+    Route::get('/dashboard/gestion_admin/entreprises/{id}/contracts', [AdminCompanyController::class, 'contracts'])->name('admin.company.contracts');
 });
 
 // Prestaires

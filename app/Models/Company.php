@@ -16,4 +16,5 @@ class Company extends Model
         'mode_paiement_prefere', 'employee_count'
     ];
     protected $hidden = ['password'];
+    public $timestamps = false;
 }
