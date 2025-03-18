@@ -18,7 +18,6 @@
                     <a href="{{ route('admin.salaries.index') }}" class="list-group-item list-group-item-action">Salariés</a>
                     <a href="{{ route('admin.prestataires.index') }}" class="list-group-item list-group-item-action">Prestataires</a>
                     <a href="{{ route('admin.activities.index') }}" class="list-group-item list-group-item-action">Activités</a>
-                    <a href="#" class="list-group-item list-group-item-action">Configuration</a>
                 </div>
             </div>
         </div>
@@ -37,42 +36,42 @@
                     <!-- Statistics cards -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <div class="card bg-primary text-white">
+                            <div class="card text-white">
                                 <div class="card-body">
-                                    <h5 class="card-title">Entreprises</h5>
-                                    <p class="card-text display-6">{{ $companyCount }}</p>
+                                    <h5 class="card-title text-black">Entreprises</h5>
+                                    <p class="card-text display-6 text-black">{{ $companyCount }}</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-success text-white">
+                            <div class="card text-white">
                                 <div class="card-body">
-                                    <h5 class="card-title">Employés</h5>
-                                    <p class="card-text display-6">{{ $employeeCount }}</p>
+                                    <h5 class="card-title text-black">Employés</h5>
+                                    <p class="card-text display-6 text-black">{{ $employeeCount }}</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-info text-white">
+                            <div class="card text-white">
                                 <div class="card-body">
-                                    <h5 class="card-title">Prestataires</h5>
-                                    <p class="card-text display-6">{{ $providerCount }}</p>
+                                    <h5 class="card-title text-black">Prestataires</h5>
+                                    <p class="card-text display-6 text-black">{{ $providerCount }}</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-warning text-dark">
+                            <div class="card text-dark">
                                 <div class="card-body">
-                                    <h5 class="card-title">Contrats</h5>
-                                    <p class="card-text display-6">{{ $contractCount }}</p>
+                                    <h5 class="card-title text-black">Contrats</h5>
+                                    <p class="card-text display-6 text-black">{{ $contractCount }}</p>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card bg-secondary text-white">
+                            <div class="card text-white">
                                 <div class="card-body">
-                                    <h5 class="card-title">Activités</h5>
-                                    <p class="card-text display-6">{{ $activityCount }}</p>
+                                    <h5 class="card-title text-black">Activités</h5>
+                                    <p class="card-text display-6 text-black">{{ $activityCount }}</p>
                                 </div>
                             </div>
                         </div>

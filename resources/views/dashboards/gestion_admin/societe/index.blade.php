@@ -24,10 +24,10 @@
                 <td>{{ $company->formule_abonnement }}</td>
                 <td>{{ $company->statut_compte }}</td>
                 <td>
-                    <button class="btn btn-info" onclick="window.location='{{ route('admin.company.show', $company->id) }}'">Détails</button>
-                    <button class="btn btn-warning" onclick="window.location='{{ route('admin.company.edit', $company->id) }}'">Modifier</button>
+                    <button class="btn" onclick="window.location='{{ route('admin.company.show', $company->id) }}'">Détails</button>
+                    <button class="btn" onclick="window.location='{{ route('admin.company.edit', $company->id) }}'">Modifier</button>
                     <form action="{{ route('admin.company.destroy', $company->id) }}" method="POST" style="display:inline;">
-                        @csrf
+
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Supprimer</button>
                     </form>

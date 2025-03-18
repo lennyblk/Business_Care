@@ -43,7 +43,7 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="card bg-success text-white">
+                            <div class="card text-white">
                                 <div class="card-body">
                                     <h5 class="card-title">Employés</h5>
                                     <p class="card-text display-6">12</p>
@@ -51,7 +51,7 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="card bg-info text-white">
+                            <div class="card text-white">
                                 <div class="card-body">
                                     <h5 class="card-title">Événements</h5>
                                     <p class="card-text display-6">5</p>
