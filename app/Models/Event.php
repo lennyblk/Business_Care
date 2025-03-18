@@ -13,6 +13,7 @@ class Event extends Model
     protected $fillable = [
         'name', 'description', 'date', 'event_type', 'provider_id', 'capacity', 'location', 'registrations'
     ];
+    public $timestamps = false;
 
     public function provider()
     {

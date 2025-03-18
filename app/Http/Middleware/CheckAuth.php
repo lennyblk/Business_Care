@@ -40,7 +40,7 @@ class CheckAuth
 
             case 'admin':
                 // Autoriser l'accès aux routes admin.company
-                if (!str_starts_with($route, 'dashboard.admin') && !str_starts_with($route, 'admin.company') && !str_starts_with($route, 'admin.prestataires') && !str_starts_with($route, 'admin.salaries')) {
+                if (!str_starts_with($route, 'dashboard.admin') && !str_starts_with($route, 'admin.company') && !str_starts_with($route, 'admin.prestataires') && !str_starts_with($route, 'admin.salaries') && !str_starts_with($route, 'admin.activities')) {
                     return redirect()->route('dashboard.admin')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;

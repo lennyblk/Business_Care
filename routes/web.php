@@ -9,7 +9,8 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminProviderController;
-use App\Http\Controllers\AdminEmployeeController; // Ajouter l'importation du contrôleur AdminEmployeeController
+use App\Http\Controllers\AdminEmployeeController;
+use App\Http\Controllers\AdminActivityController; // Ajouter l'importation du contrôleur AdminActivityController
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -75,5 +76,18 @@ Route::middleware(['check.auth'])->group(function () {
         Route::get('/{id}/edit', [AdminEmployeeController::class, 'edit'])->name('admin.salaries.edit');
         Route::put('/{id}', [AdminEmployeeController::class, 'update'])->name('admin.salaries.update');
         Route::delete('/{id}', [AdminEmployeeController::class, 'destroy'])->name('admin.salaries.destroy');
+    });
+});
+
+// Activities
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/gestion_admin/activites')->group(function () {
+        Route::get('/', [AdminActivityController::class, 'index'])->name('admin.activities.index');
+        Route::get('/create', [AdminActivityController::class, 'create'])->name('admin.activities.create');
+        Route::post('/', [AdminActivityController::class, 'store'])->name('admin.activities.store');
+        Route::get('/{id}', [AdminActivityController::class, 'show'])->name('admin.activities.show');
+        Route::get('/{id}/edit', [AdminActivityController::class, 'edit'])->name('admin.activities.edit');
+        Route::put('/{id}', [AdminActivityController::class, 'update'])->name('admin.activities.update');
+        Route::delete('/{id}', [AdminActivityController::class, 'destroy'])->name('admin.activities.destroy');
     });
 });

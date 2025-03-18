@@ -4,6 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Company;
+use App\Models\Employee;
+use App\Models\Provider;
+use App\Models\Contract;
+use App\Models\Event;
+
 class DashboardController extends Controller
 {
     /**
@@ -85,9 +91,12 @@ class DashboardController extends Controller
      */
     public function admin()
     {
-        // Logique d'administration
-        // Par exemple, charger des statistiques globales
+        $companyCount = Company::count();
+        $employeeCount = Employee::count();
+        $providerCount = Provider::count();
+        $contractCount = Contract::count();
+        $activityCount = Event::count();
 
-        return view('dashboards.admin');
+        return view('dashboards.admin', compact('companyCount', 'employeeCount', 'providerCount', 'contractCount', 'activityCount'));
     }
 }

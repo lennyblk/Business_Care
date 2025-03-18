@@ -33,14 +33,23 @@ class AdminProviderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'last_name' => 'required|string|max:100',
-            'first_name' => 'required|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'first_name' => 'nullable|string|max:100',
+            'description' => 'required|string',
+            'domains' => 'required|string',
             'email' => 'required|email|unique:provider,email',
+            'telephone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8',
+            'adresse' => 'nullable|string|max:255',
+            'code_postal' => 'nullable|string|max:10',
+            'ville' => 'nullable|string|max:100',
+            'siret' => 'nullable|string|max:14',
+            'iban' => 'nullable|string|max:34',
             'statut_prestataire' => 'required|in:Candidat,Validé,Inactif',
+            'tarif_horaire' => 'nullable|numeric',
         ]);
 
-        $prestataire = Provider::create($request->all());
+        Provider::create($request->all());
         return redirect()->route('admin.prestataires.index')->with('success', 'Prestataire créé avec succès.');
     }
 
@@ -50,9 +59,9 @@ class AdminProviderController extends Controller
     public function show($id)
     {
         $prestataire = Provider::findOrFail($id);
-        $disponibilites = ProviderAvailability::where('provider_id', $id)->get();
-        $evaluations = ServiceEvaluation::where('provider_id', $id)->get();
-        $factures = ProviderInvoice::where('provider_id', $id)->get();
+        $disponibilites = ProviderAvailability::where('id', $id)->get();
+        $evaluations = ServiceEvaluation::where('id', $id)->get();
+        $factures = ProviderInvoice::where('id', $id)->get();
 
         return view('dashboards.gestion_admin.prestataires.show', compact('prestataire', 'disponibilites', 'evaluations', 'factures'));
     }
@@ -72,10 +81,19 @@ class AdminProviderController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'last_name' => 'required|string|max:100',
-            'first_name' => 'required|string|max:100',
+            'last_name' => 'nullable|string|max:100',
+            'first_name' => 'nullable|string|max:100',
+            'description' => 'required|string',
+            'domains' => 'required|string',
             'email' => 'required|email|unique:provider,email,' . $id,
+            'telephone' => 'nullable|string|max:20',
+            'adresse' => 'nullable|string|max:255',
+            'code_postal' => 'nullable|string|max:10',
+            'ville' => 'nullable|string|max:100',
+            'siret' => 'nullable|string|max:14',
+            'iban' => 'nullable|string|max:34',
             'statut_prestataire' => 'required|in:Candidat,Validé,Inactif',
+            'tarif_horaire' => 'nullable|numeric',
         ]);
 
         $prestataire = Provider::findOrFail($id);
