@@ -17,8 +17,11 @@ class Employee extends Model
     protected $hidden = ['password'];
     public $timestamps = false;
 
+    /**
+     * Relation avec l'entreprise.
+     */
     public function company()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

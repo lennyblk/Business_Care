@@ -11,6 +11,7 @@
                 <th>Prénom</th>
                 <th>Email</th>
                 <th>Poste</th>
+                <th>Entreprise</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -21,6 +22,7 @@
                 <td>{{ $employee->first_name }}</td>
                 <td>{{ $employee->email }}</td>
                 <td>{{ $employee->position }}</td>
+                <td>{{ $employee->company->name ?? 'Non attribué' }}</td>
                 <td>
                     <button onclick="window.location='{{ route('admin.salaries.show', $employee->id) }}'" class="btn btn-info">Détails</button>
                     <button onclick="window.location='{{ route('admin.salaries.edit', $employee->id) }}'" class="btn btn-warning">Modifier</button>
