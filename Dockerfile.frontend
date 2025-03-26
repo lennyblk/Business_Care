@@ -1,0 +1,24 @@
+FROM node:16-alpine as builder
+
+WORKDIR /app
+
+# 1. Copier les fichiers de configuration
+COPY package*.json ./
+COPY webpack.mix.js ./
+
+# 2. Vérification des fichiers (pour debug)
+RUN ls -la && \
+    echo "Contenu de package.json :" && \
+    cat package.json && \
+    echo "Contenu de webpack.mix.js :" && \
+    cat webpack.mix.js
+
+# 3. Installer les dépendances
+RUN npm install
+
+# 4. Copier les assets
+COPY resources/views/ .resources/views/
+
+
+# 6. Builder avec output détaillé
+RUN npm run production --verbose
