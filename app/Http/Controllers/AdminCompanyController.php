@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Company;
 use App\Models\Contract; // Corriger l'importation de la classe Contract
+use App\Models\Employee;
 
 class AdminCompanyController extends Controller
 {
@@ -54,12 +55,13 @@ class AdminCompanyController extends Controller
     }
 
     /**
-     * Affiche les détails d'une entreprise.
+     * Affiche les détails d'une entreprise avec ses salariés.
      */
     public function show($id)
     {
         $company = Company::findOrFail($id);
-        return view('dashboards.gestion_admin.societe.show', compact('company'));
+        $employees = Employee::where('company_id', $id)->get();
+        return view('dashboards.gestion_admin.societe.show', compact('company', 'employees'));
     }
 
     /**
