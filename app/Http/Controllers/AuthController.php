@@ -82,12 +82,45 @@ class AuthController extends Controller
             }
             // Vérifier dans la table company
             else if ($request->user_type === 'societe') {
-                $stmt = $pdo->prepare("SELECT id, email, password, name, 'societe' as type FROM company WHERE email = :email AND name = :company_name");
+                $stmt = $pdo->prepare("
+                    SELECT id, email, password, name, 'societe' as type 
+                    FROM company 
+                    WHERE email = :email AND name = :company_name
+                ");
                 $stmt->execute([
                     'email' => $validatedData['email'],
                     'company_name' => $validatedData['company_name']
                 ]);
                 $user = $stmt->fetch();
+
+                if ($user) {
+                    if (password_verify($validatedData['password'], $user['password'])) {
+                        session([
+                            'user_id' => $user['id'],
+                            'user_email' => $user['email'],
+                            'user_name' => $user['name'],
+                            'user_type' => $user['type']
+                        ]);
+
+                        \Log::info('Connexion réussie pour une société', [
+                            'user_id' => $user['id'],
+                            'user_email' => $user['email'],
+                            'company_name' => $user['name']
+                        ]);
+
+                        return redirect()->route('dashboard.client');
+                    } else {
+                        \Log::warning('Mot de passe incorrect pour la société', [
+                            'email' => $validatedData['email'],
+                            'company_name' => $validatedData['company_name']
+                        ]);
+                    }
+                } else {
+                    \Log::warning('Société non trouvée ou informations incorrectes', [
+                        'email' => $validatedData['email'],
+                        'company_name' => $validatedData['company_name']
+                    ]);
+                }
             }
             // Vérifier dans la table employee
             else if ($request->user_type === 'employe') {
