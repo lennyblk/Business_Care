@@ -14,9 +14,11 @@
                 <div class="list-group list-group-flush">
                     <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
                     <a href="#" class="list-group-item list-group-item-action">Profil</a>
-                    <a href="{{ route('contracts') }}" class="list-group-item list-group-item-action">Contrats</a>
-                    <a href="{{ route('events') }}" class="list-group-item list-group-item-action">Événements</a>
-                    <a href="{{ route('medical') }}" class="list-group-item list-group-item-action">Rendez-vous médicaux</a>
+                    <a href="{{ route('contracts.index') }}" class="list-group-item list-group-item-action">Contrats</a>
+                    <a href="{{ route('quotes.index') }}" class="list-group-item list-group-item-action">Devis</a>
+                    <a href="{{ route('employees.index') }}" class="list-group-item list-group-item-action">Collaborateurs</a>
+                    <a href="{{ route('payments.index') }}" class="list-group-item list-group-item-action">Paiements</a>
+                    <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action">Facturation</a>
                 </div>
             </div>
         </div>
@@ -32,51 +34,68 @@
                         Bienvenue dans votre espace client.
                     </div>
 
+                    <!-- Quick Actions -->
+                    <div class="mb-4">
+                        <h5>Actions rapides</h5>
+                        <div class="btn-group">
+                            <a href="{{ route('quotes.create') }}" class="btn btn-primary">Nouveau devis</a>
+                            <a href="{{ route('contracts.create') }}" class="btn btn-success">Nouveau contrat</a>
+                            <a href="{{ route('employees.create') }}" class="btn btn-info">Ajouter un collaborateur</a>
+                        </div>
+                    </div>
+
                     <!-- Statistics cards -->
                     <div class="row g-3 mb-4">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <div class="card bg-primary text-white">
                                 <div class="card-body">
-                                    <h5 class="card-title">Contrats</h5>
-                                    <p class="card-text display-6">3</p>
+                                    <h5 class="card-title">Contrats actifs</h5>
+                                    <p class="card-text display-6">{{ $activeContracts }}</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card text-white">
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
                                 <div class="card-body">
-                                    <h5 class="card-title">Employés</h5>
-                                    <p class="card-text display-6">12</p>
+                                    <h5 class="card-title">Collaborateurs</h5>
+                                    <p class="card-text display-6">{{ $employeesCount }}</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card text-white">
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
                                 <div class="card-body">
-                                    <h5 class="card-title">Événements</h5>
-                                    <p class="card-text display-6">5</p>
+                                    <h5 class="card-title">Devis en cours</h5>
+                                    <p class="card-text display-6">{{ $pendingQuotes }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Factures à payer</h5>
+                                    <p class="card-text display-6">{{ $unpaidInvoices }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Recent activity -->
-                    <h5>Activité récente</h5>
+                    <h5>Activités récentes</h5>
                     <div class="list-group">
+                        @forelse($recentActivities as $activity)
                         <div class="list-group-item">
                             <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Nouveau contrat ajouté</h6>
-                                <small>Aujourd'hui</small>
+                                <h6 class="mb-1">{{ $activity->title }}</h6>
+                                <small>{{ $activity->created_at->diffForHumans() }}</small>
                             </div>
-                            <p class="mb-1">Contrat de prestation médicale signé.</p>
+                            <p class="mb-1">{{ $activity->description }}</p>
                         </div>
+                        @empty
                         <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Rendez-vous planifié</h6>
-                                <small>Hier</small>
-                            </div>
-                            <p class="mb-1">Visite médicale pour 5 employés le 25/03/2025.</p>
+                            <p class="mb-1">Aucune activité récente</p>
                         </div>
+                        @endforelse
                     </div>
                 </div>
             </div>

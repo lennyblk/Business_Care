@@ -11,9 +11,14 @@ use App\Models\Provider;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 
-class AuthController extends Controller
+class CompanyController extends Controller
 {
-    /**
+    public function index()
+    {
+        $companies = Company::all();
+        return response()->json(['data' => $companies], 200);
+    }
+    /**S
      * Authentification d'un utilisateur
      */
     public function login(Request $request)

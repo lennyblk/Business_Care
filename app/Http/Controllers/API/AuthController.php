@@ -1,193 +1,286 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
+use App\Models\Admin;
+use App\Models\Company;
+use App\Models\Employee;
+use App\Models\Provider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    protected $apiBaseUrl;
-
-    public function __construct()
-    {
-        // Définir l'URL de base de l'API (à ajuster selon votre configuration)
-        $this->apiBaseUrl = env('API_BASE_URL', 'http://localhost:8000/api');
-    }
-
-    // Affichage du formulaire de connexion
-    public function loginForm()
-    {
-        return view('auth.login');
-    }
-
-    // Traitement de la connexion
+    /**
+     * Authentification d'un utilisateur
+     */
     public function login(Request $request)
     {
-        try {
-            $validatedData = $request->validate([
-                'email' => 'required|email',
-                'password' => 'required',
-                'user_type' => 'required|in:admin,societe,employe,prestataire',
-                'company_name' => 'required_if:user_type,societe,employe'
-            ]);
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required',
+            'user_type' => 'required|in:admin,societe,employe,prestataire',
+            'company_name' => 'required_if:user_type,societe,employe'
+        ]);
 
-            // Appel à l'API d'authentification
-            $response = Http::post($this->apiBaseUrl . '/auth/login', [
-                'email' => $validatedData['email'],
-                'password' => $validatedData['password'],
-                'user_type' => $validatedData['user_type'],
-                'company_name' => $validatedData['company_name'] ?? null
-            ]);
-
-            $result = $response->json();
-
-            if ($response->successful() && $result['success']) {
-                // Stocker les informations utilisateur en session
-                $user = $result['user'];
-                session([
-                    'user_id' => $user['id'],
-                    'user_email' => $user['email'],
-                    'user_name' => $user['name'],
-                    'user_type' => $user['type'],
-                    'company_id' => $user['company_id'] ?? null
-                ]);
-
-                \Log::info('Connexion réussie via API', [
-                    'user_id' => $user['id'],
-                    'user_type' => $user['type']
-                ]);
-
-                // Redirection selon le type d'utilisateur
-                switch ($user['type']) {
-                    case 'admin':
-                        return redirect()->route('dashboard.admin');
-                    case 'societe':
-                        return redirect()->route('dashboard.client');
-                    case 'employe':
-                        return redirect()->route('dashboard.employee');
-                    case 'prestataire':
-                        return redirect()->route('dashboard.provider');
-                    default:
-                        return redirect()->route('home');
-                }
-            }
-
-            \Log::warning('Échec de connexion via API', [
-                'email' => $validatedData['email'],
-                'response' => $result
-            ]);
-
-            return back()->withErrors(['email' => 'Identifiants invalides'])->withInput();
-
-        } catch (\Exception $e) {
-            \Log::error('Erreur de connexion', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return back()->withErrors(['email' => 'Une erreur est survenue : ' . $e->getMessage()])->withInput();
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
+
+        $credentials = $request->only('email', 'password');
+        $userType = $request->input('user_type');
+        $companyName = $request->input('company_name');
+
+        // On recherche l'utilisateur en fonction de son type
+        $user = null;
+
+        if ($userType === 'admin') {
+            $user = Admin::where('email', $credentials['email'])->first();
+
+            if ($user && $credentials['password'] === $user->password) {
+                $userData = [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'type' => 'admin',
+                ];
+            }
+        }
+        elseif ($userType === 'societe') {
+            $user = Company::where('email', $credentials['email'])
+                          ->where('name', $companyName)
+                          ->first();
+
+            if ($user && Hash::check($credentials['password'], $user->password)) {
+                $userData = [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->name,
+                    'type' => 'societe',
+                ];
+            }
+        }
+        elseif ($userType === 'employe') {
+            $user = Employee::with('company')
+                          ->whereHas('company', function($query) use ($companyName) {
+                              $query->where('name', $companyName);
+                          })
+                          ->where('email', $credentials['email'])
+                          ->first();
+
+            if ($user && Hash::check($credentials['password'], $user->password)) {
+                $userData = [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'type' => 'employe',
+                    'company_id' => $user->company_id
+                ];
+            }
+        }
+        elseif ($userType === 'prestataire') {
+            $user = Provider::where('email', $credentials['email'])->first();
+
+            if ($user && Hash::check($credentials['password'], $user->password)) {
+                $userData = [
+                    'id' => $user->id,
+                    'email' => $user->email,
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'type' => 'prestataire',
+                ];
+            }
+        }
+
+        if (isset($userData)) {
+            // Retourner la réponse JSON
+            return response()->json([
+                'success' => true,
+                'user' => $userData
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Identifiants invalides'
+        ], 401);
     }
 
-    // Déconnexion
-    public function logout(Request $request)
-    {
-        // Appel à l'API de déconnexion (si nécessaire)
-        // Http::post($this->apiBaseUrl . '/auth/logout');
-
-        $request->session()->flush();
-        return redirect()->route('home');
-    }
-
-    // Affichage du formulaire d'inscription
-    public function registerForm()
-    {
-        return view('auth.register');
-    }
-
-    // Traitement de l'inscription
+    /**
+     * Inscription d'un nouvel utilisateur
+     */
     public function register(Request $request)
     {
+        // Validation commune pour tous les types d'utilisateurs
+        $commonRules = [
+            'email' => 'required|email',
+            'password' => 'required|min:6',
+            'user_type' => 'required|in:societe,employe,prestataire',
+        ];
+
+        // Règles spécifiques par type d'utilisateur
+        $typeRules = [
+            'societe' => [
+                'company_name' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'code_postal' => 'required|string|max:10',
+                'ville' => 'required|string|max:100',
+                'phone' => 'required|string|max:20',
+                'siret' => 'nullable|string|max:14',
+            ],
+            'employe' => [
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'company_name' => 'required|string|exists:company,name',
+                'position' => 'required|string|max:100',
+                'departement' => 'nullable|string|max:100',
+                'telephone' => 'nullable|string|max:20',
+            ],
+            'prestataire' => [
+                'name' => 'required|string|max:100',
+                'prenom' => 'required|string|max:100',
+                'specialite' => 'required|string',
+                'telephone' => 'required|string|max:20',
+                'bio' => 'nullable|string',
+                'tarif_horaire' => 'nullable|numeric|min:0',
+            ],
+        ];
+
+        // Récupérer les règles spécifiques au type d'utilisateur
+        $userType = $request->input('user_type');
+        $validationRules = array_merge($commonRules, $typeRules[$userType] ?? []);
+        
+        $validator = Validator::make($request->all(), $validationRules);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
         try {
-            \Log::info('Données brutes reçues', [
-                'all_data' => $request->all()
-            ]);
+            $hashedPassword = Hash::make($request->password);
+            $userData = null;
 
-            // Validation des données
-            $validatedData = $request->validate([
-                'email' => 'required|email',
-                'password' => 'required|min:6',
-                'user_type' => 'required|in:societe,employe,prestataire',
+            switch ($request->user_type) {
+                case 'societe':
+                    $company = Company::create([
+                        'name' => $request->company_name,
+                        'address' => $request->address,
+                        'code_postal' => $request->code_postal,
+                        'ville' => $request->ville,
+                        'pays' => 'France', // Valeur par défaut
+                        'phone' => $request->phone,
+                        'email' => $request->email,
+                        'siret' => $request->siret,
+                        'password' => $hashedPassword,
+                        'creation_date' => now(),
+                        'formule_abonnement' => 'Starter', // Valeur par défaut
+                        'statut_compte' => 'Actif', // Valeur par défaut
+                        'date_debut_contrat' => now()
+                    ]);
 
-                // Validation société
-                'company_name' => 'required_if:user_type,societe',
-                'address' => 'required_if:user_type,societe',
-                'code_postal' => 'required_if:user_type,societe',
-                'ville' => 'required_if:user_type,societe',
-                'phone' => 'required_if:user_type,societe',
-                'siret' => 'nullable|digits:14',
+                    $userData = [
+                        'id' => $company->id,
+                        'email' => $company->email,
+                        'name' => $company->name,
+                        'type' => 'societe'
+                    ];
+                    break;
 
-                // Validation employé
-                'first_name' => 'required_if:user_type,employe,prestataire',
-                'last_name' => 'required_if:user_type,employe,prestataire',
-                'position' => 'required_if:user_type,employe',
-                'departement' => 'nullable',
-                'telephone' => 'nullable',
+                case 'employe':
+                    // Récupérer l'ID de la société
+                    $company = Company::where('name', $request->company_name)->first();
 
-                // Validation prestataire
-                'name' => 'required_if:user_type,prestataire',
-                'prenom' => 'required_if:user_type,prestataire',
-                'specialite' => 'required_if:user_type,prestataire',
-                'bio' => 'nullable',
-                'tarif_horaire' => 'nullable|numeric|min:0'
-            ]);
+                    if (!$company) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Entreprise non trouvée'
+                        ], 404);
+                    }
 
-            // Appel à l'API d'inscription
-            $response = Http::post($this->apiBaseUrl . '/auth/register', $validatedData);
-            $result = $response->json();
+                    $employee = Employee::create([
+                        'company_id' => $company->id,
+                        'first_name' => $request->first_name,
+                        'last_name' => $request->last_name,
+                        'email' => $request->email,
+                        'telephone' => $request->telephone,
+                        'position' => $request->position,
+                        'departement' => $request->departement,
+                        'date_creation_compte' => now(),
+                        'password' => $hashedPassword,
+                        'preferences_langue' => 'fr' // Valeur par défaut
+                    ]);
 
-            if ($response->successful() && $result['success']) {
-                // Stocker les informations utilisateur en session
-                $user = $result['user'];
-                session([
-                    'user_id' => $user['id'],
-                    'user_email' => $user['email'],
-                    'user_name' => $user['name'],
-                    'user_type' => $user['type'],
-                    'company_id' => $user['company_id'] ?? null
-                ]);
+                    $userData = [
+                        'id' => $employee->id,
+                        'email' => $employee->email,
+                        'name' => $employee->first_name . ' ' . $employee->last_name,
+                        'type' => 'employe',
+                        'company_id' => $employee->company_id
+                    ];
+                    break;
 
-                \Log::info('Inscription réussie via API, session créée', [
-                    'user_id' => $user['id'],
-                    'user_type' => $user['type']
-                ]);
+                case 'prestataire':
+                    $provider = Provider::create([
+                        'last_name' => $request->name,
+                        'first_name' => $request->prenom,
+                        'description' => $request->bio ?? 'Pas de description',
+                        'domains' => $request->specialite,
+                        'email' => $request->email,
+                        'telephone' => $request->telephone,
+                        'password' => $hashedPassword,
+                        'statut_prestataire' => 'Candidat', // Valeur par défaut
+                        'tarif_horaire' => $request->tarif_horaire
+                    ]);
 
-                // Redirection selon le type d'utilisateur
-                switch ($user['type']) {
-                    case 'societe':
-                        return redirect()->route('dashboard.client');
-                    case 'employe':
-                        return redirect()->route('dashboard.employee');
-                    case 'prestataire':
-                        return redirect()->route('dashboard.provider');
-                    default:
-                        return redirect()->route('home');
-                }
+                    $userData = [
+                        'id' => $provider->id,
+                        'email' => $provider->email,
+                        'name' => $provider->first_name . ' ' . $provider->last_name,
+                        'type' => 'prestataire'
+                    ];
+                    break;
             }
 
-            \Log::error('Échec de l\'inscription via API', [
-                'email' => $validatedData['email'],
-                'response' => $result
-            ]);
+            if ($userData) {
+                return response()->json([
+                    'success' => true,
+                    'user' => $userData,
+                    'message' => 'Inscription réussie'
+                ], 201);
+            }
 
-            return back()->withErrors(['error' => $result['message'] ?? 'Échec de l\'inscription'])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Échec de l\'inscription'
+            ], 500);
 
         } catch (\Exception $e) {
-            \Log::error('Erreur de traitement de l\'inscription', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            return back()->withErrors(['error' => 'Une erreur est survenue : ' . $e->getMessage()])->withInput();
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue : ' . $e->getMessage(),
+                'error_details' => $e->getTraceAsString()
+            ], 500);
         }
+    }
+
+    /**
+     * Déconnexion (invalidation du token)
+     */
+    public function logout(Request $request)
+    {
+        // Pour une authentification basée sur les sessions:
+        if ($request->session()->has('user_id')) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
+
+        // Si vous utilisez des tokens JWT ou API tokens:
+        // Ici il faudrait invalider le token
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Déconnexion réussie'
+        ]);
     }
 }
