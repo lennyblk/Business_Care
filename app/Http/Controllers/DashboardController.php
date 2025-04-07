@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon; // Pour la gestion des dates
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Provider;
 use App\Models\Contract;
 use App\Models\Event;
+use App\Models\Quote;
+use App\Models\Invoice;
+use App\Models\Activity;
 
 class DashboardController extends Controller
 {
@@ -39,7 +43,48 @@ class DashboardController extends Controller
         }
 
         \Log::info('Accès autorisé au dashboard client');
-        return view('dashboards.client');
+        
+        // Récupération des données pour la société
+        $companyId = session('user_id');
+        $company = Company::find($companyId);
+        
+        if (!$company) {
+            return view('dashboards.client', [
+                'activeContracts' => 0,
+                'employeesCount' => 0,
+                'pendingQuotes' => 0,
+                'unpaidInvoices' => 0,
+                'recentActivities' => collect([]), // Collection vide
+            ]);
+        }
+        
+        // Date actuelle pour calculer les contrats actifs
+        $today = Carbon::today()->toDateString();
+        
+        // Récupération des données pour le tableau de bord
+        $data = [
+            'activeContracts' => Contract::where('company_id', $companyId)
+                                         ->where('start_date', '<=', $today)
+                                         ->where('end_date', '>=', $today)
+                                         ->count(),
+                                         
+            'employeesCount' => Employee::where('company_id', $companyId)
+                                            ->count(),
+                                        
+            'pendingQuotes' => Quote::where('company_id', $companyId)
+                                    ->where('status', 'pending')
+                                    ->count(),
+                                    
+            'unpaidInvoices' => Invoice::where('company_id', $companyId)
+                                       ->where('payment_status', 'unpaid')
+                                       ->count(),
+                                       
+            'recentActivities' => Event::where('company_id', $companyId)
+                                         ->take(5)
+                                         ->get(),
+        ];
+        
+        return view('dashboards.client', $data);
     }
 
     /**
@@ -96,7 +141,29 @@ class DashboardController extends Controller
         $providerCount = Provider::count();
         $contractCount = Contract::count();
         $activityCount = Event::count();
+        
+        // Date actuelle pour calculer les contrats actifs
+        $today = Carbon::today()->toDateString();
+        
+        // Nouvelles statistiques pour l'admin
+        $activeContractsCount = Contract::where('start_date', '<=', $today)
+                                        ->where('end_date', '>=', $today)
+                                        ->count();
+                                        
+        $pendingQuotesCount = Quote::where('status', 'pending')->count();
+        $unpaidInvoicesCount = Invoice::where('status', 'unpaid')->count();
+        $recentActivities = Activity::latest()->take(10)->get();
 
-        return view('dashboards.admin', compact('companyCount', 'employeeCount', 'providerCount', 'contractCount', 'activityCount'));
+        return view('dashboards.admin', compact(
+            'companyCount', 
+            'employeeCount', 
+            'providerCount', 
+            'contractCount', 
+            'activityCount',
+            'activeContractsCount',
+            'pendingQuotesCount',
+            'unpaidInvoicesCount',
+            'recentActivities'
+        ));
     }
 }

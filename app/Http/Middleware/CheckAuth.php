@@ -21,7 +21,7 @@ class CheckAuth
         // Vérifier les permissions selon le type d'utilisateur
         switch ($userType) {
             case 'societe':
-                if (!str_starts_with($route, 'dashboard.client')) {
+                if (!str_starts_with($route, 'dashboard.client') && !str_starts_with($route, 'contracts.')&& !str_starts_with($route, 'quotes.')) {
                     return redirect()->route('dashboard.client')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;

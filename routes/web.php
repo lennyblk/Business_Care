@@ -11,6 +11,12 @@ use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminProviderController;
 use App\Http\Controllers\AdminEmployeeController;
 use App\Http\Controllers\AdminActivityController; // Ajouter l'importation du contrôleur AdminActivityController
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\ContractPaymentController;
+use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\InvoiceController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -91,3 +97,68 @@ Route::middleware(['check.auth'])->group(function () {
         Route::delete('/{id}', [AdminActivityController::class, 'destroy'])->name('admin.activities.destroy');
     });
 });
+
+// ============= ESPACE CLIENT - NOUVELLES ROUTES =============
+
+// Routes pour le tableau de bord client (utilisation de la syntaxe de classe)
+Route::middleware(['auth', 'client'])->group(function () {
+    // Dashboard client
+    Route::get('/client/dashboard', [DashboardController::class, 'clientDashboard'])->name('client.dashboard');
+});
+
+// Routes pour les contrats (mise à jour avec la syntaxe de classe)
+Route::prefix('contracts')->name('contracts.')->middleware(['check.auth'])->group(function () {
+    Route::get('/', [ContractController::class, 'index'])->name('index');
+    Route::get('/create', [ContractController::class, 'create'])->name('create');
+    Route::post('/', [ContractController::class, 'store'])->name('store');
+    Route::get('/{contract}', [ContractController::class, 'show'])->name('show');
+    Route::get('/{contract}/edit', [ContractController::class, 'edit'])->name('edit');
+    Route::put('/{contract}', [ContractController::class, 'update'])->name('update');
+    Route::delete('/{contract}', [ContractController::class, 'destroy'])->name('destroy');
+    
+    // Paiements liés aux contrats
+    Route::get('/{contract}/payment', [ContractPaymentController::class, 'create'])->name('payment.create');
+    Route::post('/{contract}/payment', [ContractPaymentController::class, 'process'])->name('payment.process');
+    Route::get('/{contract}/showPayment', [ContractController::class, 'showPayment'])->name('showPayment');
+    Route::post('/{contract}/processPayment', [ContractController::class, 'processPayment'])->name('processPayment');
+});
+
+// Routes pour les devis
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/quotes', [QuoteController::class, 'index'])->name('quotes.index');
+    Route::get('/quotes/create', [QuoteController::class, 'create'])->name('quotes.create');
+    Route::post('/quotes', [QuoteController::class, 'store'])->name('quotes.store');
+    Route::get('/quotes/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
+    Route::get('/quotes/{quote}/edit', [QuoteController::class, 'edit'])->name('quotes.edit');
+    Route::put('/quotes/{quote}', [QuoteController::class, 'update'])->name('quotes.update');
+    Route::delete('/quotes/{quote}', [QuoteController::class, 'destroy'])->name('quotes.destroy');
+    
+    // Routes personnalisées
+    Route::post('/quotes/calculate', [QuoteController::class, 'calculate'])->name('quotes.calculate');
+    Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
+    Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
+});
+
+// Routes pour les collaborateurs de l'entreprise
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::resource('employees', EmployeeController::class);
+});
+
+// Routes pour les paiements
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('/payments/{payment}', [PaymentController::class, 'show'])->name('payments.show');
+    Route::get('/payments/process/{invoice}', [PaymentController::class, 'process'])->name('payments.process');
+    Route::get('/payments/success', [PaymentController::class, 'success'])->name('payments.success');
+    Route::get('/payments/cancel', [PaymentController::class, 'cancel'])->name('payments.cancel');
+});
+
+// Routes pour les factures
+Route::middleware(['auth', 'client'])->group(function () {
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
+    Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+    Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+});
+
+// Webhook pour les paiements (pas d'authentification requise)
+Route::post('/webhooks/payment', [PaymentController::class, 'webhook'])->name('webhooks.payment');

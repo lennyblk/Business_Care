@@ -12,7 +12,7 @@
                     Menu
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
+                    <a href="{{ route('dashboard.client') }}" class="list-group-item list-group-item-action active">Tableau de bord</a>
                     <a href="#" class="list-group-item list-group-item-action">Profil</a>
                     <a href="{{ route('contracts.index') }}" class="list-group-item list-group-item-action">Contrats</a>
                     <a href="{{ route('quotes.index') }}" class="list-group-item list-group-item-action">Devis</a>
@@ -21,6 +21,23 @@
                     <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action">Facturation</a>
                 </div>
             </div>
+            
+            <!-- Informations de la société -->
+            @if(auth()->user()->company)
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    Votre société
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ auth()->user()->company->name }}</h5>
+                    <p class="card-text">
+                        <small>{{ auth()->user()->company->address }}<br>
+                        {{ auth()->user()->company->postal_code }} {{ auth()->user()->company->city }}<br>
+                        {{ auth()->user()->company->country }}</small>
+                    </p>
+                </div>
+            </div>
+            @endif
         </div>
 
         <div class="col-md-9">
@@ -30,8 +47,26 @@
                     <h4 class="mb-0">Tableau de bord Client</h4>
                 </div>
                 <div class="card-body">
+                    <!-- Alertes et notifications -->
+                    @if(session('success'))
+                    <div class="alert alert-success">
+                        {{ session('success') }}
+                    </div>
+                    @endif
+                    
+                    @if(session('error'))
+                    <div class="alert alert-danger">
+                        {{ session('error') }}
+                    </div>
+                    @endif
+                    
+                    @if(!auth()->user()->company)
+                    <div class="alert alert-warning">
+                        Vous n'êtes pas encore associé à une société. Veuillez contacter l'administration pour configurer votre compte.
+                    </div>
+                    @else
                     <div class="alert alert-info">
-                        Bienvenue dans votre espace client.
+                        Bienvenue dans votre espace client, {{ auth()->user()->name }}.
                     </div>
 
                     <!-- Quick Actions -->
@@ -87,7 +122,7 @@
                         <div class="list-group-item">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1">{{ $activity->title }}</h6>
-                                <small>{{ \Carbon\Carbon::parse($activity->date)->diffForHumans() }}</small>
+                                <small>{{ $activity->created_at->diffForHumans() }}</small>
                             </div>
                             <p class="mb-1">{{ $activity->description }}</p>
                         </div>
@@ -97,6 +132,7 @@
                         </div>
                         @endforelse
                     </div>
+                    @endif
                 </div>
             </div>
         </div>

@@ -9,6 +9,7 @@ class Contract extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
     protected $table = 'contract';
     protected $fillable = [
         'company_id', 'start_date', 'end_date', 'services', 'amount', 'payment_method'
