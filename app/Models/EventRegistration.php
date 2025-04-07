@@ -13,14 +13,15 @@ class EventRegistration extends Model
     protected $fillable = [
         'event_id', 'employee_id', 'registration_date', 'status'
     ];
+    public $timestamps = false;
 
     public function event()
     {
-        return $this->belongsTo(Event::class);
+        return $this->belongsTo(Event::class, 'event_id');
     }
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Employee::class, 'employee_id');
     }
 }

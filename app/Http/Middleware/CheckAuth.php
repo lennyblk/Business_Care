@@ -21,14 +21,19 @@ class CheckAuth
         // Vérifier les permissions selon le type d'utilisateur
         switch ($userType) {
             case 'societe':
-                if (!str_starts_with($route, 'dashboard.client') && !str_starts_with($route, 'contracts.')&& !str_starts_with($route, 'quotes.')) {
+                if (!str_starts_with($route, 'dashboard.client') &&
+                    !str_starts_with($route, 'contracts.')&&
+                    !str_starts_with($route, 'quotes.')) {
                     return redirect()->route('dashboard.client')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 
             case 'employe':
-                if (!str_starts_with($route, 'dashboard.employee')) {
-                    return redirect()->route('dashboard.employee')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
+                if (!str_starts_with($route, 'dashboard.employee') &&
+                    !str_starts_with($route, 'events.') &&
+                    !str_starts_with($route, 'employee.events')) {
+                    return redirect()->route('dashboard.employee')
+                        ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 
@@ -40,7 +45,11 @@ class CheckAuth
 
             case 'admin':
                 // Autoriser l'accès aux routes admin.company
-                if (!str_starts_with($route, 'dashboard.admin') && !str_starts_with($route, 'admin.company') && !str_starts_with($route, 'admin.prestataires') && !str_starts_with($route, 'admin.salaries') && !str_starts_with($route, 'admin.activities')) {
+                if (!str_starts_with($route, 'dashboard.admin') &&
+                    !str_starts_with($route, 'admin.company') &&
+                    !str_starts_with($route, 'admin.prestataires') &&
+                    !str_starts_with($route, 'admin.salaries') &&
+                    !str_starts_with($route, 'admin.activities')) {
                     return redirect()->route('dashboard.admin')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;

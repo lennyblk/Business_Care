@@ -11,12 +11,27 @@ class Event extends Model
 
     protected $table = 'event';
     protected $fillable = [
-        'name', 'description', 'date', 'event_type', 'provider_id', 'capacity', 'location', 'registrations'
+        'name', 'description', 'date', 'event_type', 'provider_id', 'capacity', 'location', 'registrations','company_id'
     ];
     public $timestamps = false;
 
     public function provider()
     {
         return $this->belongsTo(Provider::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
+
+    public function registrations()
+    {
+    return $this->hasMany(EventRegistration::class, 'event_id');
+    }
+
+    public function registeredEmployees()
+    {
+        return $this->belongsToMany(Employee::class, 'event_registration', 'event_id', 'employee_id');
     }
 }

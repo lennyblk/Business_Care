@@ -24,4 +24,20 @@ class Employee extends Model
     {
         return $this->belongsTo(Company::class, 'company_id');
     }
+
+    /**
+     * Relation avec les inscriptions aux événements
+     */
+    public function eventRegistrations()
+    {
+        return $this->hasMany(EventRegistration::class, 'employee_id');
+    }
+
+    /**
+     * Relation avec les événements auxquels l'employé est inscrit
+     */
+    public function registeredEvents()
+    {
+        return $this->belongsToMany(Event::class, 'event_registration', 'employee_id', 'event_id');
+    }
 }

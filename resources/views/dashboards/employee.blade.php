@@ -15,7 +15,7 @@
                     <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
                     <a href="#" class="list-group-item list-group-item-action">Mon profil</a>
                     <a href="#" class="list-group-item list-group-item-action">Planning médical</a>
-                    <a href="#" class="list-group-item list-group-item-action">Mes événements</a>
+                    <a href="{{ route('employee.events.index') }}" class="list-group-item list-group-item-action">Mes événements</a>
                     <a href="#" class="list-group-item list-group-item-action">Assistance</a>
                 </div>
             </div>
@@ -29,7 +29,11 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-success">
-                        Bienvenue sur votre espace personnel.
+                        @if(isset($employee))
+                            Bienvenue sur votre espace personnel, {{ $employee->first_name }} {{ $employee->last_name }}.
+                        @else
+                            Bienvenue sur votre espace personnel.
+                        @endif
                     </div>
 
                     <!-- Statistics cards -->
@@ -38,7 +42,7 @@
                             <div class="card bg-primary text-white">
                                 <div class="card-body">
                                     <h5 class="card-title">RDV Médicaux</h5>
-                                    <p class="card-text display-6">2</p>
+                                    <p class="card-text display-6">0</p>
                                 </div>
                             </div>
                         </div>
@@ -46,67 +50,32 @@
                             <div class="card bg-success text-white">
                                 <div class="card-body">
                                     <h5 class="card-title">Événements</h5>
-                                    <p class="card-text display-6">4</p>
+                                    <p class="card-text display-6">{{ $eventsCount ?? 0 }}</p>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="card bg-warning text-dark">
-                                <div class="card-body">
-                                    <h5 class="card-title">Notifications</h5>
-                                    <p class="card-text display-6">3</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Upcoming appointments -->
-                    <h5 class="mb-3">Prochains rendez-vous</h5>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Type</th>
-                                    <th>Lieu</th>
-                                    <th>Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>24/03/2025</td>
-                                    <td>Visite annuelle</td>
-                                    <td>Centre médical</td>
-                                    <td><span class="badge bg-primary">Confirmé</span></td>
-                                </tr>
-                                <tr>
-                                    <td>15/04/2025</td>
-                                    <td>Ergonomie</td>
-                                    <td>Bureau</td>
-                                    <td><span class="badge bg-warning text-dark">En attente</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
 
                     <!-- Upcoming events -->
                     <h5 class="mb-3">Événements à venir</h5>
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Formation bien-être</h6>
-                                <small>30/03/2025</small>
+                    @if(isset($upcomingEvents) && $upcomingEvents->count() > 0)
+                        <div class="list-group">
+                            @foreach($upcomingEvents as $event)
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ $event->name }}</h6>
+                                    <small>{{ date('d/m/Y', strtotime($event->date)) }}</small>
+                                </div>
+                                <p class="mb-1">{{ \Illuminate\Support\Str::limit($event->description, 100) }}</p>
+                                <small class="text-muted">Type: {{ $event->event_type }} | Lieu: {{ $event->location }}</small>
                             </div>
-                            <p class="mb-1">Atelier de gestion du stress et exercices de relaxation.</p>
+                            @endforeach
                         </div>
-                        <div class="list-group-item">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1">Team building</h6>
-                                <small>12/04/2025</small>
-                            </div>
-                            <p class="mb-1">Journée d'activités en plein air avec l'équipe.</p>
+                    @else
+                        <div class="alert alert-info">
+                            Vous n'avez pas d'événements à venir. <a href="{{ route('employee.events.index') }}">Parcourir les événements disponibles</a>.
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>
