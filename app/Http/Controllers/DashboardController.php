@@ -12,7 +12,6 @@ use App\Models\Contract;
 use App\Models\Event;
 use App\Models\Quote;
 use App\Models\Invoice;
-use App\Models\Activity;
 
 class DashboardController extends Controller
 {
@@ -185,8 +184,8 @@ public function employee()
                                         ->count();
 
         $pendingQuotesCount = Quote::where('status', 'pending')->count();
-        $unpaidInvoicesCount = Invoice::where('status', 'unpaid')->count();
-        $recentActivities = Activity::latest()->take(10)->get();
+        $unpaidInvoicesCount = Invoice::where('payment_status', 'unpaid')->count();
+        $recentActivities = Event::orderBy('date', 'desc')->take(10)->get();
 
         return view('dashboards.admin', compact(
             'companyCount',
