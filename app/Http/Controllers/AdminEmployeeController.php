@@ -21,7 +21,8 @@ class AdminEmployeeController extends Controller
      */
     public function create()
     {
-        return view('dashboards.gestion_admin.salaries.create');
+    $companies = \App\Models\Company::all();
+    return view('dashboards.gestion_admin.salaries.create', compact('companies'));
     }
 
     /**
@@ -30,6 +31,7 @@ class AdminEmployeeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'company_id' => 'nullable|exists:company,id',
             'last_name' => 'required|string|max:50',
             'first_name' => 'required|string|max:50',
             'email' => 'required|email|unique:employee,email',

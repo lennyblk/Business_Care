@@ -6,6 +6,15 @@
     <form action="{{ route('admin.salaries.store') }}" method="POST">
         @csrf
         <div class="form-group">
+            <label for="company_id">Entreprise</label>
+            <select name="company_id" id="company_id" class="form-control">
+                <option value="">Sélectionnez une entreprise</option>
+                @foreach($companies as $company)
+                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="form-group">
             <label for="first_name">Prénom</label>
             <input type="text" name="first_name" id="first_name" class="form-control" required>
         </div>
