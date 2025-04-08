@@ -35,6 +35,15 @@
             <label for="location">Lieu</label>
             <input type="text" name="location" id="location" class="form-control" value="{{ $event->location }}">
         </div>
+        <div class="form-group">
+            <label for="company_id">Entreprise</label>
+            <select name="company_id" id="company_id" class="form-control" required>
+                <option value="">Sélectionner une entreprise</option>
+                @foreach($companies as $company)
+                    <option value="{{ $company->id }}" {{ $event->company_id == $company->id ? 'selected' : '' }}>{{ $company->name }}</option>
+                @endforeach
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary">Mettre à jour</button>
         <button onclick="window.history.back()" type="button" class="btn btn-secondary">Retour</button>
     </form>

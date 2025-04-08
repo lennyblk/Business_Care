@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Event;
+use App\Models\Company; // Ajout de l'import du modèle Company
 
 class AdminActivityController extends Controller
 {
@@ -12,7 +13,7 @@ class AdminActivityController extends Controller
      */
     public function index()
     {
-        $events = Event::all();
+        $events = Event::with('company')->get(); // Chargement de la relation company
         return view('dashboards.gestion_admin.activites.index', compact('events'));
     }
 
@@ -21,7 +22,8 @@ class AdminActivityController extends Controller
      */
     public function create()
     {
-        return view('dashboards.gestion_admin.activites.create');
+        $companies = Company::all(); // Récupération de toutes les entreprises
+        return view('dashboards.gestion_admin.activites.create', compact('companies'));
     }
 
     /**
@@ -36,6 +38,7 @@ class AdminActivityController extends Controller
             'event_type' => 'required|in:Webinar,Conference,Sport Event,Workshop',
             'capacity' => 'required|integer',
             'location' => 'nullable|string|max:255',
+            'company_id' => 'required|exists:company,id', // Correction du nom de la table
         ]);
 
         Event::create($request->all());
@@ -47,7 +50,7 @@ class AdminActivityController extends Controller
      */
     public function show($id)
     {
-        $event = Event::findOrFail($id);
+        $event = Event::with('company')->findOrFail($id);
         return view('dashboards.gestion_admin.activites.show', compact('event'));
     }
 
@@ -57,7 +60,8 @@ class AdminActivityController extends Controller
     public function edit($id)
     {
         $event = Event::findOrFail($id);
-        return view('dashboards.gestion_admin.activites.edit', compact('event'));
+        $companies = Company::all(); // Récupération de toutes les entreprises
+        return view('dashboards.gestion_admin.activites.edit', compact('event', 'companies'));
     }
 
     /**
@@ -72,6 +76,7 @@ class AdminActivityController extends Controller
             'event_type' => 'required|in:Webinar,Conference,Sport Event,Workshop',
             'capacity' => 'required|integer',
             'location' => 'nullable|string|max:255',
+            'company_id' => 'required|exists:company,id',
         ]);
 
         $event = Event::findOrFail($id);

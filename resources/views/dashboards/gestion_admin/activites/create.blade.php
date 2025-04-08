@@ -34,6 +34,15 @@
             <label for="location">Lieu</label>
             <input type="text" name="location" id="location" class="form-control">
         </div>
+        <div class="form-group">
+            <label for="company_id">Entreprise</label>
+            <select name="company_id" id="company_id" class="form-control mb-4" required>
+                <option value="">Sélectionner une entreprise</option>
+                @foreach($companies as $company)
+                    <option value="{{ $company->id }}">{{ $company->name }}</option>
+                @endforeach
+            </select>
+        </div>
         <button type="submit" class="btn btn-primary">Créer</button>
         <button onclick="window.history.back()" type="button" class="btn btn-secondary">Retour</button>
     </form>
