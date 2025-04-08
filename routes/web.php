@@ -10,7 +10,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminProviderController;
 use App\Http\Controllers\AdminEmployeeController;
-use App\Http\Controllers\AdminActivityController; // Ajouter l'importation du contrôleur AdminActivityController
+use App\Http\Controllers\AdminActivityController; 
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\QuoteController;

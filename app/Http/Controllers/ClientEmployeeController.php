@@ -11,9 +11,7 @@ use App\Notifications\NewEmployeeNotification;
 
 class EmployeeController extends Controller
 {
-    /**
-     * Affiche la liste des collaborateurs de la société
-     */
+
     public function index()
     {
         $user = Auth::user();

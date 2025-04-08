@@ -397,9 +397,6 @@
             const minSize = parseInt($(this).data('min'));
             const maxSize = parseInt($(this).data('max'));
             
-            // Si c'est "jusqu'à 30", on met 1 par défaut 
-            // Si c'est "31 à 250", on met 31 par défaut
-            // Si c'est "251 et plus", on met 251 par défaut
             let defaultSize = minSize;
             
             // Mettre à jour la taille de l'entreprise

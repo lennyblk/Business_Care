@@ -11,11 +11,7 @@ class Quote extends Model
 
     protected $table = 'quote';
 
-    /**
-     * Les attributs qui sont mass assignable.
-     *
-     * @var array
-     */
+
     protected $fillable = [
         'company_id',
         'company_name',
@@ -39,41 +35,28 @@ class Quote extends Model
         'services_details',
     ];
 
-    /**
-     * Relation avec la société
-     */
+
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
 
-    /**
-     * Relation avec les factures
-     */
+
     public function invoices()
     {
         return $this->hasMany(Invoice::class);
     }
 
-    /**
-     * Vérifie si le devis est en attente
-     */
     public function isPending()
     {
         return $this->status === 'Pending';
     }
 
-    /**
-     * Vérifie si le devis est accepté
-     */
     public function isAccepted()
     {
         return $this->status === 'Accepted';
     }
 
-    /**
-     * Vérifie si le devis est rejeté
-     */
     public function isRejected()
     {
         return $this->status === 'Rejected';

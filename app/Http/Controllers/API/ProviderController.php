@@ -13,18 +13,14 @@ use Illuminate\Support\Facades\Hash;
 
 class ProviderController extends Controller
 {
-    /**
-     * Récupère la liste de tous les prestataires
-     */
+
     public function index()
     {
         $providers = Provider::all();
         return response()->json(['data' => $providers]);
     }
 
-    /**
-     * Crée un nouveau prestataire
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -50,7 +46,6 @@ class ProviderController extends Controller
 
         $data = $request->all();
 
-        // Hash password
         $data['password'] = Hash::make($data['password']);
 
         $provider = Provider::create($data);
@@ -61,9 +56,6 @@ class ProviderController extends Controller
         ], 201);
     }
 
-    /**
-     * Récupère les détails d'un prestataire
-     */
     public function show($id)
     {
         $provider = Provider::find($id);
@@ -75,9 +67,6 @@ class ProviderController extends Controller
         return response()->json(['data' => $provider]);
     }
 
-    /**
-     * Met à jour un prestataire existant
-     */
     public function update(Request $request, $id)
     {
         $provider = Provider::find($id);
@@ -109,7 +98,6 @@ class ProviderController extends Controller
 
         $data = $request->all();
 
-        // Hash password if provided
         if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
@@ -124,9 +112,6 @@ class ProviderController extends Controller
         ]);
     }
 
-    /**
-     * Supprime un prestataire
-     */
     public function destroy($id)
     {
         $provider = Provider::find($id);
@@ -140,9 +125,7 @@ class ProviderController extends Controller
         return response()->json(['message' => 'Prestataire supprimé avec succès']);
     }
 
-    /**
-     * Récupère les disponibilités d'un prestataire
-     */
+
     public function getAvailabilities($id)
     {
         $provider = Provider::find($id);
@@ -156,9 +139,7 @@ class ProviderController extends Controller
         return response()->json(['data' => $availabilities]);
     }
 
-    /**
-     * Récupère les évaluations d'un prestataire
-     */
+
     public function getEvaluations($id)
     {
         $provider = Provider::find($id);
@@ -172,9 +153,7 @@ class ProviderController extends Controller
         return response()->json(['data' => $evaluations]);
     }
 
-    /**
-     * Récupère les factures d'un prestataire
-     */
+
     public function getInvoices($id)
     {
         $provider = Provider::find($id);

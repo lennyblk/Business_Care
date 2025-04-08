@@ -9,18 +9,12 @@ use Illuminate\Support\Facades\Validator;
 
 class EventController extends Controller
 {
-    /**
-     * Récupère la liste de toutes les activités/événements
-     */
     public function index()
     {
         $events = Event::all();
         return response()->json(['data' => $events]);
     }
 
-    /**
-     * Crée une nouvelle activité/événement
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -44,9 +38,6 @@ class EventController extends Controller
         ], 201);
     }
 
-    /**
-     * Récupère les détails d'une activité/événement
-     */
     public function show($id)
     {
         $event = Event::find($id);
@@ -58,9 +49,6 @@ class EventController extends Controller
         return response()->json(['data' => $event]);
     }
 
-    /**
-     * Met à jour une activité/événement existante
-     */
     public function update(Request $request, $id)
     {
         $event = Event::find($id);
@@ -90,9 +78,6 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Supprime une activité/événement
-     */
     public function destroy($id)
     {
         $event = Event::find($id);

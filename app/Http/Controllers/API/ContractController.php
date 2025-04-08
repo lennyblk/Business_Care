@@ -10,18 +10,12 @@ use Illuminate\Support\Facades\Validator;
 
 class ContractController extends Controller
 {
-    /**
-     * Récupère la liste de tous les contrats
-     */
     public function index()
     {
         $contracts = Contract::with('company')->get();
         return response()->json(['data' => $contracts]);
     }
 
-    /**
-     * Crée un nouveau contrat
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -45,9 +39,6 @@ class ContractController extends Controller
         ], 201);
     }
 
-    /**
-     * Récupère les détails d'un contrat
-     */
     public function show($id)
     {
         $contract = Contract::with('company')->find($id);
@@ -59,9 +50,6 @@ class ContractController extends Controller
         return response()->json(['data' => $contract]);
     }
 
-    /**
-     * Met à jour un contrat existant
-     */
     public function update(Request $request, $id)
     {
         $contract = Contract::find($id);
@@ -91,9 +79,6 @@ class ContractController extends Controller
         ]);
     }
 
-    /**
-     * Supprime un contrat
-     */
     public function destroy($id)
     {
         $contract = Contract::find($id);
@@ -107,9 +92,6 @@ class ContractController extends Controller
         return response()->json(['message' => 'Contrat supprimé avec succès']);
     }
 
-    /**
-     * Récupère les contrats d'une entreprise spécifique
-     */
     public function getByCompany($companyId)
     {
         $company = Company::find($companyId);

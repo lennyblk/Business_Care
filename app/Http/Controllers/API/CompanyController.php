@@ -18,9 +18,7 @@ class CompanyController extends Controller
         $companies = Company::all();
         return response()->json(['data' => $companies], 200);
     }
-    /**S
-     * Authentification d'un utilisateur
-     */
+    
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -99,8 +97,7 @@ class CompanyController extends Controller
         }
 
         if (isset($userData)) {
-            // Ici, vous pourriez générer un JWT ou un token d'API
-            // Pour l'instant, nous retournons simplement les données de l'utilisateur
+           
             return response()->json([
                 'success' => true,
                 'user' => $userData
@@ -113,9 +110,7 @@ class CompanyController extends Controller
         ], 401);
     }
 
-    /**
-     * Inscription d'un nouvel utilisateur
-     */
+
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -123,7 +118,7 @@ class CompanyController extends Controller
             'password' => 'required|min:6',
             'user_type' => 'required|in:societe,employe,prestataire',
 
-            // Validation société
+            // Validation pour société
             'company_name' => 'required_if:user_type,societe',
             'address' => 'required_if:user_type,societe',
             'code_postal' => 'required_if:user_type,societe',
@@ -131,14 +126,14 @@ class CompanyController extends Controller
             'phone' => 'required_if:user_type,societe',
             'siret' => 'nullable|digits:14',
 
-            // Validation employé
+            // Validation pour employé
             'first_name' => 'required_if:user_type,employe,prestataire',
             'last_name' => 'required_if:user_type,employe,prestataire',
             'position' => 'required_if:user_type,employe',
             'departement' => 'nullable',
             'telephone' => 'nullable',
 
-            // Validation prestataire
+            // Validation pour prestataire
             'specialite' => 'required_if:user_type,prestataire',
             'bio' => 'nullable',
             'tarif_horaire' => 'nullable|numeric|min:0'
@@ -179,7 +174,7 @@ class CompanyController extends Controller
                     break;
 
                 case 'employe':
-                    // Récupérer l'ID de la société
+                    // On récupère l'ID de la société
                     $company = Company::where('name', $request->company_name)->first();
 
                     if (!$company) {
@@ -253,16 +248,9 @@ class CompanyController extends Controller
         }
     }
 
-    /**
-     * Déconnexion (invalidation du token)
-     */
     public function logout(Request $request)
     {
-        // Pour une authentification basée sur les sessions:
         $request->session()->invalidate();
-
-        // Si vous utilisez des tokens JWT ou API tokens:
-        // Ici il faudrait invalider le token
 
         return response()->json([
             'success' => true,

@@ -23,17 +23,16 @@ class EmployeeController extends Controller
                 $employee = Employee::find($userId);
             }
 
-            // Si aucun employé n'est trouvé avec l'ID de session, essayer avec l'email
+            // Si aucun employé n'est trouvé avec l'ID de session, on essaye avec l'email
             if (!$employee && session('user_email')) {
                 $employee = Employee::where('email', session('user_email'))->first();
 
-                // Si on trouve l'employé par email, mettre à jour la session avec le bon ID
+                // Si on trouve l'employé par email, on met à jour la session avec le bon ID
                 if ($employee) {
                     session(['user_id' => $employee->id]);
                 }
             }
 
-            // Si toujours aucun employé, utiliser une solution de secours temporaire
             if (!$employee) {
                 $employee = Employee::first();
             }
@@ -41,17 +40,17 @@ class EmployeeController extends Controller
             if ($employee) {
                 $companyId = $employee->company_id;
 
-                // Récupérer les événements auxquels l'employé est inscrit
+                // On récupère les événements auxquels l'employé est inscrit
                 $myEventIds = EventRegistration::where('employee_id', $employee->id)
                               ->pluck('event_id')
                               ->toArray();
 
-                // Récupérer uniquement les événements pour l'entreprise de cet employé
+                // On récupère uniquement les événements pour l'entreprise de cet employé
                 $allEvents = Event::where('company_id', $companyId)
                             ->whereNotIn('id', $myEventIds)
                             ->get();
 
-                // Récupérer les événements auxquels l'employé est inscrit
+                // On récupère les événements auxquels l'employé est inscrit
                 $myEvents = Event::whereIn('id', $myEventIds)->get();
 
                 return view('dashboards.employee.events.index', compact('allEvents', 'myEvents', 'employee'));
@@ -66,13 +65,12 @@ class EmployeeController extends Controller
         $userType = session('user_type');
 
         if ($userType === 'employe') {
-            // Récupérer l'ID de l'employé depuis la session
+            // On récupère l'ID de l'employé depuis la session
             $userId = (int)session('user_id');
 
-            // Récupérer l'employé connecté
+            // On récupère l'employé connecté
             $employee = Employee::find($userId);
 
-            // Si l'employé n'est pas trouvé, utiliser une solution de secours
             if (!$employee) {
                 $employee = Employee::first();
 
@@ -83,7 +81,7 @@ class EmployeeController extends Controller
 
             $companyId = $employee->company_id;
 
-            // Vérifier que l'événement existe et appartient à l'entreprise
+            // on verifie que l'événement existe et appartient à l'entreprise
             $event = Event::where('id', $id)
                     ->where('company_id', $companyId)
                     ->first();
@@ -93,7 +91,7 @@ class EmployeeController extends Controller
                     ->withErrors(['error' => 'Événement non trouvé ou non autorisé pour votre entreprise.']);
             }
 
-            // Vérifier si l'employé est déjà inscrit
+            // on verifie si l'employé est déjà inscrit
             $existingRegistration = EventRegistration::where('event_id', $id)
                                     ->where('employee_id', $employee->id)
                                     ->first();
@@ -103,13 +101,13 @@ class EmployeeController extends Controller
                     ->with('warning', 'Vous êtes déjà inscrit à cet événement.');
             }
 
-            // Vérifier si l'événement n'est pas déjà complet
+            // on verifie si l'événement n'est pas déjà complet
             if ($event->registrations >= $event->capacity) {
                 return redirect()->route('employee.events.index')
                     ->with('warning', 'Cet événement est complet.');
             }
 
-            // Créer une nouvelle inscription
+            // On crée une nouvelle inscription
             EventRegistration::create([
                 'event_id' => $id,
                 'employee_id' => $employee->id,
@@ -117,7 +115,7 @@ class EmployeeController extends Controller
                 'status' => 'confirmed'
             ]);
 
-            // Mettre à jour le compteur d'inscriptions de l'événement
+            // On met à jour le compteur d'inscriptions de l'événement
             $event->registrations = ($event->registrations ?? 0) + 1;
             $event->save();
 
@@ -134,10 +132,10 @@ class EmployeeController extends Controller
         $userType = session('user_type');
 
         if ($userType === 'employe') {
-            // Récupérer l'ID de l'employé depuis la session
+            // On récupère l'ID de l'employé depuis la session
             $userId = (int)session('user_id');
 
-            // Récupérer l'employé connecté
+            // On récupère l'employé connecté
             $employee = Employee::find($userId);
 
             // Si l'employé n'est pas trouvé, utiliser une solution de secours
@@ -149,7 +147,7 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Chercher l'inscription
+            // On cherche l'inscription
             $registration = EventRegistration::where('event_id', $id)
                             ->where('employee_id', $employee->id)
                             ->first();

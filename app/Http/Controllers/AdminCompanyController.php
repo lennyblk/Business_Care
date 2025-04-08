@@ -4,31 +4,25 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Company;
-use App\Models\Contract; // Corriger l'importation de la classe Contract
+use App\Models\Contract;
 use App\Models\Employee;
 
 class AdminCompanyController extends Controller
 {
-    /**
-     * Affiche la liste des entreprises.
-     */
+
     public function index()
     {
         $companies = Company::all();
         return view('dashboards.gestion_admin.societe.index', compact('companies'));
     }
 
-    /**
-     * Affiche le formulaire de création d'une entreprise.
-     */
+
     public function create()
     {
         return view('dashboards.gestion_admin.societe.create');
     }
 
-    /**
-     * Enregistre une nouvelle entreprise.
-     */
+
     public function store(Request $request)
     {
         $request->validate([
@@ -54,9 +48,7 @@ class AdminCompanyController extends Controller
         return redirect()->route('admin.company')->with('success', 'Entreprise créée avec succès.');
     }
 
-    /**
-     * Affiche les détails d'une entreprise avec ses salariés.
-     */
+
     public function show($id)
     {
         $company = Company::findOrFail($id);
@@ -64,18 +56,14 @@ class AdminCompanyController extends Controller
         return view('dashboards.gestion_admin.societe.show', compact('company', 'employees'));
     }
 
-    /**
-     * Affiche le formulaire de modification d'une entreprise.
-     */
+
     public function edit($id)
     {
         $company = Company::findOrFail($id);
         return view('dashboards.gestion_admin.societe.edit', compact('company'));
     }
 
-    /**
-     * Met à jour les informations d'une entreprise.
-     */
+
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -106,9 +94,6 @@ class AdminCompanyController extends Controller
         return redirect()->route('admin.company')->with('success', 'Entreprise mise à jour avec succès.');
     }
 
-    /**
-     * Supprime une entreprise.
-     */
     public function destroy($id)
     {
         $company = Company::findOrFail($id);
@@ -116,9 +101,7 @@ class AdminCompanyController extends Controller
         return redirect()->route('admin.company')->with('success', 'Entreprise supprimée avec succès.');
     }
 
-    /**
-     * Affiche les contrats d'une entreprise.
-     */
+
     public function contracts($id)
     {
         $company = Company::findOrFail($id);

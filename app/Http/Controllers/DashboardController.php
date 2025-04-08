@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon; // Pour la gestion des dates
+use Carbon\Carbon;
 use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Provider;
@@ -15,19 +15,11 @@ use App\Models\Invoice;
 
 class DashboardController extends Controller
 {
-    /**
-     * Constructeur avec middleware d'authentification
-     */
     public function __construct()
     {
         \Log::info('DashboardController constructeur');
-        // Retirer ce middleware car nous utilisons notre propre système d'authentification
-        // $this->middleware('auth');
     }
 
-    /**
-     * Tableau de bord pour les clients/sociétés
-     */
     public function client()
     {
         \Log::info('Tentative d\'accès au dashboard client', [
@@ -53,7 +45,7 @@ class DashboardController extends Controller
                 'employeesCount' => 0,
                 'pendingQuotes' => 0,
                 'unpaidInvoices' => 0,
-                'recentActivities' => collect([]), // Collection vide
+                'recentActivities' => collect([]),
             ]);
         }
 
@@ -86,9 +78,6 @@ class DashboardController extends Controller
         return view('dashboards.client', $data);
     }
 
-    /**
- * Tableau de bord pour les employés
- */
 public function employee()
 {
     \Log::info('Tentative d\'accès au dashboard employé', [
@@ -113,23 +102,21 @@ public function employee()
     $employee = Employee::find($employeeId);
 
     if (!$employee) {
-        // Si nous ne pouvons pas trouver l'employé, utilisons une solution temporaire (comme dans votre EmployeeController)
         $employee = Employee::first();
     }
 
-    // Si nous avons un employé
     if ($employee) {
-        // Récupérer son entreprise
+        // On récupère son entreprise
         $companyId = $employee->company_id;
 
-        // Récupérer les événements auxquels l'employé est inscrit
+        // On récupère les événements auxquels l'employé est inscrit
         $eventRegistrations = \App\Models\EventRegistration::where('employee_id', $employee->id)->get();
         $eventsCount = $eventRegistrations->count();
 
-        // Récupérer les IDs des événements auxquels l'employé est inscrit
+        // On récupère les IDs des événements auxquels l'employé est inscrit
         $eventIds = $eventRegistrations->pluck('event_id')->toArray();
 
-        // Récupérer les détails des événements à venir (date >= aujourd'hui)
+        // On récupère les détails des événements à venir (date >= aujourd'hui)
         $today = date('Y-m-d');
         $upcomingEvents = Event::whereIn('id', $eventIds)
                           ->where('date', '>=', $today)
@@ -140,13 +127,9 @@ public function employee()
         return view('dashboards.employee', compact('employee', 'eventsCount', 'upcomingEvents'));
     }
 
-    // Si aucun employé n'est trouvé, afficher une vue par défaut
     return view('dashboards.employee');
 }
 
-    /**
-     * Tableau de bord pour les prestataires
-     */
     public function provider()
     {
         \Log::info('Tentative d\'accès au dashboard prestataire', [
@@ -164,9 +147,6 @@ public function employee()
         return view('dashboards.provider');
     }
 
-    /**
-     * Tableau de bord pour les administrateurs
-     */
     public function admin()
     {
         $companyCount = Company::count();

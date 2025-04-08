@@ -10,26 +10,18 @@ use App\Models\ProviderInvoice;
 
 class AdminProviderController extends Controller
 {
-    /**
-     * Affiche la liste des prestataires.
-     */
+
     public function index()
     {
         $prestataires = Provider::all();
         return view('dashboards.gestion_admin.prestataires.index', compact('prestataires'));
     }
 
-    /**
-     * Affiche le formulaire de création d'un prestataire.
-     */
     public function create()
     {
         return view('dashboards.gestion_admin.prestataires.create');
     }
 
-    /**
-     * Enregistre un nouveau prestataire.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -53,9 +45,6 @@ class AdminProviderController extends Controller
         return redirect()->route('admin.prestataires.index')->with('success', 'Prestataire créé avec succès.');
     }
 
-    /**
-     * Affiche les détails d'un prestataire.
-     */
     public function show($id)
     {
         $prestataire = Provider::findOrFail($id);
@@ -66,18 +55,12 @@ class AdminProviderController extends Controller
         return view('dashboards.gestion_admin.prestataires.show', compact('prestataire', 'disponibilites', 'evaluations', 'factures'));
     }
 
-    /**
-     * Affiche le formulaire de modification d'un prestataire.
-     */
     public function edit($id)
     {
         $prestataire = Provider::findOrFail($id);
         return view('dashboards.gestion_admin.prestataires.edit', compact('prestataire'));
     }
 
-    /**
-     * Met à jour les informations d'un prestataire.
-     */
     public function update(Request $request, $id)
     {
         $request->validate([
@@ -101,9 +84,6 @@ class AdminProviderController extends Controller
         return redirect()->route('admin.prestataires.index')->with('success', 'Prestataire mis à jour avec succès.');
     }
 
-    /**
-     * Supprime un prestataire.
-     */
     public function destroy($id)
     {
         $prestataire = Provider::findOrFail($id);

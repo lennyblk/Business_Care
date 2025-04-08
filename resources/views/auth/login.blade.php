@@ -4,7 +4,6 @@
 
 @section('content')
 <div class="min-vh-100 bg-light d-flex">
-    <!-- Partie gauche - Formulaire -->
     <div class="flex-grow-1 d-flex align-items-center justify-content-center p-4">
         <div class="bg-white p-4 rounded shadow-sm w-100" style="max-width: 450px;">
             <h1 class="fs-3 fw-bold mb-4 text-dark">Connexion</h1>
@@ -53,7 +52,6 @@
         </div>
     </div>
 
-    <!-- Partie droite - Logo et texte -->
     <div class="flex-grow-1 bg-primary bg-opacity-10 d-none d-lg-flex flex-column align-items-center justify-content-center p-4">
         <div class="mb-4">
             <img src="{{ asset('images/logo.svg') }}" alt="Logo" class="img-fluid" style="max-width: 150px;">
@@ -75,7 +73,6 @@
         function toggleFields() {
             const userType = userTypeSelect.value;
             
-            // Gestion du champ société
             if (userType === 'societe' || userType === 'employe') {
                 companyField.style.display = 'block';
                 companyField.querySelector('input').required = true;
@@ -85,7 +82,7 @@
             }
         }
 
-        toggleFields(); // État initial
+        toggleFields();
         userTypeSelect.addEventListener('change', toggleFields);
     });
 </script>

@@ -9,19 +9,17 @@ use App\Http\Controllers\Database;
 
 class AuthController extends Controller
 {
-    // Affichage du formulaire de connexion
     public function loginForm()
     {
         return view('auth.login');
     }
 
-    // Fonction de validation des identifiants
     private function validateCredentials($email, $password, $userType)
     {
         try {
             $pdo = Database::getConnection();
 
-            // Mapping sécurisé pour les noms de tables
+            // Mapping pour les noms de nos tables
             $tableMap = [
                 'societe' => 'company',
                 'employe' => 'employee',
@@ -42,12 +40,10 @@ class AuthController extends Controller
             // Vérifiez si l'utilisateur existe et si le mot de passe correspond
             if ($user) {
                 if ($userType === 'admin') {
-                    // Vérification du mot de passe en clair pour l'administrateur
                     if ($password === $user['password']) {
                         return $user;
                     }
                 } else {
-                    // Vérification du mot de passe haché pour les autres utilisateurs
                     if (password_verify($password, $user['password'])) {
                         return $user;
                     }
@@ -56,13 +52,11 @@ class AuthController extends Controller
 
             return null;
         } catch (\Exception $e) {
-            // Log l'erreur
             \Log::error('Erreur de validation des identifiants: ' . $e->getMessage());
             return null;
         }
     }
 
-    // Traitement de la connexion
     public function login(Request $request)
     {
         try {
@@ -74,13 +68,11 @@ class AuthController extends Controller
 
             $pdo = Database::getConnection();
 
-            // Vérifier d'abord dans la table admin
             if ($request->user_type === 'admin') {
                 $stmt = $pdo->prepare("SELECT id, email, password, name, 'admin' as type FROM admin WHERE email = :email");
                 $stmt->execute(['email' => $validatedData['email']]);
                 $user = $stmt->fetch();
             }
-            // Vérifier dans la table company
             else if ($request->user_type === 'societe') {
                 $stmt = $pdo->prepare("
                     SELECT id, email, password, name, 'societe' as type 
@@ -145,7 +137,6 @@ class AuthController extends Controller
 
             if ($user) {
                 if ($request->user_type === 'admin') {
-                    // Vérification du mot de passe en clair pour l'administrateur
                     if ($validatedData['password'] === $user['password']) {
                         session([
                             'user_id' => $user['id'],
@@ -164,7 +155,6 @@ class AuthController extends Controller
                         return redirect()->route('dashboard.admin');
                     }
                 } else {
-                    // Vérification du mot de passe haché pour les autres utilisateurs
                     if (password_verify($validatedData['password'], $user['password'])) {
                         session([
                             'user_id' => $user['id'],
@@ -194,7 +184,6 @@ class AuthController extends Controller
                 }
             }
 
-            // Authentification échouée
             return back()->withErrors(['email' => 'Identifiants invalides'])->withInput();
 
         } catch (\Exception $e) {
@@ -206,20 +195,17 @@ class AuthController extends Controller
         }
     }
 
-    // Déconnexion
     public function logout(Request $request)
     {
         $request->session()->flush();
         return redirect()->route('home');
     }
 
-    // Affichage du formulaire d'inscription
     public function registerForm()
     {
         return view('auth.register');
     }
 
-    // Traitement de l'inscription
     public function register(Request $request)
     {
         try {
@@ -227,28 +213,27 @@ class AuthController extends Controller
                 'all_data' => $request->all()
             ]);
 
-            // Validation des données
             $validatedData = $request->validate([
                 'email' => 'required|email',
                 'password' => 'required|min:6',
                 'user_type' => 'required|in:societe,employe,prestataire',
 
-                // Validation société
+                // Validation pour société
                 'company_name' => 'required_if:user_type,societe',
                 'address' => 'required_if:user_type,societe',
                 'code_postal' => 'required_if:user_type,societe',
                 'ville' => 'required_if:user_type,societe',
                 'phone' => 'required_if:user_type,societe',
-                'siret' => 'nullable|digits:14',  // Exactement 14 chiffres
+                'siret' => 'nullable|digits:14',  
 
-                // Validation employé
+                // Validation pour employé
                 'first_name' => 'required_if:user_type,employe',
                 'last_name' => 'required_if:user_type,employe',
                 'position' => 'required_if:user_type,employe',
                 'departement' => 'nullable',
                 'telephone' => 'nullable',
 
-                // Validation prestataire
+                // Validation pour prestataire
                 'name' => 'required_if:user_type,prestataire',
                 'prenom' => 'required_if:user_type,prestataire',
                 'specialite' => 'required_if:user_type,prestataire',
@@ -419,7 +404,7 @@ class AuthController extends Controller
                         'user_type' => $request->user_type
                     ]);
 
-                    // Redirection selon le type d'utilisateur
+                    // Redirections
                     switch ($request->user_type) {
                         case 'societe':
                             return redirect()->route('dashboard.client');

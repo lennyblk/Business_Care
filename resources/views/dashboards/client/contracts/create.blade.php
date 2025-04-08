@@ -6,7 +6,6 @@
 <div class="container py-4">
     <div class="row">
         <div class="col-md-3">
-            <!-- Sidebar -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     Menu
@@ -24,7 +23,6 @@
         </div>
 
         <div class="col-md-9">
-            <!-- Main content -->
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Nouveau contrat</h4>
@@ -97,7 +95,7 @@
                             </div>
                         </div>
                         
-                        <!-- Services proposés (si vous avez une liste de services) -->
+                        <!-- Services proposés -->
                         @if(isset($services) && $services->count() > 0)
                         <div class="card mb-4">
                             <div class="card-header">
@@ -119,7 +117,6 @@
                             </div>
                         </div>
                         @endif
-                        <!-- Add this to the existing form in create.blade.php -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="employee_count" class="form-label">Nombre de collaborateurs</label>
@@ -140,7 +137,6 @@
                             </div>
                         </div>
 
-                        <!-- Tariff grid information card -->
                         <div class="card mb-4">
                             <div class="card-header">
                                 Grille tarifaire
@@ -186,7 +182,6 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Aperçu du contrat -->
                         <div class="card mb-4">
                             <div class="card-header">
                                 Récapitulatif
@@ -228,7 +223,7 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-    // Éléments du formulaire
+        // Éléments du formulaire
         const startDateInput = document.getElementById('start_date');
         const endDateInput = document.getElementById('end_date');
         const amountInput = document.getElementById('amount');
@@ -244,7 +239,7 @@
         const paymentMethodText = document.getElementById('payment-method-text');
         const formulaText = document.getElementById('formula-text');
         
-        // Calculer le montant du contrat en fonction du nombre d'employés et de la formule
+        // Calculs du montant en fonction du nombre d'employés et de la formule
         function calculateContractAmount() {
             const employeeCount = parseInt(employeeCountInput.value) || 0;
             const formula = formulaSelect.value;
@@ -259,7 +254,7 @@
                 pricePerEmployee = 100;
             }
             
-            // Calculer le montant total
+            // montant total
             const totalPrice = pricePerEmployee * employeeCount;
             
             // Mettre à jour le champ montant

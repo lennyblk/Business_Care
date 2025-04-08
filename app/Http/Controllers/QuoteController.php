@@ -12,29 +12,21 @@ use Carbon\Carbon;
 
 class QuoteController extends Controller
 {
-    /**
-     * Affiche la liste des devis de la société
-     *
-     * @return \Illuminate\View\View
-     */
+
     public function index()
     {
-        // Vérifiez si l'utilisateur est authentifié avec session
         if (!session()->has('user_id')) {
             return redirect()->route('login')
                 ->with('error', 'Vous devez être connecté pour accéder à cette page.');
         }
 
-        // Récupérer l'ID de la société depuis la session
         $companyId = session('user_id');
         
-        // Vérifier que l'utilisateur est bien du type 'societe'
         if (session('user_type') !== 'societe') {
             return redirect()->route('dashboard.' . session('user_type'))
                 ->with('error', 'Vous n\'avez pas accès à cette fonctionnalité.');
         }
         
-        // Récupérer les devis de la société
         $quotes = Quote::where('company_id', $companyId)
                     ->latest()
                     ->paginate(10);
@@ -42,31 +34,16 @@ class QuoteController extends Controller
         return view('dashboards.client.quotes.index', compact('quotes'));
     }
 
-    /**
-     * Affiche le formulaire de création de devis
-     *
-     * @return \Illuminate\View\View
-     */
+
     public function create()
     {
         return view('dashboards.client.quotes.create');
     }
 
-    /**
-     * Enregistre un nouveau devis
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    /**
- * Enregistre un nouveau devis
- *
- * @param  \Illuminate\Http\Request  $request
- * @return \Illuminate\Http\RedirectResponse
- */
+    
     public function store(Request $request)
     {
-        // Validation des champs du nouveau formulaire
+        // Validation des champs du formulaire
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'company_size' => 'required|integer|min:1',
@@ -81,7 +58,6 @@ class QuoteController extends Controller
             $user = Auth::user();
             $companyId = $user->company_id;
         } else {
-            // Utilisation de l'ID de session si l'authentification n'est pas basée sur Auth
             $companyId = session('user_id');
         }
         
@@ -91,9 +67,9 @@ class QuoteController extends Controller
                 ->withInput();
         }
         
-        // Déterminer les dates
+        // dates
         $creationDate = Carbon::now();
-        $expirationDate = Carbon::now()->addDays(30); // Validité standard de 30 jours
+        $expirationDate = Carbon::now()->addDays(30);
         
         // Générer le numéro de référence unique
         $referenceNumber = 'DEVIS-' . strtoupper(substr($request->formule_abonnement, 0, 3)) . '-' . time() . '-' . $companyId;
@@ -141,12 +117,7 @@ class QuoteController extends Controller
             ->with('success', 'Devis créé avec succès.');
     }
 
-    /**
-     * Affiche les détails d'un devis
-     *
-     * @param  \App\Models\Quote  $quote
-     * @return \Illuminate\View\View
-     */
+
     public function show(Quote $quote)
     {
         $this->checkQuoteOwnership($quote);
@@ -154,12 +125,7 @@ class QuoteController extends Controller
         return view('dashboards.client.quotes.show', compact('quote'));
     }
 
-    /**
-     * Affiche le formulaire d'édition d'un devis (uniquement si en attente)
-     *
-     * @param  \App\Models\Quote  $quote
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
-     */
+
     public function edit(Quote $quote)
     {
         $this->checkQuoteOwnership($quote);
@@ -172,13 +138,7 @@ class QuoteController extends Controller
         return view('dashboards.client.quotes.edit', compact('quote'));
     }
 
-    /**
-     * Met à jour un devis
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Quote  $quote
-     * @return \Illuminate\Http\RedirectResponse
-     */
+
     public function update(Request $request, Quote $quote)
     {
         $this->checkQuoteOwnership($quote);
@@ -188,7 +148,7 @@ class QuoteController extends Controller
                 ->with('error', 'Seuls les devis en attente peuvent être modifiés.');
         }
         
-        // Validation des champs du nouveau formulaire
+        // Validation des champs du formulaire
         $validated = $request->validate([
             'company_name' => 'required|string|max:255',
             'company_size' => 'required|integer|min:1',
@@ -215,7 +175,7 @@ class QuoteController extends Controller
         $weeklyAdvice = ($formula == 'Starter') ? 'non' : 'oui';
         $personalizedAdvice = ($formula == 'Premium') ? 'oui' : 'non';
         
-        // Calcul des montants
+        // montants
         $annualAmount = $request->company_size * $pricePerEmployee;
         $totalAmount = $annualAmount * $request->contract_duration;
         $totalAmountTTC = $totalAmount * 1.2;
@@ -256,12 +216,6 @@ class QuoteController extends Controller
             ->with('success', 'Devis mis à jour avec succès.');
     }
 
-    /**
-     * Supprimer un devis (uniquement si en attente)
-     *
-     * @param  \App\Models\Quote  $quote
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function destroy(Quote $quote)
     {
         $this->checkQuoteOwnership($quote);
@@ -290,12 +244,6 @@ class QuoteController extends Controller
             ->with('success', 'Devis supprimé avec succès.');
     }
 
-    /**
-     * Accepter un devis et le transformer en facture
-     *
-     * @param  \App\Models\Quote  $quote
-     * @return \Illuminate\Http\RedirectResponse
-     */
     public function accept(Quote $quote)
     {
         $this->checkQuoteOwnership($quote);
@@ -353,12 +301,7 @@ class QuoteController extends Controller
             ->with('success', 'Devis accepté avec succès. Une facture a été générée.');
     }
 
-    /**
-     * Rejeter un devis
-     *
-     * @param  \App\Models\Quote  $quote
-     * @return \Illuminate\Http\RedirectResponse
-     */
+
     public function reject(Quote $quote)
     {
         $this->checkQuoteOwnership($quote);
@@ -387,12 +330,7 @@ class QuoteController extends Controller
             ->with('info', 'Devis rejeté.');
     }
 
-    /**
-     * Vérifie que le devis appartient bien à la société de l'utilisateur connecté
-     *
-     * @param  \App\Models\Quote  $quote
-     * @return void
-     */
+
     private function checkQuoteOwnership(Quote $quote)
     {
         if (Auth::check()) {

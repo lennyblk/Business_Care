@@ -30,8 +30,12 @@ Route::prefix('auth')->group(function () {
 
 // Routes pour les entreprises
 Route::apiResource('companies', CompanyController::class);
+Route::get('companies', [CompanyController::class, 'index']);
+Route::get('companies/{id}', [CompanyController::class, 'show']);
 Route::get('companies/{id}/employees', [CompanyController::class, 'getEmployees']);
 Route::get('companies/{id}/contracts', [CompanyController::class, 'getContracts']);
+Route::put('companies/{id}', [CompanyController::class, 'update']);
+Route::delete('companies/{id}', [CompanyController::class, 'destroy']);
 
 // Routes pour les salariés
 Route::apiResource('employees', EmployeeController::class);

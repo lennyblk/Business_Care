@@ -6,7 +6,6 @@
 <div class="container py-4">
     <div class="row">
         <div class="col-md-3">
-            <!-- Sidebar -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     Menu
@@ -24,7 +23,6 @@
         </div>
 
         <div class="col-md-9">
-            <!-- Main content -->
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Gestion des contrats</h4>
@@ -50,7 +48,6 @@
                     </div>
                     @endif
 
-                    <!-- Liste des contrats -->
                     @if($contracts->isEmpty())
                         <div class="alert alert-info">
                             Vous n'avez pas encore de contrats. Cliquez sur "Nouveau contrat" pour en créer un.
@@ -130,7 +127,6 @@
                             </table>
                         </div>
                         
-                        <!-- Pagination -->
                         <div class="d-flex justify-content-center mt-4">
                             {{ $contracts->links() }}
                         </div>
@@ -141,7 +137,6 @@
     </div>
 </div>
 
-<!-- Modals de confirmation de résiliation -->
 @foreach($contracts as $contract)
 <div class="modal fade" id="deleteModal{{ $contract->id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ $contract->id }}" aria-hidden="true">
     <div class="modal-dialog">

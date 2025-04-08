@@ -6,7 +6,6 @@
 <div class="container py-4">
     <div class="row">
         <div class="col-md-3">
-            <!-- Sidebar -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     Menu
@@ -23,7 +22,6 @@
         </div>
 
         <div class="col-md-9">
-            <!-- Main content -->
             <div class="card">
                 <div class="card-header bg-white">
                     <h4 class="mb-0">Tableau de bord Prestataire</h4>
@@ -33,7 +31,7 @@
                         Bienvenue sur votre espace prestataire.
                     </div>
 
-                    <!-- Statistics cards -->
+                    <!-- Statistics  -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
                             <div class="card bg-primary text-white">

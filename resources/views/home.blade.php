@@ -5,7 +5,6 @@
 @section('content')
 
 <div class="w-100">
-    <!-- Hero Section avec fond bleu clair -->
     <section class="w-100 bg-light py-5">
         <div class="container">
             <h1 class="display-4 fw-bold text-dark mb-4">Business Care</h1>
@@ -18,7 +17,6 @@
         </div>
     </section>
 
-    <!-- Services Section -->
     <section class="container py-5">
         <div class="row g-4">
             <div class="col-md-4">
@@ -59,7 +57,7 @@
         </div>
     </section>
 
-    <!-- Stats Section -->
+    <!-- Stats  -->
     <section class="container py-5">
         <div class="row text-center">
             <div class="col-md-3">
@@ -81,7 +79,6 @@
         </div>
     </section>
 
-    <!-- Why Choose Us Section -->
     <section class="container py-5 mt-5">
         <h2 class="fs-1 fw-bold text-dark mb-4">Pourquoi choisir Business Care ?</h2>
         <p class="text-secondary mb-4">

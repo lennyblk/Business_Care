@@ -6,7 +6,6 @@
 <div class="container mt-5">
     <h1 class="text-center mb-4">Nos Forfaits Business Care</h1>
     <div class="row">
-        <!-- Forfait Starter -->
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-header bg-light text-center">
@@ -31,7 +30,6 @@
             </div>
         </div>
 
-        <!-- Forfait Basic -->
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow border-primary">
                 <div class="card-header bg-primary text-white text-center">
@@ -56,7 +54,6 @@
             </div>
         </div>
 
-        <!-- Forfait Premium -->
         <div class="col-md-4 mb-4">
             <div class="card h-100 shadow-sm">
                 <div class="card-header bg-dark text-white text-center">

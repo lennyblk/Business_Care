@@ -9,18 +9,8 @@ class Provider extends Model
 {
     use HasFactory;
 
-    /**
-     * Le nom de la table associée au modèle.
-     *
-     * @var string
-     */
     protected $table = 'provider';
 
-    /**
-     * Les attributs qui sont mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'last_name',
         'first_name',
@@ -42,20 +32,11 @@ class Provider extends Model
         'nombre_evaluations',
     ];
 
-    /**
-     * Les attributs qui doivent être cachés pour la sérialisation.
-     *
-     * @var array
-     */
+
     protected $hidden = [
         'password',
     ];
 
-    /**
-     * Les attributs qui doivent être convertis en types natifs.
-     *
-     * @var array
-     */
     protected $casts = [
         'rating' => 'decimal:2',
         'tarif_horaire' => 'decimal:2',
@@ -63,10 +44,5 @@ class Provider extends Model
         'statut_prestataire' => 'string',
     ];
 
-    /**
-     * Indique si le modèle doit utiliser les timestamps.
-     *
-     * @var bool
-     */
-    public $timestamps = false; // Si votre table n'a pas de colonnes `created_at` et `updated_at`
+    public $timestamps = false; 
 }

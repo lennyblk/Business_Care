@@ -10,12 +10,9 @@ use Carbon\Carbon;
 
 class ContractController extends Controller
 {
-    /**
-     * Affiche la liste des contrats de la société cliente
-     */
+
     public function index()
     {
-        // Vérification de l'authentification
         if (session('user_type') !== 'societe') {
             return redirect()->route('login')
                 ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
@@ -23,7 +20,6 @@ class ContractController extends Controller
         
         $companyId = session('user_id');
         
-        // Récupération des contrats de la société
         $contracts = Contract::where('company_id', $companyId)
                            ->orderBy('start_date', 'desc')
                            ->paginate(10);
@@ -37,12 +33,8 @@ class ContractController extends Controller
         return view('dashboards.client.contracts.index', compact('contracts'));
     }
 
-    /**
-     * Affiche le formulaire de création de contrat
-     */
     public function create()
 {
-    // Vérification de l'authentification
     if (session('user_type') !== 'societe') {
         return redirect()->route('login')
             ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
@@ -69,15 +61,8 @@ class ContractController extends Controller
     ]);
 }
 
-    /**
-     * Enregistre un nouveau contrat
-     */
-    /**
- * Enregistre un nouveau contrat
- */
     public function store(Request $request)
     {
-        // Vérification de l'authentification
         if (session('user_type') !== 'societe') {
             return redirect()->route('login')
                 ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
@@ -130,12 +115,9 @@ class ContractController extends Controller
         return redirect()->route('contracts.show', $contract->id)
             ->with('success', 'Contrat créé avec succès. Une facture vous sera envoyée prochainement.');
     }
-    /**
-     * Affiche les détails d'un contrat
-     */
+
     public function show($id)
     {
-        // Vérification de l'authentification
         if (session('user_type') !== 'societe') {
             return redirect()->route('login')
                 ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
@@ -151,19 +133,16 @@ class ContractController extends Controller
             abort(403, 'Vous n\'êtes pas autorisé à accéder à ce contrat.');
         }
         
-        // Calcul de l'état du contrat
+        // Calcul de l'état du contrat avec carbon
         $today = Carbon::today()->toDateString();
         $contract->is_active = ($contract->start_date <= $today && $contract->end_date >= $today);
         
         return view('dashboards.client.contracts.show', compact('contract'));
     }
 
-    /**
-     * Affiche le formulaire d'édition d'un contrat
-     */
+
     public function edit($id)
     {
-        // Vérification de l'authentification
         if (session('user_type') !== 'societe') {
             return redirect()->route('login')
                 ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
@@ -171,7 +150,6 @@ class ContractController extends Controller
         
         $companyId = session('user_id');
         
-        // Récupération du contrat
         $contract = Contract::findOrFail($id);
         
         // Vérification que le contrat appartient bien à la société
@@ -185,12 +163,9 @@ class ContractController extends Controller
         return view('dashboards.client.contracts.edit', compact('contract', 'services'));
     }
 
-    /**
-     * Met à jour un contrat existant
-     */
+
     public function update(Request $request, $id)
     {
-        // Vérification de l'authentification
         if (session('user_type') !== 'societe') {
             return redirect()->route('login')
                 ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
@@ -214,7 +189,7 @@ class ContractController extends Controller
             'payment_method' => 'required|in:Direct Debit,Invoice',
         ]);
         
-        // Mise à jour du contrat (on ne modifie pas la date de début)
+        // Mise à jour du contrat
         $contract->services = $request->services;
         $contract->end_date = $request->end_date;
         $contract->amount = $request->amount;
@@ -238,12 +213,9 @@ class ContractController extends Controller
             ->with('success', 'Contrat mis à jour avec succès.');
     }
 
-    /**
-     * Supprime un contrat
-     */
+
     public function destroy($id)
     {
-        // Vérification de l'authentification
         if (session('user_type') !== 'societe') {
             return redirect()->route('login')
                 ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
@@ -264,9 +236,7 @@ class ContractController extends Controller
         $isActive = ($contract->start_date <= $today && $contract->end_date >= $today);
         
         if ($isActive) {
-            // Pour un contrat actif, on ne le supprime pas mais on demande une résiliation
-            // On pourrait ajouter un champ de résiliation dans la table contrat si nécessaire
-            
+        
             // Enregistrement de l'activité de demande de résiliation
             if (class_exists('App\Models\Activity')) {
                 Activity::create([

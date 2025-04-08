@@ -5,7 +5,6 @@
 @section('content')
 <div class="min-vh-100 bg-light d-flex flex-column align-items-center justify-content-center py-5">
     <div class="container" style="max-width: 1200px;">
-        <!-- Section principale -->
         <div class="text-center mb-5">
             <img src="{{ asset('images/logo.svg') }}" alt="Logo" class="img-fluid mb-4" style="max-width: 100px;">
             <h1 class="display-5 fw-bold text-primary">À propos de nous</h1>
@@ -17,7 +16,6 @@
             </p>
         </div>
 
-        <!-- Section Mission et Valeurs -->
         <div class="row mb-5">
             <div class="col-md-6 mb-4">
                 <div class="bg-white shadow rounded p-4 h-100">
@@ -44,11 +42,9 @@
             </div>
         </div>
 
-        <!-- Section Présentation de l'équipe -->
         <div class="bg-white shadow rounded p-4">
             <h2 class="fs-3 fw-bold text-primary mb-4 text-center">Notre équipe</h2>
             <div class="row">
-                <!-- Carte pour Sarah -->
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <img src="{{ asset('images/sarah.png') }}" alt="Sarah" class="card-img-top">
@@ -63,7 +59,6 @@
                     </div>
                 </div>
 
-                <!-- Carte pour Lenny -->
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <img src="{{ asset('images/lenny.png') }}" alt="Lenny" class="card-img-top">
@@ -78,7 +73,6 @@
                     </div>
                 </div>
 
-                <!-- Carte pour Barthélemy -->
                 <div class="col-md-4 mb-4">
                     <div class="card h-100 border-0 shadow-sm">
                         <img src="{{ asset('images/bart.png') }}" alt="Barthélemy" class="card-img-top">

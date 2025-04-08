@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
-    /**
-     * Authentification d'un utilisateur
-     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -33,7 +30,7 @@ class AuthController extends Controller
         $userType = $request->input('user_type');
         $companyName = $request->input('company_name');
 
-        // On recherche l'utilisateur en fonction de son type
+        // Recherche de l'utilisateur en fonction de son type
         $user = null;
 
         if ($userType === 'admin') {
@@ -94,7 +91,6 @@ class AuthController extends Controller
         }
 
         if (isset($userData)) {
-            // Retourner la réponse JSON
             return response()->json([
                 'success' => true,
                 'user' => $userData
@@ -107,9 +103,6 @@ class AuthController extends Controller
         ], 401);
     }
 
-    /**
-     * Inscription d'un nouvel utilisateur
-     */
     public function register(Request $request)
     {
         // Validation commune pour tous les types d'utilisateurs
@@ -119,7 +112,7 @@ class AuthController extends Controller
             'user_type' => 'required|in:societe,employe,prestataire',
         ];
 
-        // Règles spécifiques par type d'utilisateur
+        // Règles par type d'utilisateur
         $typeRules = [
             'societe' => [
                 'company_name' => 'required|string|max:255',
@@ -147,7 +140,7 @@ class AuthController extends Controller
             ],
         ];
 
-        // Récupérer les règles spécifiques au type d'utilisateur
+        // on récupère les règles spécifiques au type d'utilisateur
         $userType = $request->input('user_type');
         $validationRules = array_merge($commonRules, $typeRules[$userType] ?? []);
         
@@ -168,14 +161,14 @@ class AuthController extends Controller
                         'address' => $request->address,
                         'code_postal' => $request->code_postal,
                         'ville' => $request->ville,
-                        'pays' => 'France', // Valeur par défaut
+                        'pays' => 'France',
                         'phone' => $request->phone,
                         'email' => $request->email,
                         'siret' => $request->siret,
                         'password' => $hashedPassword,
                         'creation_date' => now(),
-                        'formule_abonnement' => 'Starter', // Valeur par défaut
-                        'statut_compte' => 'Actif', // Valeur par défaut
+                        'formule_abonnement' => 'Starter', 
+                        'statut_compte' => 'Actif', 
                         'date_debut_contrat' => now()
                     ]);
 
@@ -188,7 +181,6 @@ class AuthController extends Controller
                     break;
 
                 case 'employe':
-                    // Récupérer l'ID de la société
                     $company = Company::where('name', $request->company_name)->first();
 
                     if (!$company) {
@@ -208,7 +200,7 @@ class AuthController extends Controller
                         'departement' => $request->departement,
                         'date_creation_compte' => now(),
                         'password' => $hashedPassword,
-                        'preferences_langue' => 'fr' // Valeur par défaut
+                        'preferences_langue' => 'fr'
                     ]);
 
                     $userData = [
@@ -229,7 +221,7 @@ class AuthController extends Controller
                         'email' => $request->email,
                         'telephone' => $request->telephone,
                         'password' => $hashedPassword,
-                        'statut_prestataire' => 'Candidat', // Valeur par défaut
+                        'statut_prestataire' => 'Candidat',
                         'tarif_horaire' => $request->tarif_horaire
                     ]);
 
@@ -264,9 +256,6 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Déconnexion (invalidation du token)
-     */
     public function logout(Request $request)
     {
         // Pour une authentification basée sur les sessions:
@@ -274,9 +263,6 @@ class AuthController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
         }
-
-        // Si vous utilisez des tokens JWT ou API tokens:
-        // Ici il faudrait invalider le token
 
         return response()->json([
             'success' => true,

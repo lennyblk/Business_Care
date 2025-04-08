@@ -25,13 +25,11 @@
 
                 <div class="navbar-nav">
                     @if(session()->has('user_id'))
-                        <!-- Menu déroulant pour l'utilisateur connecté -->
                         <div class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                {{ session('user_name') }} <!-- Affiche le nom de l'utilisateur -->
+                                {{ session('user_name') }} 
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <!-- Lien vers le tableau de bord (adapté au type d'utilisateur) -->
                                 @if(session('user_type') === 'admin')
                                     <li><a class="dropdown-item" href="{{ route('dashboard.admin') }}">Tableau de bord</a></li>
                                 @elseif(session('user_type') === 'societe')
@@ -42,7 +40,6 @@
                                     <li><a class="dropdown-item" href="{{ route('dashboard.provider') }}">Tableau de bord</a></li>
                                 @endif
                                 <li><hr class="dropdown-divider"></li>
-                                <!-- Lien de déconnexion -->
                                 <li>
                                     <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Déconnexion</a>
                                     <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
@@ -52,7 +49,6 @@
                             </ul>
                         </div>
                     @else
-                        <!-- Liens pour les utilisateurs non connectés -->
                         <a href="{{ route('login') }}" class="nav-link">Connexion</a>
                         <a href="{{ route('register') }}" class="nav-link">Inscription</a>
                     @endif

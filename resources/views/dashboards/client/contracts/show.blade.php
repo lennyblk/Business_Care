@@ -6,7 +6,6 @@
 <div class="container py-4">
     <div class="row">
         <div class="col-md-3">
-            <!-- Sidebar -->
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     Menu
@@ -24,7 +23,6 @@
         </div>
 
         <div class="col-md-9">
-            <!-- Main content -->
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">Détails du contrat #{{ $contract->id }}</h4>
@@ -178,7 +176,6 @@
     </div>
 </div>
 
-<!-- Modal de confirmation de résiliation -->
 @if($contract->is_active)
 <div class="modal fade" id="terminateModal" tabindex="-1" aria-labelledby="terminateModalLabel" aria-hidden="true">
     <div class="modal-dialog">

@@ -9,16 +9,13 @@ class CheckAuth
 {
     public function handle(Request $request, Closure $next)
     {
-        // Vérifier si l'utilisateur est connecté via la session
         if (!session()->has('user_id')) {
             return redirect()->route('login')->withErrors(['error' => 'Vous devez être connecté pour accéder à cette page.']);
         }
 
-        // Récupérer le type d'utilisateur depuis la session
         $userType = session('user_type');
         $route = $request->route()->getName();
 
-        // Vérifier les permissions selon le type d'utilisateur
         switch ($userType) {
             case 'societe':
                 if (!str_starts_with($route, 'dashboard.client') &&
@@ -44,7 +41,6 @@ class CheckAuth
                 break;
 
             case 'admin':
-                // Autoriser l'accès aux routes admin.company
                 if (!str_starts_with($route, 'dashboard.admin') &&
                     !str_starts_with($route, 'admin.company') &&
                     !str_starts_with($route, 'admin.prestataires') &&

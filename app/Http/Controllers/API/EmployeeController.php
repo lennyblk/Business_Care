@@ -11,18 +11,13 @@ use Illuminate\Support\Facades\Hash;
 
 class EmployeeController extends Controller
 {
-    /**
-     * Récupère la liste de tous les employés
-     */
+
     public function index()
     {
         $employees = Employee::with('company')->get();
         return response()->json(['data' => $employees]);
     }
 
-    /**
-     * Crée un nouvel employé
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -44,7 +39,6 @@ class EmployeeController extends Controller
 
         $data = $request->all();
 
-        // Hash password
         $data['password'] = Hash::make($data['password']);
         $data['date_creation_compte'] = now();
 
@@ -56,9 +50,6 @@ class EmployeeController extends Controller
         ], 201);
     }
 
-    /**
-     * Récupère les détails d'un employé
-     */
     public function show($id)
     {
         $employee = Employee::with('company')->find($id);
@@ -70,9 +61,6 @@ class EmployeeController extends Controller
         return response()->json(['data' => $employee]);
     }
 
-    /**
-     * Met à jour un employé existant
-     */
     public function update(Request $request, $id)
     {
         $employee = Employee::find($id);
@@ -100,7 +88,6 @@ class EmployeeController extends Controller
 
         $data = $request->all();
 
-        // Hash password if provided
         if (isset($data['password']) && !empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         } else {
@@ -115,9 +102,6 @@ class EmployeeController extends Controller
         ]);
     }
 
-    /**
-     * Supprime un employé
-     */
     public function destroy($id)
     {
         $employee = Employee::find($id);
@@ -131,9 +115,6 @@ class EmployeeController extends Controller
         return response()->json(['message' => 'Employé supprimé avec succès']);
     }
 
-    /**
-     * Récupère les employés d'une entreprise spécifique
-     */
     public function getByCompany($companyId)
     {
         $company = Company::find($companyId);

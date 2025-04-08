@@ -19,8 +19,6 @@ class ContactController extends Controller
             'message' => 'required|string',
         ]);
 
-        // Logique d'envoi d'email
-
         return back()->with('success', 'Votre message a été envoyé avec succès!');
     }
 }
