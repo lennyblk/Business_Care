@@ -10,13 +10,14 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AdminCompanyController;
 use App\Http\Controllers\AdminProviderController;
 use App\Http\Controllers\AdminEmployeeController;
-use App\Http\Controllers\AdminActivityController; 
+use App\Http\Controllers\AdminActivityController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\MailController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -156,3 +157,5 @@ Route::middleware(['check.auth'])->group(function () {
     Route::post('/dashboard/employee/events/{id}/register', [EmployeeController::class, 'register'])->name('employee.events.register');
     Route::post('/dashboard/employee/events/{id}/cancel', [EmployeeController::class, 'cancelRegistration'])->name('employee.events.cancel');
 });
+
+Route::get('/test-email', [MailController::class, 'envoyerEmail'])->name('test.email');
