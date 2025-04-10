@@ -159,3 +159,6 @@ Route::middleware(['check.auth'])->group(function () {
 });
 
 Route::get('/test-email', [MailController::class, 'envoyerEmail'])->name('test.email');
+
+
+// Test branche merge
