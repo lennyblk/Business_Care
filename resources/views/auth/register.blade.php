@@ -19,7 +19,7 @@
         <div class="bg-white p-4 rounded shadow-sm w-100" style="max-width: 450px;">
             <h1 class="fs-3 fw-bold mb-4 text-dark">Inscription</h1>
 
-            <form action="{{ route('register') }}" method="POST">
+            <form action="{{ route('register.pending') }}" method="POST">
                 @csrf
                 <div class="mb-3">
                     <label for="user_type" class="form-label">Type d'utilisateur</label>

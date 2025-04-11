@@ -19,6 +19,8 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailController;
+use App\Http\Controllers\API\AdminPendingRegistrationController;
+
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -100,15 +102,24 @@ Route::middleware(['check.auth'])->group(function () {
     });
 });
 
-// ============= ESPACE CLIENT - NOUVELLES ROUTES =============
+// Inscription
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/gestion_admin/inscriptions')->group(function () {
+        Route::get('/', [AdminPendingRegistrationController::class, 'index'])->name('admin.inscriptions.index');
+        Route::get('/{id}', [AdminPendingRegistrationController::class, 'show'])->name('admin.inscriptions.show');
+        Route::post('/{id}/approve', [AdminPendingRegistrationController::class, 'approve'])->name('admin.inscriptions.approve');
+        Route::post('/{id}/reject', [AdminPendingRegistrationController::class, 'reject'])->name('admin.inscriptions.reject');
+    });
+});
 
-// Routes pour le tableau de bord client (utilisation de la syntaxe de classe)
+// ============= ESPACE CLIENT
+
 Route::middleware(['auth', 'client'])->group(function () {
     // Dashboard client
     Route::get('/client/dashboard', [DashboardController::class, 'clientDashboard'])->name('client.dashboard');
 });
 
-// Routes pour les contrats (mise à jour avec la syntaxe de classe)
+// Routes pour les contrats
 Route::prefix('contracts')->name('contracts.')->middleware(['check.auth'])->group(function () {
     Route::get('/', [ContractController::class, 'index'])->name('index');
     Route::get('/create', [ContractController::class, 'create'])->name('create');
@@ -160,6 +171,6 @@ Route::middleware(['check.auth'])->group(function () {
 });
 
 Route::get('/test-email', [MailController::class, 'envoyerEmail'])->name('test.email');
-
+Route::post('/register/pending', [AuthController::class, 'registerPending'])->name('register.pending');
 
 // Ok je garde ca

@@ -11,12 +11,11 @@
                     Menu Administrateur
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
-                    <a href="#" class="list-group-item list-group-item-action">Gestion utilisateurs</a>
                     <a href="{{ route('admin.company') }}" class="list-group-item list-group-item-action">Entreprises</a>
                     <a href="{{ route('admin.salaries.index') }}" class="list-group-item list-group-item-action">Salariés</a>
                     <a href="{{ route('admin.prestataires.index') }}" class="list-group-item list-group-item-action">Prestataires</a>
                     <a href="{{ route('admin.activities.index') }}" class="list-group-item list-group-item-action">Activités</a>
+                    <a href="{{ route('admin.inscriptions.index') }}" class="list-group-item list-group-item-action">Inscriptions en attente</a>
                 </div>
             </div>
         </div>

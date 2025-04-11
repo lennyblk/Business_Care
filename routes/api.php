@@ -9,6 +9,7 @@ use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\ProviderController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\ContractController;
+use App\Http\Controllers\API\AdminPendingRegistrationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,7 +25,7 @@ Route::get('/test', function() {
 // Routes d'authentification
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/register', [PendingRegistrationController::class, 'register']);
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:api');
 });
 
@@ -53,3 +54,5 @@ Route::apiResource('events', EventController::class);
 // Routes pour les contrats
 Route::apiResource('contracts', ContractController::class);
 Route::get('contracts/by-company/{companyId}', [ContractController::class, 'getByCompany']);
+
+
