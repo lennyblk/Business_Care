@@ -82,8 +82,8 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="phone" class="form-label">Téléphone *</label>
-                        <input type="tel" id="phone" name="phone" class="form-control" required>
+                        <label for="telephone" class="form-label">Téléphone *</label>
+                        <input type="tel" id="telephone" name="telephone" class="form-control" required>
                     </div>
 
                     <div class="mb-3">

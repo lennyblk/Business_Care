@@ -14,6 +14,7 @@ class PendingRegistrationController extends Controller
 {
     public function register(Request $request)
     {
+        \Log::info('Données reçues dans PendingRegistrationController', $request->all());
         \Log::info('Début de la demande d\'inscription', $request->all());
 
         // Validation commune pour tous les types d'utilisateurs
@@ -30,7 +31,7 @@ class PendingRegistrationController extends Controller
                 'address' => 'required|string|max:255',
                 'code_postal' => 'required|string|max:10',
                 'ville' => 'required|string|max:100',
-                'phone' => 'required|string|max:20',
+                'telephone' => 'required|string|max:20',
                 'siret' => 'nullable|string|max:14',
             ],
             'employe' => [
@@ -108,6 +109,7 @@ class PendingRegistrationController extends Controller
 
             // Configuration du serveur
             $mail->isSMTP();
+            $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth = true;
             $mail->Username = env('MAIL_USERNAME');
@@ -134,6 +136,7 @@ class PendingRegistrationController extends Controller
             }
 
             $mail->Body = "
+                <meta charset='UTF-8'>
                 <h2>Nouvelle demande d'inscription</h2>
                 <p><strong>Type d'utilisateur :</strong> {$userType}</p>
                 <p><strong>Nom :</strong> {$userName}</p>
@@ -160,6 +163,7 @@ class PendingRegistrationController extends Controller
         try {
             // Configuration du serveur
             $mail->isSMTP();
+            $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth = true;
             $mail->Username = env('MAIL_USERNAME');
@@ -183,6 +187,7 @@ class PendingRegistrationController extends Controller
             }
 
             $mail->Body = "
+                <meta charset='UTF-8'>
                 <h2>Merci pour votre inscription!</h2>
                 <p>Nous avons bien reçu votre demande d'inscription et notre équipe administrative va l'examiner sous peu.</p>
                 <p>Vous serez informé(e) par email dès que votre compte sera validé.</p>

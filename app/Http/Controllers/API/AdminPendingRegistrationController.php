@@ -43,7 +43,7 @@ class AdminPendingRegistrationController extends Controller
                         'code_postal' => $registration->code_postal,
                         'ville' => $registration->ville,
                         'pays' => 'France',
-                        'phone' => $registration->telephone,
+                        'telephone' => $registration->telephone,
                         'email' => $registration->email,
                         'siret' => $registration->siret,
                         'password' => $registration->password, // déjà hashé
@@ -112,7 +112,7 @@ class AdminPendingRegistrationController extends Controller
             // Envoyer un email à l'utilisateur pour l'informer de l'approbation
             $this->sendUserNotification($registration, true);
 
-            return redirect()->route('admin.pending-registrations.index')
+            return redirect()->route('admin.inscriptions.index')
                            ->with('success', 'Inscription approuvée avec succès');
 
         } catch (\Exception $e) {
@@ -132,7 +132,7 @@ class AdminPendingRegistrationController extends Controller
         // Envoyer un email à l'utilisateur pour l'informer du rejet
         $this->sendUserNotification($registration, false);
 
-        return redirect()->route('admin.pending-registrations.index')
+        return redirect()->route('admin.inscriptions.index')
                        ->with('success', 'Inscription rejetée');
     }
 
@@ -143,6 +143,7 @@ class AdminPendingRegistrationController extends Controller
         try {
             // Configuration du serveur
             $mail->isSMTP();
+            $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
             $mail->SMTPAuth = true;
             $mail->Username = env('MAIL_USERNAME');
@@ -160,6 +161,7 @@ class AdminPendingRegistrationController extends Controller
             if ($approved) {
                 $mail->Subject = 'Votre inscription a été approuvée';
                 $mail->Body = "
+                    <meta charset='UTF-8'>
                     <h2>Félicitations !</h2>
                     <p>Votre demande d'inscription a été approuvée. Vous pouvez maintenant vous connecter à votre compte.</p>
                     <p><a href='" . url('/login') . "'>Se connecter</a></p>

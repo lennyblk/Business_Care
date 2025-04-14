@@ -225,7 +225,7 @@ class AuthController extends Controller
                'address' => 'required_if:user_type,societe',
                'code_postal' => 'required_if:user_type,societe',
                'ville' => 'required_if:user_type,societe',
-               'phone' => 'required_if:user_type,societe',
+               'telephone' => 'required_if:user_type,societe',
                'siret' => 'nullable|digits:14',
 
                // Validation pour employé
