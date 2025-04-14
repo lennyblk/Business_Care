@@ -10,6 +10,7 @@ use App\Http\Controllers\API\ProviderController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\ContractController;
 use App\Http\Controllers\API\AdminPendingRegistrationController;
+use App\Http\Controllers\API\PendingRegistrationController;
 
 /*
 |--------------------------------------------------------------------------
