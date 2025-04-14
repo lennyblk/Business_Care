@@ -14,6 +14,8 @@ class PendingRegistrationController extends Controller
 {
     public function register(Request $request)
     {
+        \Log::info('Début de la demande d\'inscription', $request->all());
+
         // Validation commune pour tous les types d'utilisateurs
         $commonRules = [
             'email' => 'required|email',
@@ -56,6 +58,7 @@ class PendingRegistrationController extends Controller
         $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
+            \Log::warning('Validation échouée', ['errors' => $validator->errors()]);
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
@@ -64,9 +67,13 @@ class PendingRegistrationController extends Controller
             $data = $request->all();
             $data['password'] = Hash::make($data['password']);
             $data['status'] = 'pending';
+            \Log::info('Données préparées pour insertion', ['data' => array_diff_key($data, ['password' => ''])]);
 
             // Stockage de la demande d'inscription en attente
             $pendingRegistration = PendingRegistration::create($data);
+
+            \Log::info('Inscription en attente créée', ['id' => $pendingRegistration->id]);
+
 
             // Envoi d'email à l'administrateur et aux utilisateurs
             $this->sendAdminNotification($pendingRegistration);
@@ -79,6 +86,7 @@ class PendingRegistrationController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            \Log::error('Erreur lors de la création de l\'inscription', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Une erreur est survenue : ' . $e->getMessage(),
@@ -92,6 +100,12 @@ class PendingRegistrationController extends Controller
         $mail = new PHPMailer(true);
 
         try {
+
+            $mail->SMTPDebug = 2;
+            $mail->Debugoutput = function($str, $level) {
+            \Log::info("PHPMailer Debug: $str");
+            };
+
             // Configuration du serveur
             $mail->isSMTP();
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');

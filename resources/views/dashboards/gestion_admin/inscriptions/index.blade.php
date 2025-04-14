@@ -56,21 +56,21 @@
                             <td>{{ $registration->email }}</td>
                             <td>{{ $registration->created_at->format('d/m/Y H:i') }}</td>
                             <td>
-                                <a href="{{ route('gestion_admin.inscriptions.show', $registration->id) }}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i> Voir
-                                </a>
-                                <form action="{{ route('gestion_admin.inscriptions.approve', $registration->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="fas fa-check"></i> Approuver
-                                    </button>
-                                </form>
-                                <form action="{{ route('gestion_admin.inscriptions.reject', $registration->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-danger btn-sm">
-                                        <i class="fas fa-times"></i> Rejeter
-                                    </button>
-                                </form>
+                            <a href="{{ route('admin.inscriptions.show', $registration->id) }}" class="btn btn-info btn-sm">
+                                <i class="fas fa-eye"></i> Voir
+                            </a>
+                            <form action="{{ route('admin.inscriptions.approve', $registration->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-check"></i> Approuver
+                                </button>
+                            </form>
+                            <form action="{{ route('admin.inscriptions.reject', $registration->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-times"></i> Rejeter
+                                </button>
+                            </form>
                             </td>
                         </tr>
                         @endforeach

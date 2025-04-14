@@ -34,7 +34,6 @@ class PendingRegistration extends Model
     ];
 
     protected $casts = [
-        'additional_data' => 'array',
-        'password' => 'hashed',
+        'additional_data' => 'array'
     ];
 }

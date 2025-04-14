@@ -145,21 +145,21 @@
             </div>
 
             <div class="mt-4 text-center">
-                <form action="{{ route('gestion_admin.inscriptions.approve', $registration->id) }}" method="POST" class="d-inline">
-                    @csrf
-                    <button type="submit" class="btn btn-success">
-                        <i class="fas fa-check"></i> Approuver
-                    </button>
-                </form>
-                <form action="{{ route('gestion_admin.inscriptions.reject', $registration->id) }}" method="POST" class="d-inline ml-2">
-                    @csrf
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-times"></i> Rejeter
-                    </button>
-                </form>
-                <a href="{{ route('gestion_admin.inscriptions.index') }}" class="btn btn-secondary ml-2">
-                    <i class="fas fa-arrow-left"></i> Retour à la liste
-                </a>
+            <form action="{{ route('admin.inscriptions.approve', $registration->id) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check"></i> Approuver
+                </button>
+            </form>
+            <form action="{{ route('admin.inscriptions.reject', $registration->id) }}" method="POST" class="d-inline ml-2">
+                @csrf
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-times"></i> Rejeter
+                </button>
+            </form>
+            <a href="{{ route('admin.inscriptions.index') }}" class="btn btn-secondary ml-2">
+                <i class="fas fa-arrow-left"></i> Retour à la liste
+            </a>
             </div>
         </div>
     </div>
