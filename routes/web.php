@@ -16,6 +16,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\QuoteController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\ClientEmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailController;
@@ -28,7 +29,7 @@ Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 Route::post('/contact', [ContactController::class, 'send'])->name('contact.send');
 Route::get('/communities', [PageController::class, 'communities'])->name('communities');
-Route::get('/contracts', [PageController::class, 'contracts'])->name('contracts');
+Route::get('/contracts-info', [PageController::class, 'contracts'])->name('contracts-info');
 Route::get('/events', [PageController::class, 'events'])->name('events');
 Route::get('/medical', [PageController::class, 'medical'])->name('medical');
 Route::get('/services', function () {
@@ -42,6 +43,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'registerForm'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 // Dashboards
 Route::middleware(['check.auth'])->group(function () {
     Route::get('/dashboard/client', [DashboardController::class, 'client'])->name('dashboard.client');
@@ -119,21 +121,21 @@ Route::middleware(['auth', 'client'])->group(function () {
     Route::get('/client/dashboard', [DashboardController::class, 'clientDashboard'])->name('client.dashboard');
 });
 
-// Routes pour les contrats
-Route::prefix('contracts')->name('contracts.')->middleware(['check.auth'])->group(function () {
-    Route::get('/', [ContractController::class, 'index'])->name('index');
-    Route::get('/create', [ContractController::class, 'create'])->name('create');
-    Route::post('/', [ContractController::class, 'store'])->name('store');
-    Route::get('/{contract}', [ContractController::class, 'show'])->name('show');
-    Route::get('/{contract}/edit', [ContractController::class, 'edit'])->name('edit');
-    Route::put('/{contract}', [ContractController::class, 'update'])->name('update');
-    Route::delete('/{contract}', [ContractController::class, 'destroy'])->name('destroy');
+// Routes pour les contrats client
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
+    Route::get('/contracts/create', [ContractController::class, 'create'])->name('contracts.create');
+    Route::post('/contracts', [ContractController::class, 'store'])->name('contracts.store');
+    Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+    Route::get('/contracts/{contract}/edit', [ContractController::class, 'edit'])->name('contracts.edit');
+    Route::put('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
+    Route::delete('/contracts/{contract}', [ContractController::class, 'destroy'])->name('contracts.destroy');
 
     // Paiements liés aux contrats
-    Route::get('/{contract}/payment', [ContractPaymentController::class, 'create'])->name('payment.create');
-    Route::post('/{contract}/payment', [ContractPaymentController::class, 'process'])->name('payment.process');
-    Route::get('/{contract}/showPayment', [ContractController::class, 'showPayment'])->name('showPayment');
-    Route::post('/{contract}/processPayment', [ContractController::class, 'processPayment'])->name('processPayment');
+    Route::get('/contracts/{contract}/payment', [ContractPaymentController::class, 'create'])->name('contracts.payment.create');
+    Route::post('/contracts/{contract}/payment', [ContractPaymentController::class, 'process'])->name('contracts.payment.process');
+    Route::get('/contracts/{contract}/showPayment', [ContractController::class, 'showPayment'])->name('contracts.showPayment');
+    Route::post('/contracts/{contract}/processPayment', [ContractController::class, 'processPayment'])->name('contracts.processPayment');
 });
 
 // Routes pour les devis
@@ -143,6 +145,7 @@ Route::middleware(['check.auth'])->group(function () {
     Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
     Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
 });
+
 // Routes pour les collaborateurs de l'entreprise
 Route::middleware(['check.auth'])->group(function () {
     Route::resource('employees', ClientEmployeeController::class);
@@ -172,5 +175,3 @@ Route::middleware(['check.auth'])->group(function () {
 
 Route::get('/test-email', [MailController::class, 'envoyerEmail'])->name('test.email');
 Route::post('/register/pending', [AuthController::class, 'registerPending'])->name('register.pending');
-
-// Ok je garde ca

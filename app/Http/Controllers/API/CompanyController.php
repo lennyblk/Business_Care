@@ -3,258 +3,191 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Admin;
 use App\Models\Company;
 use App\Models\Employee;
-use App\Models\Provider;
-use Illuminate\Support\Facades\Hash;
+use App\Models\Contract;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 
 class CompanyController extends Controller
 {
     public function index()
     {
-        $companies = Company::all();
-        return response()->json(['data' => $companies], 200);
-    }
-    
-    public function login(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
-            'user_type' => 'required|in:admin,societe,employe,prestataire',
-            'company_name' => 'required_if:user_type,societe,employe'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $credentials = $request->only('email', 'password');
-        $userType = $request->input('user_type');
-        $companyName = $request->input('company_name');
-
-        // On recherche l'utilisateur en fonction de son type
-        $user = null;
-
-        if ($userType === 'admin') {
-            $user = Admin::where('email', $credentials['email'])->first();
-
-            if ($user && $credentials['password'] === $user->password) {
-                $userData = [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'name' => $user->name,
-                    'type' => 'admin',
-                ];
-            }
-        }
-        elseif ($userType === 'societe') {
-            $user = Company::where('email', $credentials['email'])
-                          ->where('name', $companyName)
-                          ->first();
-
-            if ($user && Hash::check($credentials['password'], $user->password)) {
-                $userData = [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'name' => $user->name,
-                    'type' => 'societe',
-                ];
-            }
-        }
-        elseif ($userType === 'employe') {
-            $user = Employee::with('company')
-                          ->whereHas('company', function($query) use ($companyName) {
-                              $query->where('name', $companyName);
-                          })
-                          ->where('email', $credentials['email'])
-                          ->first();
-
-            if ($user && Hash::check($credentials['password'], $user->password)) {
-                $userData = [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'name' => $user->first_name . ' ' . $user->last_name,
-                    'type' => 'employe',
-                    'company_id' => $user->company_id
-                ];
-            }
-        }
-        elseif ($userType === 'prestataire') {
-            $user = Provider::where('email', $credentials['email'])->first();
-
-            if ($user && Hash::check($credentials['password'], $user->password)) {
-                $userData = [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'name' => $user->first_name . ' ' . $user->last_name,
-                    'type' => 'prestataire',
-                ];
-            }
-        }
-
-        if (isset($userData)) {
-           
-            return response()->json([
-                'success' => true,
-                'user' => $userData
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Identifiants invalides'
-        ], 401);
-    }
-
-
-    public function register(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|min:6',
-            'user_type' => 'required|in:societe,employe,prestataire',
-
-            // Validation pour société
-            'company_name' => 'required_if:user_type,societe',
-            'address' => 'required_if:user_type,societe',
-            'code_postal' => 'required_if:user_type,societe',
-            'ville' => 'required_if:user_type,societe',
-            'phone' => 'required_if:user_type,societe',
-            'siret' => 'nullable|digits:14',
-
-            // Validation pour employé
-            'first_name' => 'required_if:user_type,employe,prestataire',
-            'last_name' => 'required_if:user_type,employe,prestataire',
-            'position' => 'required_if:user_type,employe',
-            'departement' => 'nullable',
-            'telephone' => 'nullable',
-
-            // Validation pour prestataire
-            'specialite' => 'required_if:user_type,prestataire',
-            'bio' => 'nullable',
-            'tarif_horaire' => 'nullable|numeric|min:0'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
         try {
-            $hashedPassword = Hash::make($request->password);
-            $userData = null;
-
-            switch ($request->user_type) {
-                case 'societe':
-                    $company = Company::create([
-                        'name' => $request->company_name,
-                        'address' => $request->address,
-                        'code_postal' => $request->code_postal,
-                        'ville' => $request->ville,
-                        'pays' => 'France',
-                        'phone' => $request->phone,
-                        'email' => $request->email,
-                        'siret' => $request->siret,
-                        'password' => $hashedPassword,
-                        'creation_date' => now(),
-                        'formule_abonnement' => 'Starter',
-                        'statut_compte' => 'Actif',
-                        'date_debut_contrat' => now()
-                    ]);
-
-                    $userData = [
-                        'id' => $company->id,
-                        'email' => $company->email,
-                        'name' => $company->name,
-                        'type' => 'societe'
-                    ];
-                    break;
-
-                case 'employe':
-                    // On récupère l'ID de la société
-                    $company = Company::where('name', $request->company_name)->first();
-
-                    if (!$company) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Entreprise non trouvée'
-                        ], 404);
-                    }
-
-                    $employee = Employee::create([
-                        'company_id' => $company->id,
-                        'first_name' => $request->first_name,
-                        'last_name' => $request->last_name,
-                        'email' => $request->email,
-                        'telephone' => $request->telephone,
-                        'position' => $request->position,
-                        'departement' => $request->departement,
-                        'date_creation_compte' => now(),
-                        'password' => $hashedPassword,
-                        'preferences_langue' => 'fr'
-                    ]);
-
-                    $userData = [
-                        'id' => $employee->id,
-                        'email' => $employee->email,
-                        'name' => $employee->first_name . ' ' . $employee->last_name,
-                        'type' => 'employe',
-                        'company_id' => $employee->company_id
-                    ];
-                    break;
-
-                case 'prestataire':
-                    $provider = Provider::create([
-                        'last_name' => $request->name,
-                        'first_name' => $request->prenom,
-                        'domains' => $request->specialite,
-                        'email' => $request->email,
-                        'telephone' => $request->telephone,
-                        'password' => $hashedPassword,
-                        'description' => $request->bio,
-                        'tarif_horaire' => $request->tarif_horaire
-                    ]);
-
-                    $userData = [
-                        'id' => $provider->id,
-                        'email' => $provider->email,
-                        'name' => $provider->first_name . ' ' . $provider->last_name,
-                        'type' => 'prestataire'
-                    ];
-                    break;
-            }
-
-            if ($userData) {
-                return response()->json([
-                    'success' => true,
-                    'user' => $userData,
-                    'message' => 'Inscription réussie'
-                ], 201);
-            }
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Échec de l\'inscription'
-            ], 500);
-
+            $companies = Company::all();
+            return response()->json(['data' => $companies], 200);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Une erreur est survenue : ' . $e->getMessage()
-            ], 500);
+            Log::error('API: Erreur lors de la récupération des entreprises: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la récupération des entreprises'], 500);
         }
     }
 
-    public function logout(Request $request)
+    public function store(Request $request)
     {
-        $request->session()->invalidate();
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'code_postal' => 'nullable|string|max:10',
+                'ville' => 'nullable|string|max:100',
+                'pays' => 'nullable|string|max:100',
+                'telephone' => 'required|string|max:20',
+                'creation_date' => 'required|date',
+                'email' => 'required|email|unique:company,email',
+                'password' => 'required|string|max:255',
+                'siret' => 'nullable|string|max:14',
+                'formule_abonnement' => 'required|in:Starter,Basic,Premium',
+                'statut_compte' => 'required|in:Actif,Inactif',
+                'date_debut_contrat' => 'nullable|date',
+                'date_fin_contrat' => 'nullable|date',
+                'mode_paiement_prefere' => 'nullable|string|max:50',
+                'employee_count' => 'nullable|integer',
+            ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Déconnexion réussie'
-        ]);
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            // Hachage du mot de passe si ce n'est pas déjà fait
+            $data = $request->all();
+            if ($request->has('password') && !preg_match('/^\$2y\$/', $data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            }
+
+            $company = Company::create($data);
+
+            return response()->json([
+                'message' => 'Entreprise créée avec succès',
+                'data' => $company
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la création de l\'entreprise: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la création de l\'entreprise'], 500);
+        }
+    }
+
+    public function show($id)
+    {
+        try {
+            $company = Company::find($id);
+
+            if (!$company) {
+                return response()->json(['message' => 'Entreprise non trouvée'], 404);
+            }
+
+            return response()->json(['data' => $company]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la récupération de l\'entreprise: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la récupération de l\'entreprise'], 500);
+        }
+    }
+
+    public function update(Request $request, $id)
+    {
+        try {
+            $company = Company::find($id);
+
+            if (!$company) {
+                return response()->json(['message' => 'Entreprise non trouvée'], 404);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'address' => 'required|string|max:255',
+                'code_postal' => 'nullable|string|max:10',
+                'ville' => 'nullable|string|max:100',
+                'pays' => 'nullable|string|max:100',
+                'telephone' => 'required|string|max:20',
+                'creation_date' => 'required|date',
+                'email' => 'required|email|unique:company,email,' . $id,
+                'password' => 'nullable|string',
+                'siret' => 'nullable|string|max:14',
+                'formule_abonnement' => 'required|in:Starter,Basic,Premium',
+                'statut_compte' => 'required|in:Actif,Inactif',
+                'date_debut_contrat' => 'nullable|date',
+                'date_fin_contrat' => 'nullable|date',
+                'mode_paiement_prefere' => 'nullable|string|max:50',
+                'employee_count' => 'nullable|integer',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $data = $request->all();
+
+            // Traitement du mot de passe
+            if (empty($data['password'])) {
+                unset($data['password']);
+            } elseif (!preg_match('/^\$2y\$/', $data['password'])) {
+                $data['password'] = Hash::make($data['password']);
+            }
+
+            $company->update($data);
+
+            return response()->json([
+                'message' => 'Entreprise mise à jour avec succès',
+                'data' => $company
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la mise à jour de l\'entreprise: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la mise à jour de l\'entreprise'], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $company = Company::find($id);
+
+            if (!$company) {
+                return response()->json(['message' => 'Entreprise non trouvée'], 404);
+            }
+
+            $company->delete();
+
+            return response()->json(['message' => 'Entreprise supprimée avec succès']);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la suppression de l\'entreprise: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la suppression de l\'entreprise'], 500);
+        }
+    }
+
+    public function getEmployees($companyId)
+    {
+        try {
+            $company = Company::find($companyId);
+
+            if (!$company) {
+                return response()->json(['message' => 'Entreprise non trouvée'], 404);
+            }
+
+            $employees = Employee::where('company_id', $companyId)->get();
+
+            return response()->json(['data' => $employees]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la récupération des employés de l\'entreprise: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la récupération des employés'], 500);
+        }
+    }
+
+    public function getContracts($companyId)
+    {
+        try {
+            $company = Company::find($companyId);
+
+            if (!$company) {
+                return response()->json(['message' => 'Entreprise non trouvée'], 404);
+            }
+
+            $contracts = Contract::where('company_id', $companyId)->get();
+
+            return response()->json(['data' => $contracts]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la récupération des contrats de l\'entreprise: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la récupération des contrats'], 500);
+        }
     }
 }

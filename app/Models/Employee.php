@@ -32,4 +32,5 @@ class Employee extends Model
     {
         return $this->belongsToMany(Event::class, 'event_registration', 'employee_id', 'event_id');
     }
+
 }

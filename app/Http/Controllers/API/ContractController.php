@@ -7,101 +7,130 @@ use App\Models\Contract;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ContractController extends Controller
 {
+    // GET /api/contracts
     public function index()
     {
-        $contracts = Contract::with('company')->get();
-        return response()->json(['data' => $contracts]);
+        try {
+            $contracts = Contract::all();
+            return response()->json(['data' => $contracts]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la récupération des contrats: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue'], 500);
+        }
     }
 
+    // POST /api/contracts
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'company_id' => 'required|exists:company,id',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'services' => 'required|string',
-            'amount' => 'required|numeric',
-            'payment_method' => 'nullable|string|max:50',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'company_id' => 'required|exists:company,id',
+                'services' => 'required|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after:start_date',
+                'amount' => 'required|numeric',
+                'payment_method' => 'required|string',
+                'formule_abonnement' => 'required|in:Starter,Basic,Premium'
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $contract = Contract::create($request->all());
+
+            return response()->json([
+                'message' => 'Contrat créé avec succès',
+                'data' => $contract
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la création du contrat: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la création du contrat'], 500);
         }
-
-        $contract = Contract::create($request->all());
-
-        return response()->json([
-            'message' => 'Contrat créé avec succès',
-            'data' => $contract
-        ], 201);
     }
 
+    // GET /api/contracts/{id}
     public function show($id)
     {
-        $contract = Contract::with('company')->find($id);
-
-        if (!$contract) {
+        try {
+            $contract = Contract::findOrFail($id);
+            return response()->json(['data' => $contract]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la récupération du contrat: ' . $e->getMessage());
             return response()->json(['message' => 'Contrat non trouvé'], 404);
         }
-
-        return response()->json(['data' => $contract]);
     }
 
+    // PUT /api/contracts/{id}
     public function update(Request $request, $id)
     {
-        $contract = Contract::find($id);
+        try {
+            $contract = Contract::findOrFail($id);
 
-        if (!$contract) {
-            return response()->json(['message' => 'Contrat non trouvé'], 404);
+            $validator = Validator::make($request->all(), [
+                'services' => 'required|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after:start_date',
+                'amount' => 'required|numeric',
+                'payment_method' => 'required|string',
+                'formule_abonnement' => 'required|in:Starter,Basic,Premium'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $contract->update($request->all());
+
+            return response()->json([
+                'message' => 'Contrat mis à jour avec succès',
+                'data' => $contract
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la mise à jour du contrat: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la mise à jour du contrat'], 500);
         }
-
-        $validator = Validator::make($request->all(), [
-            'company_id' => 'required|exists:company,id',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date|after:start_date',
-            'services' => 'required|string',
-            'amount' => 'required|numeric',
-            'payment_method' => 'nullable|string|max:50',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $contract->update($request->all());
-
-        return response()->json([
-            'message' => 'Contrat mis à jour avec succès',
-            'data' => $contract
-        ]);
     }
 
+    // DELETE /api/contracts/{id}
     public function destroy($id)
     {
-        $contract = Contract::find($id);
+        try {
+            $contract = Contract::findOrFail($id);
+            $contract->delete();
 
-        if (!$contract) {
-            return response()->json(['message' => 'Contrat non trouvé'], 404);
+            return response()->json(['message' => 'Contrat supprimé avec succès']);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la suppression du contrat: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la suppression du contrat'], 500);
         }
-
-        $contract->delete();
-
-        return response()->json(['message' => 'Contrat supprimé avec succès']);
     }
 
+    // GET /api/companies/{companyId}/contracts
     public function getByCompany($companyId)
     {
-        $company = Company::find($companyId);
+        try {
+            $company = Company::find($companyId);
 
-        if (!$company) {
-            return response()->json(['message' => 'Entreprise non trouvée'], 404);
+            if (!$company) {
+                return response()->json(['message' => 'Entreprise non trouvée'], 404);
+            }
+
+            $contracts = Contract::where('company_id', $companyId)->get();
+
+            return response()->json(['data' => $contracts]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la récupération des contrats par entreprise: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la récupération des contrats'], 500);
         }
-
-        $contracts = Contract::where('company_id', $companyId)->get();
-
-        return response()->json(['data' => $contracts]);
     }
 }

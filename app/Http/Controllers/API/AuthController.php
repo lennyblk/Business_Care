@@ -143,7 +143,7 @@ class AuthController extends Controller
         // on récupère les règles spécifiques au type d'utilisateur
         $userType = $request->input('user_type');
         $validationRules = array_merge($commonRules, $typeRules[$userType] ?? []);
-        
+
         $validator = Validator::make($request->all(), $validationRules);
 
         if ($validator->fails()) {
@@ -167,8 +167,8 @@ class AuthController extends Controller
                         'siret' => $request->siret,
                         'password' => $hashedPassword,
                         'creation_date' => now(),
-                        'formule_abonnement' => 'Starter', 
-                        'statut_compte' => 'Actif', 
+                        'formule_abonnement' => 'Starter',
+                        'statut_compte' => 'Actif',
                         'date_debut_contrat' => now()
                     ]);
 

@@ -2,180 +2,283 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Employee;
-use App\Models\Activity;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\API\EmployeeController as APIEmployeeController;
+use App\Http\Controllers\API\CompanyController as APICompanyController;
 use Illuminate\Support\Facades\Auth;
-use App\Notifications\NewEmployeeNotification;
+use Illuminate\Support\Facades\Log;
+use stdClass;
 
-class EmployeeController extends Controller
+class ClientEmployeController extends Controller
 {
+    protected $apiEmployeeController;
+    protected $apiCompanyController;
+
+    public function __construct()
+    {
+        $this->apiEmployeeController = new APIEmployeeController();
+        $this->apiCompanyController = new APICompanyController();
+    }
+
+    /**
+     * Convertit un tableau associatif en objet stdClass récursivement
+     */
+    private function arrayToObject($array)
+    {
+        if (!is_array($array)) {
+            return $array;
+        }
+
+        $object = new stdClass();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $object->$key = $this->arrayToObject($value);
+            } else {
+                $object->$key = $value;
+            }
+        }
+        return $object;
+    }
+
+    /**
+     * Convertit un tableau de tableaux associatifs en tableau d'objets
+     */
+    private function arrayToObjects($arrayOfArrays)
+    {
+        $objects = [];
+        foreach ($arrayOfArrays as $array) {
+            $objects[] = $this->arrayToObject($array);
+        }
+        return $objects;
+    }
 
     public function index()
     {
         $user = Auth::user();
         $company = $user->company;
-        
+
         if (!$company) {
             return redirect()->route('dashboard.client')
                 ->with('error', 'Vous devez être associé à une société pour accéder à cette page.');
         }
-        
-        $employees = $company->employees()->paginate(10);
-        
-        return view('dashboards.client.employees.index', compact('employees'));
+
+        try {
+            // Appel au contrôleur API pour récupérer les employés de l'entreprise
+            $response = $this->apiEmployeeController->getByCompany($company->id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la récupération des employés', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->with('error', 'Erreur lors de la récupération des employés');
+            }
+
+            // Convertir le tableau associatif en tableau d'objets
+            $employees = $this->arrayToObjects($data['data'] ?? []);
+
+            return view('dashboards.client.employees.index', compact('employees'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la récupération des employés: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la récupération des employés');
+        }
     }
 
-    /**
-     * Affiche le formulaire de création de collaborateur
-     */
     public function create()
     {
         return view('dashboards.client.employees.create');
     }
 
-    /**
-     * Enregistre un nouveau collaborateur
-     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email',
-            'position' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-        ]);
-        
         $user = Auth::user();
         $company = $user->company;
-        
+
         if (!$company) {
             return redirect()->route('dashboard.client')
-                ->with('error', 'Vous devez être associé à une société pour ajouter un collaborateur.');
+                ->with('error', 'Vous devez être associé à une société pour ajouter un employé.');
         }
-        
-        $employee = new Employee([
-            'name' => $request->name,
-            'email' => $request->email,
-            'position' => $request->position,
-            'phone' => $request->phone,
-            'is_active' => true,
-        ]);
-        
-        $company->employees()->save($employee);
-        
-        // Enregistrement de l'activité
-        Activity::create([
-            'company_id' => $company->id,
-            'user_id' => $user->id,
-            'title' => 'Nouveau collaborateur',
-            'description' => 'Collaborateur ' . $employee->name . ' a été ajouté',
-            'type' => 'employee',
-            'subject_type' => Employee::class,
-            'subject_id' => $employee->id,
-        ]);
-        
-        // Notification aux administrateurs
-        $admins = User::where('role', 'admin')->get();
-        foreach ($admins as $admin) {
-            $admin->notify(new NewEmployeeNotification($employee, $company));
+
+        try {
+            // Validation côté web
+            $request->validate([
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'email' => 'required|email|unique:employee,email',
+                'telephone' => 'nullable|string|max:20',
+                'position' => 'required|string|max:100',
+                'departement' => 'nullable|string|max:100',
+                'password' => 'required|string|min:8',
+                'preferences_langue' => 'nullable|string|max:10',
+                'id_carte_nfc' => 'nullable|string|max:50',
+            ]);
+
+            // Ajout de l'ID de l'entreprise
+            $request->merge(['company_id' => $company->id]);
+
+            // Appel au contrôleur API pour créer l'employé
+            $response = $this->apiEmployeeController->store($request);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 201) {
+                Log::error('Erreur lors de la création de l\'employé', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data,
+                    'request' => $request->all()
+                ]);
+
+                $errors = $data['errors'] ?? ['Une erreur est survenue lors de la création de l\'employé'];
+                return back()->withErrors($errors)->withInput();
+            }
+
+            return redirect()->route('client.employees.index')
+                ->with('success', 'Employé ajouté avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la création d\'un employé: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la création de l\'employé')->withInput();
         }
-        
-        return redirect()->route('employees.index')
-            ->with('success', 'Collaborateur ajouté avec succès.');
     }
 
-    /**
-     * Affiche les détails d'un collaborateur
-     */
-    public function show(Employee $employee)
+    public function show($id)
     {
-        $this->checkEmployeeOwnership($employee);
-        
-        return view('dashboards.client.employees.show', compact('employee'));
+        try {
+            // Appel au contrôleur API pour récupérer l'employé
+            $response = $this->apiEmployeeController->show($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la récupération de l\'employé', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data,
+                    'id' => $id
+                ]);
+                return back()->with('error', 'Employé non trouvé');
+            }
+
+            // Convertir le tableau associatif en objet
+            $employee = $this->arrayToObject($data['data'] ?? []);
+
+            // Vérification que l'employé appartient bien à l'entreprise de l'utilisateur
+            $user = Auth::user();
+            if ($employee->company_id !== $user->company_id) {
+                abort(403, 'Vous n\'êtes pas autorisé à accéder à cet employé.');
+            }
+
+            return view('dashboards.client.employees.show', compact('employee'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de l\'affichage d\'un employé: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de l\'affichage de l\'employé');
+        }
     }
 
-    /**
-     * Affiche le formulaire d'édition d'un collaborateur
-     */
-    public function edit(Employee $employee)
+    public function edit($id)
     {
-        $this->checkEmployeeOwnership($employee);
-        
-        return view('dashboards.client.employees.edit', compact('employee'));
+        try {
+            // Appel au contrôleur API pour récupérer l'employé
+            $response = $this->apiEmployeeController->show($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la récupération de l\'employé pour modification', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data,
+                    'id' => $id
+                ]);
+                return back()->with('error', 'Employé non trouvé');
+            }
+
+            // Convertir le tableau associatif en objet
+            $employee = $this->arrayToObject($data['data'] ?? []);
+
+            // Vérification que l'employé appartient bien à l'entreprise de l'utilisateur
+            $user = Auth::user();
+            if ($employee->company_id !== $user->company_id) {
+                abort(403, 'Vous n\'êtes pas autorisé à modifier cet employé.');
+            }
+
+            return view('dashboards.client.employees.edit', compact('employee'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la modification d\'un employé: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la modification de l\'employé');
+        }
     }
 
-    /**
-     * Met à jour les informations d'un collaborateur
-     */
-    public function update(Request $request, Employee $employee)
+    public function update(Request $request, $id)
     {
-        $this->checkEmployeeOwnership($employee);
-        
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $employee->id,
-            'position' => 'nullable|string|max:255',
-            'phone' => 'nullable|string|max:20',
-        ]);
-        
-        $employee->name = $request->name;
-        $employee->email = $request->email;
-        $employee->position = $request->position;
-        $employee->phone = $request->phone;
-        $employee->save();
-        
-        // Enregistrement de l'activité
-        Activity::create([
-            'company_id' => $employee->company_id,
-            'user_id' => Auth::id(),
-            'title' => 'Collaborateur modifié',
-            'description' => 'Les informations du collaborateur ' . $employee->name . ' ont été mises à jour',
-            'type' => 'employee',
-            'subject_type' => Employee::class,
-            'subject_id' => $employee->id,
-        ]);
-        
-        return redirect()->route('employees.show', $employee)
-            ->with('success', 'Collaborateur mis à jour avec succès.');
+        try {
+            // Validation côté web
+            $request->validate([
+                'first_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50',
+                'email' => 'required|email|unique:employee,email,' . $id,
+                'telephone' => 'nullable|string|max:20',
+                'position' => 'required|string|max:100',
+                'departement' => 'nullable|string|max:100',
+                'password' => 'nullable|string|min:8',
+                'preferences_langue' => 'nullable|string|max:10',
+                'id_carte_nfc' => 'nullable|string|max:50',
+            ]);
+
+            // Appel au contrôleur API pour mettre à jour l'employé
+            $response = $this->apiEmployeeController->update($request, $id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la mise à jour de l\'employé', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data,
+                    'id' => $id,
+                    'request' => $request->all()
+                ]);
+
+                $errors = $data['errors'] ?? ['Une erreur est survenue lors de la mise à jour de l\'employé'];
+                return back()->withErrors($errors)->withInput();
+            }
+
+            return redirect()->route('client.employees.show', $id)
+                ->with('success', 'Employé mis à jour avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la mise à jour d\'un employé: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'employé')->withInput();
+        }
     }
 
-    /**
-     * Désactive ou supprime un collaborateur
-     */
-    public function destroy(Employee $employee)
+    public function destroy($id)
     {
-        $this->checkEmployeeOwnership($employee);
-        
-        // Au lieu de supprimer, on désactive le collaborateur
-        $employee->is_active = false;
-        $employee->save();
-        
-        // Enregistrement de l'activité
-        Activity::create([
-            'company_id' => $employee->company_id,
-            'user_id' => Auth::id(),
-            'title' => 'Collaborateur désactivé',
-            'description' => 'Le collaborateur ' . $employee->name . ' a été désactivé',
-            'type' => 'employee',
-            'subject_type' => Employee::class,
-            'subject_id' => $employee->id,
-        ]);
-        
-        return redirect()->route('employees.index')
-            ->with('success', 'Collaborateur désactivé avec succès.');
-    }
+        try {
+            // Vérification préalable que l'employé appartient à l'entreprise
+            $user = Auth::user();
+            $response = $this->apiEmployeeController->show($id);
+            $data = json_decode($response->getContent(), true);
 
-    /**
-     * Vérifie que le collaborateur appartient bien à la société de l'utilisateur connecté
-     */
-    private function checkEmployeeOwnership(Employee $employee)
-    {
-        $user = Auth::user();
-        
-        if (!$user->company || $employee->company_id !== $user->company_id) {
-            abort(403, 'Vous n\'êtes pas autorisé à accéder à ce collaborateur.');
+            if ($response->getStatusCode() !== 200) {
+                return back()->with('error', 'Employé non trouvé');
+            }
+
+            $employee = $this->arrayToObject($data['data']);
+            if ($employee->company_id !== $user->company_id) {
+                abort(403, 'Vous n\'êtes pas autorisé à supprimer cet employé.');
+            }
+
+            // Appel au contrôleur API pour supprimer l'employé
+            $response = $this->apiEmployeeController->destroy($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la suppression de l\'employé', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data,
+                    'id' => $id
+                ]);
+                return back()->with('error', $data['message'] ?? 'Erreur lors de la suppression de l\'employé');
+            }
+
+            return redirect()->route('client.employees.index')
+                ->with('success', 'Employé supprimé avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la suppression d\'un employé: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'employé');
         }
     }
 }

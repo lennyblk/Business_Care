@@ -13,13 +13,11 @@ use Illuminate\Support\Facades\Hash;
 
 class ProviderController extends Controller
 {
-
     public function index()
     {
-        $providers = Provider::all();
+        $providers = Provider::with(['availabilities', 'evaluations', 'invoices'])->get();
         return response()->json(['data' => $providers]);
     }
-
 
     public function store(Request $request)
     {
@@ -45,7 +43,6 @@ class ProviderController extends Controller
         }
 
         $data = $request->all();
-
         $data['password'] = Hash::make($data['password']);
 
         $provider = Provider::create($data);
@@ -58,7 +55,7 @@ class ProviderController extends Controller
 
     public function show($id)
     {
-        $provider = Provider::find($id);
+        $provider = Provider::with(['availabilities', 'evaluations', 'invoices'])->find($id);
 
         if (!$provider) {
             return response()->json(['message' => 'Prestataire non trouvé'], 404);
@@ -125,7 +122,6 @@ class ProviderController extends Controller
         return response()->json(['message' => 'Prestataire supprimé avec succès']);
     }
 
-
     public function getAvailabilities($id)
     {
         $provider = Provider::find($id);
@@ -139,7 +135,6 @@ class ProviderController extends Controller
         return response()->json(['data' => $availabilities]);
     }
 
-
     public function getEvaluations($id)
     {
         $provider = Provider::find($id);
@@ -152,7 +147,6 @@ class ProviderController extends Controller
 
         return response()->json(['data' => $evaluations]);
     }
-
 
     public function getInvoices($id)
     {

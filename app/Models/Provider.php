@@ -44,5 +44,6 @@ class Provider extends Model
         'statut_prestataire' => 'string',
     ];
 
-    public $timestamps = false; 
+    public $timestamps = false;
+
 }

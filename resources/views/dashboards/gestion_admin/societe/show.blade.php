@@ -27,7 +27,7 @@
             </div>
             <div class="row mb-3">
                 <div class="col-md-4 font-weight-bold">Téléphone:</div>
-                <div class="col-md-8">{{ $company->phone }}</div>
+                <div class="col-md-8">{{ $company->telephone }}</div>
             </div>
             <div class="row mb-3">
                 <div class="col-md-4 font-weight-bold">Date de Création:</div>

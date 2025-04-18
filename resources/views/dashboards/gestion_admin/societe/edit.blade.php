@@ -28,7 +28,7 @@
         </div>
         <div class="form-group">
             <label for="phone">Téléphone</label>
-            <input type="text" name="phone" id="phone" class="form-control" value="{{ $company->phone }}" required>
+            <input type="text" name="phone" id="phone" class="form-control" value="{{ $company->telephone }}" required>
         </div>
         <div class="form-group">
             <label for="creation_date">Date de Création</label>

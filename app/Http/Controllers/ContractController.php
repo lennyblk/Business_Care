@@ -2,276 +2,294 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Contract;
-use App\Models\Service;
-use App\Models\Activity;
 use Illuminate\Http\Request;
+use App\Http\Controllers\API\ContractController as ApiContractController;
+use Illuminate\Support\Facades\Log;
+use stdClass;
 use Carbon\Carbon;
 
 class ContractController extends Controller
 {
+    protected $apiContractController;
+
+    public function __construct()
+    {
+        $this->apiContractController = new ApiContractController();
+    }
+
+    /**
+     * Convertit un tableau associatif en objet stdClass récursivement
+     */
+    private function arrayToObject($array)
+    {
+        if (!is_array($array)) {
+            return $array;
+        }
+
+        $object = new stdClass();
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $object->$key = $this->arrayToObject($value);
+            } else {
+                $object->$key = $value;
+            }
+        }
+        return $object;
+    }
+
+    /**
+     * Convertit un tableau de tableaux associatifs en tableau d'objets
+     */
+    private function arrayToObjects($arrayOfArrays)
+    {
+        $objects = [];
+        foreach ($arrayOfArrays as $array) {
+            $objects[] = $this->arrayToObject($array);
+        }
+        return $objects;
+    }
 
     public function index()
     {
-        if (session('user_type') !== 'societe') {
-            return redirect()->route('login')
-                ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
+
+            $companyId = session('user_id');
+
+            // Appel au contrôleur API pour récupérer les contrats
+            $response = $this->apiContractController->getByCompany($companyId);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la récupération des contrats', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->with('error', 'Erreur lors de la récupération des contrats');
+            }
+
+            // Convertir les données en objets
+            $contracts = $this->arrayToObjects($data['data'] ?? []);
+
+            // Ajouter des propriétés calculées
+            $today = Carbon::today()->toDateString();
+            foreach ($contracts as $contract) {
+                $contract->is_active = ($contract->start_date <= $today && $contract->end_date >= $today);
+            }
+
+            return view('dashboards.client.contracts.index', compact('contracts'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la récupération des contrats: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la récupération des contrats');
         }
-        
-        $companyId = session('user_id');
-        
-        $contracts = Contract::where('company_id', $companyId)
-                           ->orderBy('start_date', 'desc')
-                           ->paginate(10);
-        
-        // Ajout d'un attribut calculé pour déterminer si le contrat est actif
-        $today = Carbon::today()->toDateString();
-        foreach ($contracts as $contract) {
-            $contract->is_active = ($contract->start_date <= $today && $contract->end_date >= $today);
-        }
-        
-        return view('dashboards.client.contracts.index', compact('contracts'));
     }
 
     public function create()
-{
-    if (session('user_type') !== 'societe') {
-        return redirect()->route('login')
-            ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+    {
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
+
+            $companyId = session('user_id');
+
+            // Récupérer le nombre d'employés pour déterminer la formule par défaut
+            $employeeCount = \App\Models\Employee::where('company_id', $companyId)->count();
+
+            // Déterminer la formule par défaut en fonction du nombre d'employés
+            $defaultFormula = 'Starter';
+            if ($employeeCount > 250) {
+                $defaultFormula = 'Premium';
+            } elseif ($employeeCount > 30) {
+                $defaultFormula = 'Basic';
+            }
+
+            $company = \App\Models\Company::find($companyId);
+
+            return view('dashboards.client.contracts.create', [
+                'employeeCount' => $employeeCount,
+                'defaultFormula' => $defaultFormula,
+                'company' => $company
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la création d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la création d\'un contrat');
+        }
     }
-    
-    $companyId = session('user_id');
-    $company = \App\Models\Company::find($companyId);
-    
-    // Récupérer le nombre d'employés pour déterminer la formule par défaut
-    $employeeCount = \App\Models\Employee::where('company_id', $companyId)->count();
-    
-    // Déterminer la formule par défaut en fonction du nombre d'employés
-    $defaultFormula = 'Starter';
-    if ($employeeCount > 250) {
-        $defaultFormula = 'Premium';
-    } elseif ($employeeCount > 30) {
-        $defaultFormula = 'Basic';
-    }
-    
-    return view('dashboards.client.contracts.create', [
-        'employeeCount' => $employeeCount,
-        'defaultFormula' => $defaultFormula,
-        'company' => $company
-    ]);
-}
 
     public function store(Request $request)
     {
-        if (session('user_type') !== 'societe') {
-            return redirect()->route('login')
-                ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
-        }
-        
-        $validated = $request->validate([
-            'services' => 'required|string',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'amount' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:Direct Debit,Invoice',
-            'formule_abonnement' => 'required|in:Starter,Basic,Premium',
-        ]);
-        
-        $companyId = session('user_id');
-        
-        // Création du contrat
-        $contract = new Contract([
-            'company_id' => $companyId,
-            'services' => $request->services,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'amount' => $request->amount,
-            'payment_method' => $request->payment_method,
-            'formule_abonnement' => $request->formule_abonnement,
-            'statut_contrat' => 'En cours de validation',
-        ]);
-        
-        $contract->save();
-        
-        // Enregistrement de l'activité
-        if (class_exists('App\Models\Activity')) {
-            Activity::create([
-                'company_id' => $companyId,
-                'user_id' => session('user_id'),
-                'title' => 'Nouveau contrat créé',
-                'description' => 'Contrat pour les services ' . $request->services . ' créé avec la formule ' . $request->formule_abonnement,
-                'type' => 'contract',
-                'subject_type' => Contract::class,
-                'subject_id' => $contract->id,
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
+
+            // Validation
+            $validated = $request->validate([
+                'services' => 'required|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after:start_date',
+                'amount' => 'required|numeric|min:0',
+                'payment_method' => 'required|in:Direct Debit,Invoice',
+                'formule_abonnement' => 'required|in:Starter,Basic,Premium',
             ]);
+
+            // Ajout de l'ID de l'entreprise
+            $request->merge(['company_id' => session('user_id')]);
+
+            // Appel à l'API
+            $response = $this->apiContractController->store($request);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 201 && $response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la création du contrat', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+
+                $errors = $data['errors'] ?? ['Une erreur est survenue lors de la création du contrat'];
+                return back()->withErrors($errors)->withInput();
+            }
+
+            return redirect()->route('contracts.index')->with('success', 'Contrat créé avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la création d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la création du contrat')->withInput();
         }
-        
-        // Redirection selon la méthode de paiement
-        if ($request->payment_method == 'Direct Debit') {
-            return redirect()->route('contracts.show', $contract->id)
-                ->with('success', 'Contrat créé avec succès. Un conseiller va vous contacter pour finaliser le prélèvement.');
-        }
-        
-        return redirect()->route('contracts.show', $contract->id)
-            ->with('success', 'Contrat créé avec succès. Une facture vous sera envoyée prochainement.');
     }
 
     public function show($id)
     {
-        if (session('user_type') !== 'societe') {
-            return redirect()->route('login')
-                ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
-        }
-        
-        $companyId = session('user_id');
-        
-        // Récupération du contrat
-        $contract = Contract::findOrFail($id);
-        
-        // Vérification que le contrat appartient bien à la société
-        if ($contract->company_id != $companyId) {
-            abort(403, 'Vous n\'êtes pas autorisé à accéder à ce contrat.');
-        }
-        
-        // Calcul de l'état du contrat avec carbon
-        $today = Carbon::today()->toDateString();
-        $contract->is_active = ($contract->start_date <= $today && $contract->end_date >= $today);
-        
-        return view('dashboards.client.contracts.show', compact('contract'));
-    }
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
 
+            // Appel à l'API
+            $response = $this->apiContractController->show($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la récupération du contrat', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->with('error', 'Contrat non trouvé');
+            }
+
+            // Convertir en objet
+            $contract = $this->arrayToObject($data['data'] ?? []);
+
+            // Ajouter la propriété is_active
+            $today = Carbon::today()->toDateString();
+            $contract->is_active = ($contract->start_date <= $today && $contract->end_date >= $today);
+
+            return view('dashboards.client.contracts.show', compact('contract'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de l\'affichage d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de l\'affichage du contrat');
+        }
+    }
 
     public function edit($id)
     {
-        if (session('user_type') !== 'societe') {
-            return redirect()->route('login')
-                ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
-        }
-        
-        $companyId = session('user_id');
-        
-        $contract = Contract::findOrFail($id);
-        
-        // Vérification que le contrat appartient bien à la société
-        if ($contract->company_id != $companyId) {
-            abort(403, 'Vous n\'êtes pas autorisé à accéder à ce contrat.');
-        }
-        
-        // Les services disponibles pour le formulaire d'édition
-        $services = Service::where('is_active', true)->get();
-        
-        return view('dashboards.client.contracts.edit', compact('contract', 'services'));
-    }
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
 
+            // Appel à l'API
+            $response = $this->apiContractController->show($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la récupération du contrat', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->with('error', 'Contrat non trouvé');
+            }
+
+            // Convertir en objet
+            $contract = $this->arrayToObject($data['data'] ?? []);
+
+            return view('dashboards.client.contracts.edit', compact('contract'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de l\'édition d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de l\'édition du contrat');
+        }
+    }
 
     public function update(Request $request, $id)
     {
-        if (session('user_type') !== 'societe') {
-            return redirect()->route('login')
-                ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
-        }
-        
-        $companyId = session('user_id');
-        
-        // Récupération du contrat
-        $contract = Contract::findOrFail($id);
-        
-        // Vérification que le contrat appartient bien à la société
-        if ($contract->company_id != $companyId) {
-            abort(403, 'Vous n\'êtes pas autorisé à modifier ce contrat.');
-        }
-        
-        // Validation des données
-        $validated = $request->validate([
-            'services' => 'required|string',
-            'end_date' => 'required|date|after:start_date',
-            'amount' => 'required|numeric|min:0',
-            'payment_method' => 'required|in:Direct Debit,Invoice',
-        ]);
-        
-        // Mise à jour du contrat
-        $contract->services = $request->services;
-        $contract->end_date = $request->end_date;
-        $contract->amount = $request->amount;
-        $contract->payment_method = $request->payment_method;
-        $contract->save();
-        
-        // Enregistrement de l'activité
-        if (class_exists('App\Models\Activity')) {
-            Activity::create([
-                'company_id' => $companyId,
-                'user_id' => session('user_id'),
-                'title' => 'Contrat modifié',
-                'description' => 'Contrat #' . $contract->id . ' a été modifié',
-                'type' => 'contract',
-                'subject_type' => Contract::class,
-                'subject_id' => $contract->id,
-            ]);
-        }
-        
-        return redirect()->route('contracts.show', $contract->id)
-            ->with('success', 'Contrat mis à jour avec succès.');
-    }
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
 
+            // Validation
+            $validated = $request->validate([
+                'services' => 'required|string',
+                'start_date' => 'required|date',
+                'end_date' => 'required|date|after:start_date',
+                'amount' => 'required|numeric|min:0',
+                'payment_method' => 'required|in:Direct Debit,Invoice',
+                'formule_abonnement' => 'required|in:Starter,Basic,Premium',
+            ]);
+
+            // Appel à l'API
+            $response = $this->apiContractController->update($request, $id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la mise à jour du contrat', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+
+                $errors = $data['errors'] ?? ['Une erreur est survenue lors de la mise à jour du contrat'];
+                return back()->withErrors($errors)->withInput();
+            }
+
+            return redirect()->route('contracts.show', $id)->with('success', 'Contrat mis à jour avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la mise à jour d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la mise à jour du contrat')->withInput();
+        }
+    }
 
     public function destroy($id)
     {
-        if (session('user_type') !== 'societe') {
-            return redirect()->route('login')
-                ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
-        }
-        
-        $companyId = session('user_id');
-        
-        // Récupération du contrat
-        $contract = Contract::findOrFail($id);
-        
-        // Vérification que le contrat appartient bien à la société
-        if ($contract->company_id != $companyId) {
-            abort(403, 'Vous n\'êtes pas autorisé à supprimer ce contrat.');
-        }
-        
-        // Vérification si le contrat est actif
-        $today = Carbon::today()->toDateString();
-        $isActive = ($contract->start_date <= $today && $contract->end_date >= $today);
-        
-        if ($isActive) {
-        
-            // Enregistrement de l'activité de demande de résiliation
-            if (class_exists('App\Models\Activity')) {
-                Activity::create([
-                    'company_id' => $companyId,
-                    'user_id' => session('user_id'),
-                    'title' => 'Demande de résiliation de contrat',
-                    'description' => 'Demande de résiliation pour le contrat #' . $contract->id,
-                    'type' => 'contract',
-                    'subject_type' => Contract::class,
-                    'subject_id' => $contract->id,
-                ]);
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
             }
-            
-            return redirect()->route('contracts.index')
-                ->with('info', 'Votre demande de résiliation a été enregistrée. Un conseiller va vous contacter.');
+
+            // Appel à l'API
+            $response = $this->apiContractController->destroy($id);
+
+            if ($response->getStatusCode() !== 200) {
+                $data = json_decode($response->getContent(), true);
+                Log::error('Erreur lors de la suppression du contrat', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->with('error', $data['message'] ?? 'Erreur lors de la suppression du contrat');
+            }
+
+            return redirect()->route('contracts.index')->with('success', 'Contrat supprimé avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la suppression d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la suppression du contrat');
         }
-        
-        // Pour un contrat non actif ou terminé, on peut le supprimer
-        $contractId = $contract->id;
-        $contract->delete();
-        
-        // Enregistrement de l'activité
-        if (class_exists('App\Models\Activity')) {
-            Activity::create([
-                'company_id' => $companyId,
-                'user_id' => session('user_id'),
-                'title' => 'Contrat supprimé',
-                'description' => 'Contrat #' . $contractId . ' a été supprimé',
-                'type' => 'contract',
-                'subject_type' => 'App\Models\Contract',
-                'subject_id' => null,
-            ]);
-        }
-        
-        return redirect()->route('contracts.index')
-            ->with('success', 'Contrat supprimé avec succès.');
     }
 }
