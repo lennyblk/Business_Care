@@ -32,7 +32,7 @@ class AuthController extends Controller
             if ($response->getStatusCode() === 200 && $responseData['success']) {
                 // Récupérer les données de l'utilisateur
                 $user = $responseData['user'];
-                
+
                 // Enregistrer les données de l'utilisateur en session
                 session([
                     'user_id' => $user['id'],
@@ -79,10 +79,10 @@ class AuthController extends Controller
     {
         // Appeler le contrôleur API pour la déconnexion
         $this->apiAuthController->logout($request);
-        
+
         // Vider la session locale
         $request->session()->flush();
-        
+
         return redirect()->route('home');
     }
 
