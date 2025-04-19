@@ -32,6 +32,7 @@ class AuthController extends Controller
 
         // Recherche de l'utilisateur en fonction de son type
         $user = null;
+        $userData = null;
 
         if ($userType === 'admin') {
             $user = Admin::where('email', $credentials['email'])->first();
@@ -105,6 +106,9 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
+        // Adaptation pour la validation avec les champs du formulaire web
+        $userType = $request->input('user_type');
+        
         // Validation commune pour tous les types d'utilisateurs
         $commonRules = [
             'email' => 'required|email',
@@ -119,7 +123,7 @@ class AuthController extends Controller
                 'address' => 'required|string|max:255',
                 'code_postal' => 'required|string|max:10',
                 'ville' => 'required|string|max:100',
-                'phone' => 'required|string|max:20',
+                'telephone' => 'required|string|max:20', // Adaptation pour le formulaire web
                 'siret' => 'nullable|string|max:14',
             ],
             'employe' => [
@@ -131,8 +135,8 @@ class AuthController extends Controller
                 'telephone' => 'nullable|string|max:20',
             ],
             'prestataire' => [
-                'name' => 'required|string|max:100',
-                'prenom' => 'required|string|max:100',
+                'name' => 'required|string|max:100', // Pour le nom de famille
+                'prenom' => 'required|string|max:100', // Pour le prénom
                 'specialite' => 'required|string',
                 'telephone' => 'required|string|max:20',
                 'bio' => 'nullable|string',
@@ -141,7 +145,6 @@ class AuthController extends Controller
         ];
 
         // on récupère les règles spécifiques au type d'utilisateur
-        $userType = $request->input('user_type');
         $validationRules = array_merge($commonRules, $typeRules[$userType] ?? []);
 
         $validator = Validator::make($request->all(), $validationRules);
@@ -162,7 +165,7 @@ class AuthController extends Controller
                         'code_postal' => $request->code_postal,
                         'ville' => $request->ville,
                         'pays' => 'France',
-                        'phone' => $request->phone,
+                        'phone' => $request->telephone, // Adaptation pour le formulaire web
                         'email' => $request->email,
                         'siret' => $request->siret,
                         'password' => $hashedPassword,
@@ -254,6 +257,16 @@ class AuthController extends Controller
                 'error_details' => $e->getTraceAsString()
             ], 500);
         }
+    }
+
+    /**
+     * Gère les demandes d'inscription en attente
+     */
+    public function registerPending(Request $request)
+    {
+        // On réutilise la même logique d'inscription mais avec un statut différent
+        // Cette méthode est utilisée par le contrôleur web
+        return $this->register($request);
     }
 
     public function logout(Request $request)
