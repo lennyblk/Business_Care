@@ -1,59 +1,60 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Event;
-use App\Models\Employee;
-use App\Models\EventRegistration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class EmployeeController extends Controller
-
 {
+    protected $apiBaseUrl;
+
+    public function __construct()
+    {
+        // Configurez l'URL de base de votre API - ajustez selon votre configuration
+        $this->apiBaseUrl = config('app.url') . '/api';
+    }
+
     public function index()
     {
         $userType = session('user_type');
 
         if ($userType === 'employe') {
-            // Récupérer l'employé connecté
-            $employee = null;
-
-            // D'abord, essayer avec l'ID de session
+            // Récupérer l'ID et l'email de l'employé connecté depuis la session
             $userId = (int)session('user_id');
-            if ($userId > 0) {
-                $employee = Employee::find($userId);
+            $userEmail = session('user_email');
+
+            // Appel à l'API pour obtenir l'employé connecté
+            $response = Http::get("{$this->apiBaseUrl}/employees/current", [
+                'user_id' => $userId,
+                'user_email' => $userEmail
+            ]);
+
+            if ($response->failed()) {
+                return redirect()->route('login')->withErrors(['error' => 'Impossible de déterminer l\'employé connecté.']);
             }
 
-            // Si aucun employé n'est trouvé avec l'ID de session, on essaye avec l'email
-            if (!$employee && session('user_email')) {
-                $employee = Employee::where('email', session('user_email'))->first();
+            $apiData = $response->json();
 
-                // Si on trouve l'employé par email, on met à jour la session avec le bon ID
-                if ($employee) {
-                    session(['user_id' => $employee->id]);
-                }
+            if (!$apiData['success']) {
+                return redirect()->route('login')->withErrors(['error' => $apiData['message'] ?? 'Erreur lors de la récupération de l\'employé.']);
             }
 
-            if (!$employee) {
-                $employee = Employee::first();
-            }
+            $employee = $apiData['data'];
 
+            // Si on a trouvé l'employé, on met à jour la session
             if ($employee) {
-                $companyId = $employee->company_id;
+                session(['user_id' => $employee['id']]);
 
-                // On récupère les événements auxquels l'employé est inscrit
-                $myEventIds = EventRegistration::where('employee_id', $employee->id)
-                              ->pluck('event_id')
-                              ->toArray();
+                // Obtenir les événements pour cet employé
+                $eventsResponse = Http::get("{$this->apiBaseUrl}/employees/{$employee['id']}/events");
 
-                // On récupère uniquement les événements pour l'entreprise de cet employé
-                $allEvents = Event::where('company_id', $companyId)
-                            ->whereNotIn('id', $myEventIds)
-                            ->get();
+                if ($eventsResponse->successful()) {
+                    $eventsData = $eventsResponse->json()['data'];
+                    $allEvents = $eventsData['allEvents'];
+                    $myEvents = $eventsData['myEvents'];
 
-                // On récupère les événements auxquels l'employé est inscrit
-                $myEvents = Event::whereIn('id', $myEventIds)->get();
-
-                return view('dashboards.employee.events.index', compact('allEvents', 'myEvents', 'employee'));
+                    return view('dashboards.employee.events.index', compact('allEvents', 'myEvents', 'employee'));
+                }
             }
         }
 
@@ -68,59 +69,19 @@ class EmployeeController extends Controller
             // On récupère l'ID de l'employé depuis la session
             $userId = (int)session('user_id');
 
-            // On récupère l'employé connecté
-            $employee = Employee::find($userId);
+            // Appel à l'API pour inscrire l'employé à l'événement
+            $response = Http::post("{$this->apiBaseUrl}/employees/{$userId}/events/{$id}/register");
 
-            if (!$employee) {
-                $employee = Employee::first();
-
-                if (!$employee) {
-                    return redirect()->route('login')->withErrors(['error' => 'Aucun employé trouvé.']);
-                }
-            }
-
-            $companyId = $employee->company_id;
-
-            // on verifie que l'événement existe et appartient à l'entreprise
-            $event = Event::where('id', $id)
-                    ->where('company_id', $companyId)
-                    ->first();
-
-            if (!$event) {
+            if ($response->successful()) {
                 return redirect()->route('employee.events.index')
-                    ->withErrors(['error' => 'Événement non trouvé ou non autorisé pour votre entreprise.']);
-            }
+                    ->with('success', 'Vous êtes maintenant inscrit à cet événement.');
+            } else {
+                $apiData = $response->json();
+                $message = $apiData['message'] ?? 'Erreur lors de l\'inscription à l\'événement.';
 
-            // on verifie si l'employé est déjà inscrit
-            $existingRegistration = EventRegistration::where('event_id', $id)
-                                    ->where('employee_id', $employee->id)
-                                    ->first();
-
-            if ($existingRegistration) {
                 return redirect()->route('employee.events.index')
-                    ->with('warning', 'Vous êtes déjà inscrit à cet événement.');
+                    ->with('warning', $message);
             }
-
-            // on verifie si l'événement n'est pas déjà complet
-            if ($event->registrations >= $event->capacity) {
-                return redirect()->route('employee.events.index')
-                    ->with('warning', 'Cet événement est complet.');
-            }
-
-            // On crée une nouvelle inscription
-            EventRegistration::create([
-                'event_id' => $id,
-                'employee_id' => $employee->id,
-                'registration_date' => now(),
-                'status' => 'confirmed'
-            ]);
-
-            // On met à jour le compteur d'inscriptions de l'événement
-            $event->registrations = ($event->registrations ?? 0) + 1;
-            $event->save();
-
-            return redirect()->route('employee.events.index')
-                ->with('success', 'Vous êtes maintenant inscrit à cet événement.');
         }
 
         return redirect()->route('login')
@@ -135,40 +96,19 @@ class EmployeeController extends Controller
             // On récupère l'ID de l'employé depuis la session
             $userId = (int)session('user_id');
 
-            // On récupère l'employé connecté
-            $employee = Employee::find($userId);
+            // Appel à l'API pour annuler l'inscription
+            $response = Http::delete("{$this->apiBaseUrl}/employees/{$userId}/events/{$id}/cancel");
 
-            // Si l'employé n'est pas trouvé, utiliser une solution de secours
-            if (!$employee) {
-                $employee = Employee::first();
-
-                if (!$employee) {
-                    return redirect()->route('login')->withErrors(['error' => 'Aucun employé trouvé.']);
-                }
-            }
-
-            // On cherche l'inscription
-            $registration = EventRegistration::where('event_id', $id)
-                            ->where('employee_id', $employee->id)
-                            ->first();
-
-            if (!$registration) {
+            if ($response->successful()) {
                 return redirect()->route('employee.events.index')
-                    ->with('warning', 'Vous n\'êtes pas inscrit à cet événement.');
+                    ->with('success', 'Votre inscription a été annulée.');
+            } else {
+                $apiData = $response->json();
+                $message = $apiData['message'] ?? 'Erreur lors de l\'annulation de l\'inscription.';
+
+                return redirect()->route('employee.events.index')
+                    ->with('warning', $message);
             }
-
-            // Supprimer l'inscription
-            $registration->delete();
-
-            // Mettre à jour le compteur d'inscriptions
-            $event = Event::find($id);
-            if ($event) {
-                $event->registrations = max(0, ($event->registrations ?? 0) - 1);
-                $event->save();
-            }
-
-            return redirect()->route('employee.events.index')
-                ->with('success', 'Votre inscription a été annulée.');
         }
 
         return redirect()->route('login')

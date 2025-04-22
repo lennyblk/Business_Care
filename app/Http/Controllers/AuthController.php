@@ -98,7 +98,6 @@ class AuthController extends Controller
                 'all_data' => $request->all()
             ]);
 
-            // Utiliser le contrôleur PendingRegistrationController comme dans le code original
             $response = $this->pendingRegistrationController->register($request);
             $responseData = json_decode($response->getContent(), true);
 

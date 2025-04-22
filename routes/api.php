@@ -71,3 +71,20 @@ Route::prefix('admin')->group(function () {
 // Nouvelle route pour la réinitialisation de mot de passe
 Route::post('password/reset', [AuthController::class, 'resetPassword']);
 Route::post('password/forgot', [AuthController::class, 'sendResetLinkEmail']);
+
+
+Route::prefix('employees')->group(function () {
+    // Routes existantes
+    Route::get('/', [EmployeeController::class, 'index']);
+    Route::post('/', [EmployeeController::class, 'store']);
+    Route::get('/{id}', [EmployeeController::class, 'show']);
+    Route::put('/{id}', [EmployeeController::class, 'update']);
+    Route::delete('/{id}', [EmployeeController::class, 'destroy']);
+    Route::get('/company/{companyId}', [EmployeeController::class, 'getByCompany']);
+
+    // Nouvelles routes
+    Route::get('/current', [EmployeeController::class, 'getCurrentEmployee']);
+    Route::get('/{id}/events', [EmployeeController::class, 'getEmployeeEvents']);
+    Route::post('/{employeeId}/events/{eventId}/register', [EmployeeController::class, 'registerForEvent']);
+    Route::delete('/{employeeId}/events/{eventId}/cancel', [EmployeeController::class, 'cancelEventRegistration']);
+});
