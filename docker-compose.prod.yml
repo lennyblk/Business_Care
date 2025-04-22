@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3308
+      - DB_DATABASE=businesscare
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+    networks:
+      - businesscare-network
+
+  db:
+    image: mariadb:10.6
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=businesscare
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "3308:3308"
+    command: --port=3308
+    networks:
+      - businesscare-network
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    ports:
+      - "9000:9000"
+    networks:
+      - businesscare-network
+
+volumes:
+  mariadb-data:
+  portainer-data:
+
+networks:
+  businesscare-network:
