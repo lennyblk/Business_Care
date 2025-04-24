@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 
-class ClientEmployeController extends Controller
+class ClientEmployeeController extends Controller
 {
     protected $apiEmployeeController;
     protected $apiCompanyController;
@@ -54,34 +54,62 @@ class ClientEmployeController extends Controller
 
     public function index()
     {
-        $user = Auth::user();
-        $company = $user->company;
+        // Récupérer l'ID de l'entreprise depuis la session
+        $companyId = session('user_id');
 
-        if (!$company) {
-            return redirect()->route('dashboard.client')
-                ->with('error', 'Vous devez être associé à une société pour accéder à cette page.');
+        Log::info('Tentative d\'accès à la liste des collaborateurs', [
+            'company_id' => $companyId,
+            'session_data' => session()->all()
+        ]);
+
+        if (!$companyId) {
+            Log::warning('Tentative d\'accès sans ID d\'entreprise');
+            return redirect()->route('login')
+                ->with('error', 'Vous n\'êtes pas connecté ou votre session a expiré.');
         }
 
         try {
             // Appel au contrôleur API pour récupérer les employés de l'entreprise
-            $response = $this->apiEmployeeController->getByCompany($company->id);
+            Log::info('Appel API getByCompany', ['company_id' => $companyId]);
+
+            $response = $this->apiEmployeeController->getByCompany($companyId);
+
+            // Log de la réponse brute
+            Log::info('Réponse API brute', [
+                'status_code' => $response->getStatusCode(),
+                'content' => $response->getContent()
+            ]);
+
             $data = json_decode($response->getContent(), true);
 
             if ($response->getStatusCode() !== 200) {
-                Log::error('Erreur lors de la récupération des employés', [
+                Log::error('Échec de la récupération des employés', [
                     'status' => $response->getStatusCode(),
                     'response' => $data
                 ]);
-                return back()->with('error', 'Erreur lors de la récupération des employés');
+                return back()->with('error', 'Erreur lors de la récupération des employés: ' . ($data['message'] ?? 'Erreur inconnue'));
+            }
+
+            // Vérifier si 'data' existe dans la réponse
+            if (!isset($data['data'])) {
+                Log::error('Format de réponse API inattendu', ['response' => $data]);
+                return back()->with('error', 'Format de réponse inattendu de l\'API');
             }
 
             // Convertir le tableau associatif en tableau d'objets
             $employees = $this->arrayToObjects($data['data'] ?? []);
 
+            Log::info('Employés récupérés avec succès', ['count' => count($employees)]);
+
             return view('dashboards.client.employees.index', compact('employees'));
         } catch (\Exception $e) {
-            Log::error('Exception lors de la récupération des employés: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la récupération des employés');
+            Log::error('Exception lors de la récupération des employés', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Une erreur est survenue lors de la récupération des employés: ' . $e->getMessage());
         }
     }
 
@@ -90,14 +118,14 @@ class ClientEmployeController extends Controller
         return view('dashboards.client.employees.create');
     }
 
-    public function store(Request $request)
+        public function store(Request $request)
     {
-        $user = Auth::user();
-        $company = $user->company;
+        // Récupérer l'ID de l'entreprise directement depuis la session
+        $companyId = session('user_id');
 
-        if (!$company) {
-            return redirect()->route('dashboard.client')
-                ->with('error', 'Vous devez être associé à une société pour ajouter un employé.');
+        if (!$companyId) {
+            return redirect()->route('login')
+                ->with('error', 'Votre session a expiré. Veuillez vous reconnecter.');
         }
 
         try {
@@ -114,8 +142,14 @@ class ClientEmployeController extends Controller
                 'id_carte_nfc' => 'nullable|string|max:50',
             ]);
 
-            // Ajout de l'ID de l'entreprise
-            $request->merge(['company_id' => $company->id]);
+            // Ajout de l'ID de l'entreprise directement à partir de la session
+            $request->merge(['company_id' => $companyId]);
+
+            // Ajouter des logs pour déboguer
+            Log::info('Tentative d\'ajout d\'un employé', [
+                'company_id' => $companyId,
+                'employee_data' => $request->except('password')
+            ]);
 
             // Appel au contrôleur API pour créer l'employé
             $response = $this->apiEmployeeController->store($request);
@@ -125,18 +159,21 @@ class ClientEmployeController extends Controller
                 Log::error('Erreur lors de la création de l\'employé', [
                     'status' => $response->getStatusCode(),
                     'response' => $data,
-                    'request' => $request->all()
+                    'request' => $request->except('password')
                 ]);
 
                 $errors = $data['errors'] ?? ['Une erreur est survenue lors de la création de l\'employé'];
                 return back()->withErrors($errors)->withInput();
             }
 
-            return redirect()->route('client.employees.index')
-                ->with('success', 'Employé ajouté avec succès.');
+            return redirect()->route('employees.index')
+                ->with('success', 'Collaborateur ajouté avec succès.');
         } catch (\Exception $e) {
-            Log::error('Exception lors de la création d\'un employé: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la création de l\'employé')->withInput();
+            Log::error('Exception lors de la création d\'un employé', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Une erreur est survenue lors de la création du collaborateur: ' . $e->getMessage())->withInput();
         }
     }
 

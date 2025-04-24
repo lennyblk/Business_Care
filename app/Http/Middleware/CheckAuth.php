@@ -20,9 +20,11 @@ class CheckAuth
         switch ($userType) {
             case 'societe':
                 if (!str_starts_with($route, 'dashboard.client') &&
-                    !str_starts_with($route, 'contracts.')&&
-                    !str_starts_with($route, 'quotes.')) {
-                    return redirect()->route('dashboard.client')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
+                    !str_starts_with($route, 'contracts.') &&
+                    !str_starts_with($route, 'quotes.') &&
+                    !str_starts_with($route, 'employees.')) {
+                    return redirect()->route('dashboard.client')
+                        ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 

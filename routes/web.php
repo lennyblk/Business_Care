@@ -146,9 +146,15 @@ Route::middleware(['check.auth'])->group(function () {
     Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
 });
 
-// Routes pour les collaborateurs de l'entreprise
+// Gestion Employee en tant que client
 Route::middleware(['check.auth'])->group(function () {
-    Route::resource('employees', ClientEmployeeController::class);
+    Route::get('/employees', [ClientEmployeeController::class, 'index'])->name('employees.index');
+    Route::get('/employees/create', [ClientEmployeeController::class, 'create'])->name('employees.create');
+    Route::post('/employees', [ClientEmployeeController::class, 'store'])->name('employees.store');
+    Route::get('/employees/{id}', [ClientEmployeeController::class, 'show'])->name('employees.show');
+    Route::get('/employees/{id}/edit', [ClientEmployeeController::class, 'edit'])->name('employees.edit');
+    Route::put('/employees/{id}', [ClientEmployeeController::class, 'update'])->name('employees.update');
+    Route::delete('/employees/{id}', [ClientEmployeeController::class, 'destroy'])->name('employees.destroy');
 });
 
 // Routes pour les paiements
