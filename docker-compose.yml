@@ -32,11 +32,11 @@ services:
       - MYSQL_DATABASE=businesscare
       - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - mariadb-data:/var/lib/mysql
-      - ./database/init:/docker-entrypoint-initdb.d
+      - ./database/dataSave:/var/lib/mysql
+      - ./database/repInit:/docker-entrypoint-initdb.d
     ports:
-      - "3308:3308"
-    command: --port=3308
+      - "3333:3308"
+    command: --port=3308 # changement de port pour rester sur 3308, sinon marche pas
     networks:
       - businesscare-network
 
