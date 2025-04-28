@@ -32,8 +32,8 @@ services:
       - MYSQL_DATABASE=businesscare
       - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - ./database/dataSave:/var/lib/mysql
-      - ./database/repInit:/docker-entrypoint-initdb.d
+      - ./database/dataSave:/var/lib/mysql # les données
+      - ./database/repInit:/docker-entrypoint-initdb.d # les tables
     ports:
       - "3333:3308"
     command: --port=3308 # changement de port pour rester sur 3308, sinon marche pas
