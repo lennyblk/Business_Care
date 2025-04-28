@@ -14,7 +14,7 @@ services:
       - APP_DEBUG=true
       - DB_CONNECTION=mysql
       - DB_HOST=db
-      - DB_PORT=3308
+      - DB_PORT=3306
       - DB_DATABASE=businesscare
       - DB_USERNAME=root
       - DB_PASSWORD=root
@@ -35,9 +35,8 @@ services:
       - ./database/dataSave:/var/lib/mysql
       - ./database/repInit:/docker-entrypoint-initdb.d
     ports:
-      - "3333:3308"
+      - "3306:3306"
 
-    command: --port=3308
     networks:
       - businesscare-network
 
