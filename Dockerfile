@@ -1,4 +1,4 @@
-# Étape de build
+# Étape 1: Build de l'application avec Composer
 FROM composer:2 as build
 
 WORKDIR /app
@@ -12,16 +12,14 @@ RUN composer install --ignore-platform-reqs --prefer-dist --no-dev --no-scripts 
 # Copier le reste des fichiers de l'application
 COPY . .
 
-# Exécuter les scripts composer
+# Optimiser l'autoloader
 RUN composer dump-autoload --optimize
 
-# Étape de production
-FROM php:7.4.33-fpm-alpine
+# Étape 2: Image finale avec PHP, Nginx et Supervisor
+FROM php:7.4-fpm-alpine
 
-# Installer les extensions PHP nécessaires
+# Installer les extensions PHP nécessaires et les outils
 RUN docker-php-ext-install pdo pdo_mysql
-
-# Installer les dépendances système nécessaires
 RUN apk add --no-cache nginx supervisor
 
 # Configurer Nginx
@@ -36,10 +34,10 @@ COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Créer le répertoire de travail
 WORKDIR /var/www/html
 
-# Copier le code de l'application depuis l'étape de build
+# Copier le code depuis l'étape de build
 COPY --from=build /app .
 
-# Créer le répertoire de stockage et ajuster les permissions
+# Créer les répertoires nécessaires et ajuster les permissions
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
@@ -47,5 +45,5 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 # Exposer le port 80
 EXPOSE 80
 
-# Démarrer les services avec Supervisor
+# Démarrer Supervisor en lui indiquant où trouver son fichier de configuration
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
