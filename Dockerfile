@@ -22,22 +22,21 @@ FROM php:7.4-fpm-alpine
 RUN docker-php-ext-install pdo pdo_mysql
 RUN apk add --no-cache nginx supervisor
 
-# Configurer Nginx
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 
-# Configurer PHP
 COPY docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
 
-# Configurer Supervisor
 COPY docker/supervisor/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Créer le répertoire de travail
 WORKDIR /var/www/html
 
-# Copier le code depuis l'étape de build
+# Va chercher les fichiers qui se trouvent dans le répertoire /app de l'étape nommée build qui a installé les dépendances
 COPY --from=build /app .
 
-# Créer les répertoires nécessaires et ajuster les permissions
+# Crée les répertoires pour les sessions, les vues et le cache
+# Modifie les permissions pour permettre l'écriture dans ces répertoires
+# Change le propriétaire des répertoires à l'utilisateur www-data (utilisateur standard du serveur web)
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
