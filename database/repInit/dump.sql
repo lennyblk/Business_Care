@@ -1,0 +1,935 @@
+/*M!999999\- enable the sandbox mode */ 
+-- MariaDB dump 10.19-11.6.2-MariaDB, for Win64 (AMD64)
+--
+-- Host: localhost    Database: businesscare2
+-- ------------------------------------------------------
+-- Server version	11.6.2-MariaDB
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*M!100616 SET @OLD_NOTE_VERBOSITY=@@NOTE_VERBOSITY, NOTE_VERBOSITY=0 */;
+
+--
+-- Table structure for table `admin`
+--
+
+DROP TABLE IF EXISTS `admin`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `admin` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `type` varchar(10) NOT NULL DEFAULT 'admin',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admin`
+--
+
+LOCK TABLES `admin` WRITE;
+/*!40000 ALTER TABLE `admin` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admin` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `anonymous_report`
+--
+
+DROP TABLE IF EXISTS `anonymous_report`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `anonymous_report` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `encrypted_employee_id` varchar(255) NOT NULL,
+  `report_date` datetime DEFAULT current_timestamp(),
+  `description` text NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `status` enum('New','Processing','Resolved') DEFAULT 'New',
+  `severity_level` int(11) DEFAULT 1,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `anonymous_report`
+--
+
+LOCK TABLES `anonymous_report` WRITE;
+/*!40000 ALTER TABLE `anonymous_report` DISABLE KEYS */;
+/*!40000 ALTER TABLE `anonymous_report` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `association`
+--
+
+DROP TABLE IF EXISTS `association`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `association` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `domain` varchar(100) NOT NULL,
+  `contact_info` varchar(255) NOT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `status` enum('Active','Inactive') DEFAULT 'Active',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `association`
+--
+
+LOCK TABLES `association` WRITE;
+/*!40000 ALTER TABLE `association` DISABLE KEYS */;
+/*!40000 ALTER TABLE `association` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chatbot_question`
+--
+
+DROP TABLE IF EXISTS `chatbot_question`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `chatbot_question` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `employee_id` int(11) NOT NULL,
+  `question` text NOT NULL,
+  `response` text DEFAULT NULL,
+  `question_date` datetime DEFAULT current_timestamp(),
+  `status` enum('Resolved','Unresolved') DEFAULT 'Unresolved',
+  PRIMARY KEY (`id`),
+  KEY `chatbot_question_ibfk_1` (`employee_id`),
+  CONSTRAINT `chatbot_question_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chatbot_question`
+--
+
+LOCK TABLES `chatbot_question` WRITE;
+/*!40000 ALTER TABLE `chatbot_question` DISABLE KEYS */;
+/*!40000 ALTER TABLE `chatbot_question` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `community`
+--
+
+DROP TABLE IF EXISTS `community`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `community` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `type` enum('Internal','External') NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `community`
+--
+
+LOCK TABLES `community` WRITE;
+/*!40000 ALTER TABLE `community` DISABLE KEYS */;
+/*!40000 ALTER TABLE `community` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `company`
+--
+
+DROP TABLE IF EXISTS `company`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `company` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `code_postal` varchar(10) DEFAULT NULL,
+  `ville` varchar(100) DEFAULT NULL,
+  `pays` varchar(100) DEFAULT 'France',
+  `telephone` varchar(20) DEFAULT NULL,
+  `creation_date` date NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `siret` varchar(14) DEFAULT NULL,
+  `formule_abonnement` enum('Starter','Basic','Premium') DEFAULT 'Starter',
+  `statut_compte` enum('Actif','Inactif') DEFAULT 'Actif',
+  `date_debut_contrat` date DEFAULT curdate(),
+  `date_fin_contrat` date DEFAULT NULL,
+  `mode_paiement_prefere` varchar(50) DEFAULT NULL,
+  `employee_count` int(11) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `company`
+--
+
+LOCK TABLES `company` WRITE;
+/*!40000 ALTER TABLE `company` DISABLE KEYS */;
+/*!40000 ALTER TABLE `company` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `contract`
+--
+
+DROP TABLE IF EXISTS `contract`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `contract` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) NOT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date NOT NULL,
+  `services` text NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `payment_method` enum('Direct Debit','Invoice') NOT NULL,
+  `formule_abonnement` enum('Starter','Basic','Premium') DEFAULT 'Starter',
+  `stripe_checkout_id` varchar(255) DEFAULT NULL,
+  `stripe_subscription_id` varchar(255) DEFAULT NULL,
+  `payment_status` enum('pending','unpaid','processing','active') DEFAULT 'pending',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `contract`
+--
+
+LOCK TABLES `contract` WRITE;
+/*!40000 ALTER TABLE `contract` DISABLE KEYS */;
+/*!40000 ALTER TABLE `contract` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `donation`
+--
+
+DROP TABLE IF EXISTS `donation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `donation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `association_id` int(11) NOT NULL,
+  `employee_id` int(11) NOT NULL,
+  `donation_type` enum('Financial','Material','Time') NOT NULL,
+  `amount_or_description` text NOT NULL,
+  `donation_date` datetime DEFAULT current_timestamp(),
+  `status` enum('Pending','Validated') DEFAULT 'Pending',
+  PRIMARY KEY (`id`),
+  KEY `donation_ibfk_1` (`association_id`),
+  KEY `donation_ibfk_2` (`employee_id`),
+  CONSTRAINT `donation_ibfk_1` FOREIGN KEY (`association_id`) REFERENCES `association` (`id`),
+  CONSTRAINT `donation_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `donation`
+--
+
+LOCK TABLES `donation` WRITE;
+/*!40000 ALTER TABLE `donation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `donation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `employee`
+--
+
+DROP TABLE IF EXISTS `employee`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `employee` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) DEFAULT NULL,
+  `first_name` varchar(50) NOT NULL,
+  `last_name` varchar(50) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `telephone` varchar(20) DEFAULT NULL,
+  `position` varchar(100) NOT NULL,
+  `departement` varchar(100) DEFAULT NULL,
+  `date_creation_compte` date DEFAULT curdate(),
+  `password` varchar(255) NOT NULL,
+  `derniere_connexion` datetime DEFAULT NULL,
+  `preferences_langue` varchar(10) DEFAULT 'fr',
+  `id_carte_nfc` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  KEY `employee_ibfk_1` (`company_id`),
+  CONSTRAINT `employee_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `employee`
+--
+
+LOCK TABLES `employee` WRITE;
+/*!40000 ALTER TABLE `employee` DISABLE KEYS */;
+/*!40000 ALTER TABLE `employee` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `employee_community`
+--
+
+DROP TABLE IF EXISTS `employee_community`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `employee_community` (
+  `employee_id` int(11) NOT NULL,
+  `community_id` int(11) NOT NULL,
+  PRIMARY KEY (`employee_id`,`community_id`),
+  KEY `community_id` (`community_id`),
+  CONSTRAINT `employee_community_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`),
+  CONSTRAINT `employee_community_ibfk_2` FOREIGN KEY (`community_id`) REFERENCES `community` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `employee_community`
+--
+
+LOCK TABLES `employee_community` WRITE;
+/*!40000 ALTER TABLE `employee_community` DISABLE KEYS */;
+/*!40000 ALTER TABLE `employee_community` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `event`
+--
+
+DROP TABLE IF EXISTS `event`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `event` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `date` datetime NOT NULL,
+  `event_type` enum('Webinar','Conference','Sport Event','Workshop') NOT NULL,
+  `capacity` int(11) NOT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `registrations` int(11) NOT NULL DEFAULT 0,
+  `company_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_event_company` (`company_id`),
+  CONSTRAINT `fk_event_company` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `event`
+--
+
+LOCK TABLES `event` WRITE;
+/*!40000 ALTER TABLE `event` DISABLE KEYS */;
+/*!40000 ALTER TABLE `event` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `event_registration`
+--
+
+DROP TABLE IF EXISTS `event_registration`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `event_registration` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_id` int(11) NOT NULL,
+  `employee_id` int(11) NOT NULL,
+  `registration_date` datetime DEFAULT current_timestamp(),
+  `status` enum('Confirmed','Canceled','Waiting') DEFAULT 'Confirmed',
+  PRIMARY KEY (`id`),
+  KEY `event_registration_ibfk_1` (`event_id`),
+  KEY `event_registration_ibfk_2` (`employee_id`),
+  CONSTRAINT `event_registration_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`),
+  CONSTRAINT `event_registration_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `event_registration`
+--
+
+LOCK TABLES `event_registration` WRITE;
+/*!40000 ALTER TABLE `event_registration` DISABLE KEYS */;
+/*!40000 ALTER TABLE `event_registration` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `failed_jobs`
+--
+
+DROP TABLE IF EXISTS `failed_jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `failed_jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `failed_jobs`
+--
+
+LOCK TABLES `failed_jobs` WRITE;
+/*!40000 ALTER TABLE `failed_jobs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `failed_jobs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `intervention`
+--
+
+DROP TABLE IF EXISTS `intervention`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `intervention` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_id` int(11) NOT NULL,
+  `service_type_id` int(11) NOT NULL,
+  `employee_id` int(11) NOT NULL,
+  `intervention_date` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `location` varchar(255) NOT NULL,
+  `status` enum('Planned','Completed','Canceled') DEFAULT 'Planned',
+  `notes` text DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `intervention_ibfk_1` (`provider_id`),
+  KEY `intervention_ibfk_2` (`service_type_id`),
+  KEY `intervention_ibfk_3` (`employee_id`),
+  CONSTRAINT `intervention_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`),
+  CONSTRAINT `intervention_ibfk_2` FOREIGN KEY (`service_type_id`) REFERENCES `service_type` (`id`),
+  CONSTRAINT `intervention_ibfk_3` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `intervention`
+--
+
+LOCK TABLES `intervention` WRITE;
+/*!40000 ALTER TABLE `intervention` DISABLE KEYS */;
+/*!40000 ALTER TABLE `intervention` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `invoice`
+--
+
+DROP TABLE IF EXISTS `invoice`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `invoice` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) NOT NULL,
+  `contract_id` int(11) DEFAULT NULL,
+  `issue_date` date NOT NULL,
+  `due_date` date NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `payment_status` enum('Pending','Paid','Overdue') DEFAULT 'Pending',
+  `pdf_path` varchar(255) DEFAULT NULL,
+  `details` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `invoice_ibfk_1` (`company_id`),
+  KEY `invoice_ibfk_2` (`contract_id`),
+  CONSTRAINT `invoice_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`),
+  CONSTRAINT `invoice_ibfk_2` FOREIGN KEY (`contract_id`) REFERENCES `contract` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `invoice`
+--
+
+LOCK TABLES `invoice` WRITE;
+/*!40000 ALTER TABLE `invoice` DISABLE KEYS */;
+/*!40000 ALTER TABLE `invoice` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `medical_appointment`
+--
+
+DROP TABLE IF EXISTS `medical_appointment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `medical_appointment` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `employee_id` int(11) NOT NULL,
+  `provider_id` int(11) NOT NULL,
+  `appointment_date` datetime NOT NULL,
+  `reason` text NOT NULL,
+  `confidential` tinyint(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `employee_id` (`employee_id`),
+  KEY `provider_id` (`provider_id`),
+  CONSTRAINT `medical_appointment_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`),
+  CONSTRAINT `medical_appointment_ibfk_2` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `medical_appointment`
+--
+
+LOCK TABLES `medical_appointment` WRITE;
+/*!40000 ALTER TABLE `medical_appointment` DISABLE KEYS */;
+/*!40000 ALTER TABLE `medical_appointment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `migrations`
+--
+
+DROP TABLE IF EXISTS `migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `migrations` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `migrations`
+--
+
+LOCK TABLES `migrations` WRITE;
+/*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notification`
+--
+
+DROP TABLE IF EXISTS `notification`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `notification` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `recipient_id` int(11) NOT NULL,
+  `recipient_type` enum('Company','Employee','Provider') NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `creation_date` datetime DEFAULT current_timestamp(),
+  `send_date` datetime DEFAULT NULL,
+  `status` enum('Pending','Sent','Read') DEFAULT 'Pending',
+  `notification_type` enum('Email','Push','Internal') NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notification`
+--
+
+LOCK TABLES `notification` WRITE;
+/*!40000 ALTER TABLE `notification` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notification` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `password_resets`
+--
+
+DROP TABLE IF EXISTS `password_resets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `password_resets` (
+  `email` varchar(255) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  KEY `password_resets_email_index` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `password_resets`
+--
+
+LOCK TABLES `password_resets` WRITE;
+/*!40000 ALTER TABLE `password_resets` DISABLE KEYS */;
+/*!40000 ALTER TABLE `password_resets` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pending_registrations`
+--
+
+DROP TABLE IF EXISTS `pending_registrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pending_registrations` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_type` varchar(255) NOT NULL COMMENT 'societe, employe, prestataire',
+  `company_name` varchar(255) DEFAULT NULL,
+  `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `telephone` varchar(255) DEFAULT NULL,
+  `position` varchar(255) DEFAULT NULL,
+  `departement` varchar(255) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `code_postal` varchar(20) DEFAULT NULL,
+  `ville` varchar(255) DEFAULT NULL,
+  `siret` varchar(14) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `domains` varchar(255) DEFAULT NULL,
+  `tarif_horaire` decimal(10,2) DEFAULT NULL,
+  `additional_data` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`additional_data`)),
+  `status` varchar(20) NOT NULL DEFAULT 'pending' COMMENT 'pending, approved, rejected',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `pending_registrations_email_index` (`email`),
+  KEY `pending_registrations_status_index` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pending_registrations`
+--
+
+LOCK TABLES `pending_registrations` WRITE;
+/*!40000 ALTER TABLE `pending_registrations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pending_registrations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `personal_access_tokens`
+--
+
+DROP TABLE IF EXISTS `personal_access_tokens`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `personal_access_tokens` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
+  `last_used_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `personal_access_tokens`
+--
+
+LOCK TABLES `personal_access_tokens` WRITE;
+/*!40000 ALTER TABLE `personal_access_tokens` DISABLE KEYS */;
+/*!40000 ALTER TABLE `personal_access_tokens` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `provider`
+--
+
+DROP TABLE IF EXISTS `provider`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `provider` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `last_name` varchar(100) DEFAULT NULL,
+  `first_name` varchar(100) DEFAULT NULL,
+  `description` text NOT NULL,
+  `rating` decimal(3,2) DEFAULT 0.00,
+  `domains` text NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `telephone` varchar(20) DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `adresse` varchar(255) DEFAULT NULL,
+  `code_postal` varchar(10) DEFAULT NULL,
+  `ville` varchar(100) DEFAULT NULL,
+  `siret` varchar(14) DEFAULT NULL,
+  `iban` varchar(34) DEFAULT NULL,
+  `statut_prestataire` enum('Candidat','Validé','Inactif') DEFAULT 'Candidat',
+  `date_validation` date DEFAULT NULL,
+  `validation_documents` text DEFAULT NULL,
+  `tarif_horaire` decimal(10,2) DEFAULT NULL,
+  `nombre_evaluations` int(11) DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `provider`
+--
+
+LOCK TABLES `provider` WRITE;
+/*!40000 ALTER TABLE `provider` DISABLE KEYS */;
+/*!40000 ALTER TABLE `provider` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `provider_availability`
+--
+
+DROP TABLE IF EXISTS `provider_availability`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `provider_availability` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_id` int(11) NOT NULL,
+  `date_available` date NOT NULL,
+  `start_time` time NOT NULL,
+  `end_time` time NOT NULL,
+  `status` enum('Available','Reserved','Canceled') DEFAULT 'Available',
+  PRIMARY KEY (`id`),
+  KEY `provider_availability_ibfk_1` (`provider_id`),
+  CONSTRAINT `provider_availability_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `provider_availability`
+--
+
+LOCK TABLES `provider_availability` WRITE;
+/*!40000 ALTER TABLE `provider_availability` DISABLE KEYS */;
+/*!40000 ALTER TABLE `provider_availability` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `provider_invoice`
+--
+
+DROP TABLE IF EXISTS `provider_invoice`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `provider_invoice` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_id` int(11) NOT NULL,
+  `month` int(11) NOT NULL,
+  `year` int(11) NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `payment_status` enum('Pending','Paid') DEFAULT 'Pending',
+  `issue_date` date NOT NULL,
+  `payment_date` date DEFAULT NULL,
+  `pdf_path` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `provider_invoice_ibfk_1` (`provider_id`),
+  CONSTRAINT `provider_invoice_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `provider_invoice`
+--
+
+LOCK TABLES `provider_invoice` WRITE;
+/*!40000 ALTER TABLE `provider_invoice` DISABLE KEYS */;
+/*!40000 ALTER TABLE `provider_invoice` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `quote`
+--
+
+DROP TABLE IF EXISTS `quote`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `quote` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) NOT NULL,
+  `creation_date` date NOT NULL,
+  `expiration_date` date NOT NULL,
+  `company_size` int(11) NOT NULL,
+  `formule_abonnement` enum('Starter','Basic','Premium') NOT NULL DEFAULT 'Starter',
+  `activities_count` int(11) NOT NULL,
+  `medical_appointments` int(11) NOT NULL,
+  `extra_appointment_fee` decimal(5,2) NOT NULL,
+  `chatbot_questions` varchar(20) NOT NULL,
+  `weekly_advice` tinyint(1) NOT NULL,
+  `personalized_advice` tinyint(1) NOT NULL,
+  `price_per_employee` decimal(6,2) NOT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `status` enum('Pending','Accepted','Rejected') DEFAULT 'Pending',
+  `services_details` text NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `quote_ibfk_1` (`company_id`),
+  CONSTRAINT `quote_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `quote`
+--
+
+LOCK TABLES `quote` WRITE;
+/*!40000 ALTER TABLE `quote` DISABLE KEYS */;
+/*!40000 ALTER TABLE `quote` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `service_evaluation`
+--
+
+DROP TABLE IF EXISTS `service_evaluation`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `service_evaluation` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `intervention_id` int(11) NOT NULL,
+  `employee_id` int(11) NOT NULL,
+  `rating` decimal(3,2) NOT NULL,
+  `comment` text DEFAULT NULL,
+  `evaluation_date` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `service_evaluation_ibfk_1` (`intervention_id`),
+  KEY `service_evaluation_ibfk_2` (`employee_id`),
+  CONSTRAINT `service_evaluation_ibfk_1` FOREIGN KEY (`intervention_id`) REFERENCES `intervention` (`id`),
+  CONSTRAINT `service_evaluation_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `service_evaluation`
+--
+
+LOCK TABLES `service_evaluation` WRITE;
+/*!40000 ALTER TABLE `service_evaluation` DISABLE KEYS */;
+/*!40000 ALTER TABLE `service_evaluation` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `service_type`
+--
+
+DROP TABLE IF EXISTS `service_type`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `service_type` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `provider_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `duration` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `provider_id` (`provider_id`),
+  CONSTRAINT `service_type_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `service_type`
+--
+
+LOCK TABLES `service_type` WRITE;
+/*!40000 ALTER TABLE `service_type` DISABLE KEYS */;
+/*!40000 ALTER TABLE `service_type` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `translations`
+--
+
+DROP TABLE IF EXISTS `translations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `translations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `translation_key` varchar(255) NOT NULL,
+  `language` varchar(10) NOT NULL,
+  `text` text NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_translation` (`translation_key`,`language`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `translations`
+--
+
+LOCK TABLES `translations` WRITE;
+/*!40000 ALTER TABLE `translations` DISABLE KEYS */;
+/*!40000 ALTER TABLE `translations` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `password` varchar(255) NOT NULL,
+  `remember_token` varchar(100) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `users_email_unique` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
+
+-- Dump completed on 2025-05-04 19:35:35

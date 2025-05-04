@@ -16,7 +16,7 @@ services:
       - DB_CONNECTION=mysql
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_DATABASE=businesscare
+      - DB_DATABASE=businesscare2
       - DB_USERNAME=root
       - DB_PASSWORD=root
     depends_on:
@@ -27,17 +27,17 @@ services:
       - businesscare-network
 
   db:
-    image: mariadb:10.6
+    image: mariadb:11.7
     # AJOUT: 'always' pour assurer la haute disponibilité en production
     restart: always
     environment:
-      - MYSQL_DATABASE=businesscare
+      - MYSQL_DATABASE=businesscare2
       - MYSQL_ROOT_PASSWORD=root
     volumes:
-      - ./database/dataSave:/var/lib/mysql
+      - mariadb-data:/var/lib/mysql
       - ./database/repInit:/docker-entrypoint-initdb.d
     ports:
-      - "3306:3306"
+      - "3308:3306"
 
     networks:
       - businesscare-network
@@ -61,5 +61,4 @@ volumes:
 
 networks:
   businesscare-network:
-    # AJOUT: Spécification explicite du driver de réseau
     driver: bridge
