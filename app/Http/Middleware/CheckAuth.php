@@ -9,7 +9,6 @@ class CheckAuth
 {
     public function handle(Request $request, Closure $next)
     {
-
         if (!session()->has('user_id')) {
             return redirect()->route('login')->withErrors(['error' => 'Vous devez être connecté pour accéder à cette page.']);
         }
@@ -22,7 +21,10 @@ class CheckAuth
                 if (!str_starts_with($route, 'dashboard.client') &&
                     !str_starts_with($route, 'contracts.') &&
                     !str_starts_with($route, 'quotes.') &&
-                    !str_starts_with($route, 'employees.')) {
+                    !str_starts_with($route, 'employees.') &&
+                    !str_starts_with($route, 'payments.') &&
+                    !str_starts_with($route, 'invoices.') &&
+                    !str_starts_with($route, 'stripe.')) {
                     return redirect()->route('dashboard.client')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
@@ -39,20 +41,23 @@ class CheckAuth
 
             case 'prestataire':
                 if (!str_starts_with($route, 'dashboard.provider')) {
-                    return redirect()->route('dashboard.provider')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
+                    return redirect()->route('dashboard.provider')
+                        ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
 
-                case 'admin':
-                    if (!str_starts_with($route, 'dashboard.admin') &&
-                        !str_starts_with($route, 'admin.company') &&
-                        !str_starts_with($route, 'admin.prestataires') &&
-                        !str_starts_with($route, 'admin.salaries') &&
-                        !str_starts_with($route, 'admin.activities') &&
-                        !str_starts_with($route, 'admin.inscriptions')) {  // Ajout de cette ligne
-                        return redirect()->route('dashboard.admin')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
-                    }
-                    break;
+            case 'admin':
+                if (!str_starts_with($route, 'dashboard.admin') &&
+                    !str_starts_with($route, 'admin.company') &&
+                    !str_starts_with($route, 'admin.prestataires') &&
+                    !str_starts_with($route, 'admin.salaries') &&
+                    !str_starts_with($route, 'admin.activities') &&
+                    !str_starts_with($route, 'admin.inscriptions') &&
+                    !str_starts_with($route, 'admin.contracts')) {
+                    return redirect()->route('dashboard.admin')
+                        ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
+                }
+                break;
 
             default:
                 return redirect()->route('login')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);

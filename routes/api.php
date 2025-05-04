@@ -88,3 +88,9 @@ Route::prefix('employees')->group(function () {
     Route::post('/{employeeId}/events/{eventId}/register', [EmployeeController::class, 'registerForEvent']);
     Route::delete('/{employeeId}/events/{eventId}/cancel', [EmployeeController::class, 'cancelEventRegistration']);
 });
+
+Route::prefix('admin')->group(function () {
+    Route::get('contracts/pending', [AdminContractController::class, 'getPendingContracts']);
+    Route::post('contracts/{id}/approve', [AdminContractController::class, 'approveContract']);
+    Route::post('contracts/{id}/reject', [AdminContractController::class, 'rejectContract']);
+});

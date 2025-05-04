@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Gestion des contrats')
 
@@ -35,20 +35,20 @@
                         {{ session('success') }}
                     </div>
                     @endif
-                    
+
                     @if(session('error'))
                     <div class="alert alert-danger">
                         {{ session('error') }}
                     </div>
                     @endif
-                    
+
                     @if(session('info'))
                     <div class="alert alert-info">
                         {{ session('info') }}
                     </div>
                     @endif
 
-                    @if($contracts->isEmpty())
+                    @if(empty($contracts))
                         <div class="alert alert-info">
                             Vous n'avez pas encore de contrats. Cliquez sur "Nouveau contrat" pour en créer un.
                         </div>
@@ -75,49 +75,35 @@
                                         <td>{{ \Carbon\Carbon::parse($contract->end_date)->format('d/m/Y') }}</td>
                                         <td>{{ number_format($contract->amount, 2, ',', ' ') }} €</td>
                                         <td>
-                                            @if($contract->is_active)
+                                            @if($contract->payment_status === 'pending')
+                                                <span class="badge bg-warning">En attente d'approbation</span>
+                                            @elseif($contract->payment_status === 'unpaid')
+                                                <span class="badge bg-danger">Non payé</span>
+                                            @elseif($contract->payment_status === 'processing')
+                                                <span class="badge bg-info">Paiement en cours</span>
+                                            @elseif($contract->payment_status === 'active')
                                                 <span class="badge bg-success">Actif</span>
-                                            @elseif(\Carbon\Carbon::parse($contract->start_date)->isFuture())
-                                                <span class="badge bg-info">À venir</span>
-                                            @else
-                                                <span class="badge bg-secondary">Terminé</span>
                                             @endif
                                         </td>
+
                                         <td>
                                             <div class="btn-group btn-group-sm">
                                                 <a href="{{ route('contracts.show', $contract->id) }}" class="btn btn-info">
                                                     <i class="bi bi-eye"></i> Voir
                                                 </a>
-                                                @if($contract->is_active)
-                                                <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-warning">
-                                                    <i class="bi bi-pencil"></i> Modifier
-                                                </a>
-                                                <button type="button" class="btn btn-danger" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#deleteModal{{ $contract->id }}">
-                                                    <i class="bi bi-trash"></i> Résilier
-                                                </button>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ route('contracts.show', $contract->id) }}" class="btn btn-info">
-                                                    <i class="bi bi-eye"></i> Voir
-                                                </a>
-                                                @if($contract->is_active)
-                                                    <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-warning">
-                                                        <i class="bi bi-pencil"></i> Modifier
+
+                                                @if($contract->payment_status === 'unpaid')
+                                                    <a href="{{ route('contracts.payment.create', $contract->id) }}" class="btn btn-success">
+                                                        <i class="bi bi-credit-card"></i> Payer
                                                     </a>
-                                                    <button type="button" class="btn btn-danger" 
-                                                            data-bs-toggle="modal" 
+                                                @elseif($contract->payment_status === 'active')
+                                                    <button type="button" class="btn btn-danger"
+                                                            data-bs-toggle="modal"
                                                             data-bs-target="#deleteModal{{ $contract->id }}">
                                                         <i class="bi bi-trash"></i> Résilier
                                                     </button>
-                                                @elseif(\Carbon\Carbon::parse($contract->end_date)->isPast())
-                                                    <a href="{{ route('contracts.create') }}" class="btn btn-success">
-                                                        <i class="bi bi-arrow-repeat"></i> Renouveler
-                                                    </a>
+                                                @elseif($contract->payment_status === 'pending')
+                                                    <span class="text-muted">En attente de validation</span>
                                                 @endif
                                             </div>
                                         </td>
@@ -126,10 +112,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        
-                        <div class="d-flex justify-content-center mt-4">
-                            {{ $contracts->links() }}
-                        </div>
+
                     @endif
                 </div>
             </div>
@@ -146,7 +129,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                @if($contract->is_active)
+                @if($contract->payment_status === 'active')
                     <p>Êtes-vous sûr de vouloir demander la résiliation de ce contrat ?</p>
                     <p><strong>Services :</strong> {{ $contract->services }}</p>
                     <p><strong>Date de fin :</strong> {{ \Carbon\Carbon::parse($contract->end_date)->format('d/m/Y') }}</p>

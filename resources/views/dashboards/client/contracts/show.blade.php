@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Détails du contrat')
 
@@ -30,11 +30,6 @@
                         <a href="{{ route('contracts.index') }}" class="btn btn-secondary me-2">
                             <i class="bi bi-arrow-left"></i> Retour
                         </a>
-                        @if($contract->is_active)
-                        <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-warning">
-                            <i class="bi bi-pencil"></i> Modifier
-                        </a>
-                        @endif
                     </div>
                 </div>
                 <div class="card-body">
@@ -44,7 +39,7 @@
                         {{ session('success') }}
                     </div>
                     @endif
-                    
+
                     @if(session('error'))
                     <div class="alert alert-danger">
                         {{ session('error') }}
@@ -62,12 +57,14 @@
                                         <tr>
                                             <th>Statut:</th>
                                             <td>
-                                                @if($contract->is_active)
+                                                @if($contract->payment_status === 'pending')
+                                                    <span class="badge bg-warning">En attente d'approbation</span>
+                                                @elseif($contract->payment_status === 'unpaid')
+                                                    <span class="badge bg-danger">Non payé</span>
+                                                @elseif($contract->payment_status === 'processing')
+                                                    <span class="badge bg-info">Paiement en cours</span>
+                                                @elseif($contract->payment_status === 'active')
                                                     <span class="badge bg-success">Actif</span>
-                                                @elseif(\Carbon\Carbon::parse($contract->start_date)->isFuture())
-                                                    <span class="badge bg-info">À venir</span>
-                                                @else
-                                                    <span class="badge bg-secondary">Terminé</span>
                                                 @endif
                                             </td>
                                         </tr>
@@ -91,7 +88,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                             <div class="card h-100">
                                 <div class="card-header">
@@ -105,7 +102,7 @@
                                         </tr>
                                         <tr>
                                             <th>Fréquence:</th>
-                                            <td>..</td>
+                                            <td>Mensuelle</td>
                                         </tr>
                                         <tr>
                                             <th>Total du contrat:</th>
@@ -116,7 +113,7 @@
                                         <tr>
                                             <th>Prochain paiement:</th>
                                             <td>
-                                                @if($contract->is_active)
+                                                @if($contract->payment_status === 'active')
                                                     {{ \Carbon\Carbon::now()->addMonth()->format('d/m/Y') }}
                                                 @else
                                                     -
@@ -148,24 +145,43 @@
                         </div>
                         <div class="card-body">
                             <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <a href="#" class="btn btn-outline-primary w-100">
-                                        <i class="bi bi-file-pdf"></i> Télécharger le contrat
-                                    </a>
-                                </div>
-                                @if($contract->is_active)
-                                <div class="col-md-4 mb-3">
-                                    <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-outline-warning w-100">
-                                        <i class="bi bi-pencil"></i> Modifier le contrat
-                                    </a>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <button type="button" class="btn btn-outline-danger w-100" 
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#terminateModal">
-                                        <i class="bi bi-x-circle"></i> Demander une résiliation
-                                    </button>
-                                </div>
+                                @if($contract->payment_status === 'pending')
+                                    <div class="col-12 text-center">
+                                        <p class="text-muted">En attente de validation par l'administrateur</p>
+                                    </div>
+                                @elseif($contract->payment_status === 'unpaid')
+                                    <div class="col-md-4 mb-3">
+                                        <a href="{{ route('contracts.payment.create', $contract->id) }}" class="btn btn-success w-100">
+                                            <i class="bi bi-credit-card"></i> Payer le contrat
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-warning w-100">
+                                            <i class="bi bi-pencil"></i> Modifier le contrat
+                                        </a>
+                                    </div>
+                                @elseif($contract->payment_status === 'processing')
+                                    <div class="col-12 text-center">
+                                        <p class="text-info">Paiement en cours de traitement</p>
+                                    </div>
+                                @elseif($contract->payment_status === 'active')
+                                    <div class="col-md-4 mb-3">
+                                        <a href="#" class="btn btn-outline-primary w-100">
+                                            <i class="bi bi-file-pdf"></i> Télécharger le contrat
+                                        </a>
+                                    </div>
+                                    <div class="col-md-3 mb-3">
+                                        <a href="{{ route('contracts.request-change', $contract->id) }}" class="btn btn-outline-info w-100">
+                                            <i class="bi bi-arrow-repeat"></i> Changer de formule
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <button type="button" class="btn btn-outline-danger w-100"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#terminateModal">
+                                            <i class="bi bi-x-circle"></i> Demander une résiliation
+                                        </button>
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -176,7 +192,7 @@
     </div>
 </div>
 
-@if($contract->is_active)
+@if($contract->payment_status === 'active')
 <div class="modal fade" id="terminateModal" tabindex="-1" aria-labelledby="terminateModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -189,7 +205,7 @@
                 <p><strong>Services :</strong> {{ $contract->services }}</p>
                 <p><strong>Date de fin initiale :</strong> {{ \Carbon\Carbon::parse($contract->end_date)->format('d/m/Y') }}</p>
                 <p class="text-danger">
-                    <i class="bi bi-exclamation-triangle"></i> 
+                    <i class="bi bi-exclamation-triangle"></i>
                     Attention : Des frais de résiliation anticipée peuvent s'appliquer selon les termes du contrat.
                 </p>
                 <p>Un conseiller vous contactera pour finaliser cette demande.</p>

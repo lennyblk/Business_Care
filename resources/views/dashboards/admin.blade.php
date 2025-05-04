@@ -16,6 +16,7 @@
                     <a href="{{ route('admin.prestataires.index') }}" class="list-group-item list-group-item-action">Prestataires</a>
                     <a href="{{ route('admin.activities.index') }}" class="list-group-item list-group-item-action">Activités</a>
                     <a href="{{ route('admin.inscriptions.index') }}" class="list-group-item list-group-item-action">Inscriptions en attente</a>
+                    <a href="{{ route('admin.contracts.index') }}" class="list-group-item list-group-item-action">Contrats en attente</a>
                 </div>
             </div>
         </div>

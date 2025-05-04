@@ -21,6 +21,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\API\AdminPendingRegistrationController;
+use App\Http\Controllers\StripePaymentController;
 
 
 // Pages principales
@@ -114,6 +115,16 @@ Route::middleware(['check.auth'])->group(function () {
     });
 });
 
+
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/gestion_admin/contracts')->group(function () {
+        Route::get('/', [App\Http\Controllers\AdminContractController::class, 'index'])->name('admin.contracts.index');
+        Route::get('/{id}', [App\Http\Controllers\AdminContractController::class, 'show'])->name('admin.contracts.show');
+        Route::post('/{id}/approve', [App\Http\Controllers\AdminContractController::class, 'approve'])->name('admin.contracts.approve');
+        Route::post('/{id}/reject', [App\Http\Controllers\AdminContractController::class, 'reject'])->name('admin.contracts.reject');
+    });
+});
+
 // ============= ESPACE CLIENT
 
 Route::middleware(['auth', 'client'])->group(function () {
@@ -130,12 +141,10 @@ Route::middleware(['check.auth'])->group(function () {
     Route::get('/contracts/{contract}/edit', [ContractController::class, 'edit'])->name('contracts.edit');
     Route::put('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy'])->name('contracts.destroy');
-
-    // Paiements liés aux contrats
-    Route::get('/contracts/{contract}/payment', [ContractPaymentController::class, 'create'])->name('contracts.payment.create');
-    Route::post('/contracts/{contract}/payment', [ContractPaymentController::class, 'process'])->name('contracts.payment.process');
-    Route::get('/contracts/{contract}/showPayment', [ContractController::class, 'showPayment'])->name('contracts.showPayment');
-    Route::post('/contracts/{contract}/processPayment', [ContractController::class, 'processPayment'])->name('contracts.processPayment');
+    Route::get('/contracts/{contract}/change', [ContractController::class, 'requestChange'])
+        ->name('contracts.request-change');
+    Route::post('/contracts/{contract}/change', [ContractController::class, 'submitChange'])
+        ->name('contracts.submit-change');
 });
 
 // Routes pour les devis
@@ -181,3 +190,13 @@ Route::middleware(['check.auth'])->group(function () {
 
 Route::get('/test-email', [MailController::class, 'envoyerEmail'])->name('test.email');
 Route::post('/register/pending', [AuthController::class, 'registerPending'])->name('register.pending');
+
+// Routes Stripe
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/contracts/{contract}/payment', [StripePaymentController::class, 'createCheckoutSession'])
+        ->name('contracts.payment.create');
+    Route::get('/stripe/success/{contract}', [StripePaymentController::class, 'success'])
+        ->name('stripe.success');
+    Route::get('/stripe/cancel/{contract}', [StripePaymentController::class, 'cancel'])
+        ->name('stripe.cancel');
+});

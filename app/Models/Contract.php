@@ -2,17 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Contract extends Model
 {
-    use HasFactory;
-
     public $timestamps = false;
     protected $table = 'contract';
+
     protected $fillable = [
-        'company_id', 'start_date', 'end_date', 'services', 'amount', 'payment_method'
+        'company_id',
+        'start_date',
+        'end_date',
+        'services',
+        'amount',
+        'payment_method',
+        'formule_abonnement',
+        'stripe_checkout_id',
+        'stripe_subscription_id',
+        'payment_status'
     ];
 
     public function company()

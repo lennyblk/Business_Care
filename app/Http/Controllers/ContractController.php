@@ -292,4 +292,104 @@ class ContractController extends Controller
             return back()->with('error', 'Une erreur est survenue lors de la suppression du contrat');
         }
     }
+
+    public function requestChange($id)
+    {
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société.');
+            }
+
+            // Récupérer le contrat via l'API
+            $response = $this->apiContractController->show($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                return back()->with('error', 'Contrat non trouvé');
+            }
+
+            $contract = $this->arrayToObject($data['data'] ?? []);
+
+            // Vérifier que le contrat est actif
+            if ($contract->payment_status !== 'active') {
+                return back()->with('error', 'Seuls les contrats actifs peuvent être modifiés.');
+            }
+
+            $employeeCount = \App\Models\Employee::where('company_id', session('user_id'))->count();
+
+            // Déterminer la formule recommandée
+            $recommendedFormula = 'Starter';
+            if ($employeeCount > 250) {
+                $recommendedFormula = 'Premium';
+            } elseif ($employeeCount > 30) {
+                $recommendedFormula = 'Basic';
+            }
+
+            return view('dashboards.client.contracts.change', compact('contract', 'employeeCount', 'recommendedFormula'));
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la demande de changement: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
+    public function submitChange(Request $request, $id)
+    {
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société.');
+            }
+
+            $validated = $request->validate([
+                'new_formula' => 'required|in:Starter,Basic,Premium',
+                'reason' => 'required|string',
+            ]);
+
+            // Récupérer le contrat original
+            $response = $this->apiContractController->show($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                return back()->with('error', 'Contrat non trouvé');
+            }
+
+            $originalContract = $data['data'];
+
+            // Créer un nouveau contrat via l'API
+            $newContractData = [
+                'company_id' => session('user_id'),
+                'services' => $originalContract['services'],
+                'formule_abonnement' => $validated['new_formula'],
+                'payment_status' => 'pending',
+                'start_date' => $originalContract['end_date'],
+                'end_date' => Carbon::parse($originalContract['end_date'])->addYear()->format('Y-m-d'),
+                'payment_method' => $originalContract['payment_method'],
+            ];
+
+            // Calculer le nouveau montant
+            $employeeCount = \App\Models\Employee::where('company_id', session('user_id'))->count();
+            $pricePerEmployee = [
+                'Starter' => 180,
+                'Basic' => 150,
+                'Premium' => 100
+            ][$validated['new_formula']];
+
+            $newContractData['amount'] = $pricePerEmployee * $employeeCount;
+
+            // Créer le nouveau contrat via l'API
+            $createRequest = new Request($newContractData);
+            $createResponse = $this->apiContractController->store($createRequest);
+
+            if ($createResponse->getStatusCode() !== 201 && $createResponse->getStatusCode() !== 200) {
+                return back()->with('error', 'Erreur lors de la création de la demande de changement');
+            }
+
+            return redirect()->route('contracts.index')
+                ->with('success', 'Votre demande de changement a été envoyée.');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la soumission du changement: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue');
+        }
+    }
 }

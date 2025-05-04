@@ -44,16 +44,21 @@
 
                     <form action="{{ route('contracts.store') }}" method="POST">
                         @csrf
-                        
+
                         <div class="mb-3">
                             <label for="services" class="form-label">Services</label>
-                            <textarea class="form-control @error('services') is-invalid @enderror" id="services" name="services" rows="3" required>{{ old('services') }}</textarea>
-                            <div class="form-text">Décrivez les services dont vous avez besoin ou sélectionnez parmi les services proposés.</div>
+                            <select class="form-control @error('services') is-invalid @enderror" id="services" name="services" required>
+                                <option value="">Sélectionnez un service</option>
+                                <option value="Starter" {{ old('services') == 'Starter' ? 'selected' : '' }}>Starter</option>
+                                <option value="Basic" {{ old('services') == 'Basic' ? 'selected' : '' }}>Basic</option>
+                                <option value="Premium" {{ old('services') == 'Premium' ? 'selected' : '' }}>Premium</option>
+                            </select>
+                            <div class="form-text">Sélectionnez parmi les services proposés.</div>
                             @error('services')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="start_date" class="form-label">Date de début</label>
@@ -70,7 +75,7 @@
                                 @enderror
                             </div>
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="amount" class="form-label">Montant mensuel (€)</label>
@@ -94,7 +99,7 @@
                                 @enderror
                             </div>
                         </div>
-                        
+
                         <!-- Services proposés -->
                         @if(isset($services) && $services->count() > 0)
                         <div class="card mb-4">
@@ -120,12 +125,12 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="employee_count" class="form-label">Nombre de collaborateurs</label>
-                                <input type="number" class="form-control" id="employee_count" name="employee_count" 
+                                <input type="number" class="form-control" id="employee_count" name="employee_count"
                                     value="{{ $employeeCount ?? 0 }}" min="1" required onchange="calculateContractAmount()">
                             </div>
                             <div class="col-md-6">
                                 <label for="formule_abonnement" class="form-label">Formule d'abonnement</label>
-                                <select class="form-select @error('formule_abonnement') is-invalid @enderror" 
+                                <select class="form-select @error('formule_abonnement') is-invalid @enderror"
                                         id="formule_abonnement" name="formule_abonnement" required onchange="calculateContractAmount()">
                                     <option value="Starter" {{ $defaultFormula == 'Starter' ? 'selected' : '' }}>Starter (jusqu'à 30 employés)</option>
                                     <option value="Basic" {{ $defaultFormula == 'Basic' ? 'selected' : '' }}>Basic (jusqu'à 250 employés)</option>
@@ -199,14 +204,14 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="mb-3 form-check">
                             <input type="checkbox" class="form-check-input" id="terms" required>
                             <label class="form-check-label" for="terms">
                                 J'ai lu et j'accepte les <a href="#" target="_blank">termes et conditions</a>
                             </label>
                         </div>
-                        
+
                         <div class="d-flex justify-content-end">
                             <a href="{{ route('contracts.index') }}" class="btn btn-secondary me-2">Annuler</a>
                             <button type="submit" class="btn btn-primary">Créer le contrat</button>
@@ -231,20 +236,20 @@
         const servicesTextarea = document.getElementById('services');
         const employeeCountInput = document.getElementById('employee_count');
         const formulaSelect = document.getElementById('formule_abonnement');
-        
+
         // Éléments du récapitulatif
         const contractDuration = document.getElementById('contract-duration');
         const monthlyAmount = document.getElementById('monthly-amount');
         const totalAmount = document.getElementById('total-amount');
         const paymentMethodText = document.getElementById('payment-method-text');
         const formulaText = document.getElementById('formula-text');
-        
+
         // Calculs du montant en fonction du nombre d'employés et de la formule
         function calculateContractAmount() {
             const employeeCount = parseInt(employeeCountInput.value) || 0;
             const formula = formulaSelect.value;
             let pricePerEmployee = 0;
-            
+
             // Déterminer le prix par employé selon la formule
             if (formula === 'Starter') {
                 pricePerEmployee = 180;
@@ -253,50 +258,50 @@
             } else if (formula === 'Premium') {
                 pricePerEmployee = 100;
             }
-            
+
             // montant total
             const totalPrice = pricePerEmployee * employeeCount;
-            
+
             // Mettre à jour le champ montant
             amountInput.value = totalPrice.toFixed(2);
-            
+
             // Mettre à jour le récapitulatif
             updateSummary();
         }
-        
+
         // Fonction de mise à jour du récapitulatif
         function updateSummary() {
             // Calcul de la durée en mois
             const startDate = new Date(startDateInput.value);
             const endDate = new Date(endDateInput.value);
-            
+
             // Vérifier que les dates sont valides
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
                 return;
             }
-            
+
             const diffTime = Math.abs(endDate - startDate);
             const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Approximation
-            
+
             // Mise à jour de la durée
             contractDuration.textContent = diffMonths;
-            
+
             // Mise à jour du montant mensuel
             const amount = parseFloat(amountInput.value) || 0;
             monthlyAmount.textContent = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            
+
             // Mise à jour du montant total
             const total = amount * diffMonths;
             totalAmount.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            
+
             // Mise à jour de la méthode de paiement
             const paymentMethod = paymentMethodSelect.options[paymentMethodSelect.selectedIndex]?.text || '-';
             paymentMethodText.textContent = paymentMethod;
-            
+
             // Mise à jour de la formule d'abonnement
             formulaText.textContent = formulaSelect.options[formulaSelect.selectedIndex]?.text || '-';
         }
-        
+
         // Écouteurs d'événements
         startDateInput.addEventListener('change', updateSummary);
         endDateInput.addEventListener('change', updateSummary);
@@ -304,10 +309,10 @@
         paymentMethodSelect.addEventListener('change', updateSummary);
         employeeCountInput.addEventListener('input', calculateContractAmount);
         formulaSelect.addEventListener('change', calculateContractAmount);
-        
+
         // Initialisation du calcul et du récapitulatif
         calculateContractAmount();
     });
-    
+
 </script>
 @endpush
