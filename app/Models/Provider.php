@@ -30,6 +30,8 @@ class Provider extends Model
         'validation_documents',
         'tarif_horaire',
         'nombre_evaluations',
+        'activity_type',
+        'other_activity',
     ];
 
 
@@ -42,6 +44,7 @@ class Provider extends Model
         'tarif_horaire' => 'decimal:2',
         'date_validation' => 'date',
         'statut_prestataire' => 'string',
+        'activity_type' => 'string',
     ];
 
     public $timestamps = false;

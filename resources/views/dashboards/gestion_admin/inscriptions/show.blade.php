@@ -1,4 +1,3 @@
-// resources/views/admin/pending-registrations/show.blade.php
 @extends('layouts.admin')
 
 @section('content')
@@ -114,7 +113,7 @@
                                 <th>Téléphone</th>
                                 <td>{{ $registration->telephone }}</td>
                             </tr>
-                        @elseif($registration->user_type == 'prestataire')
+                            @elseif($registration->user_type == 'prestataire')
                             <tr>
                                 <th>Prénom</th>
                                 <td>{{ $registration->first_name }}</td>
@@ -134,6 +133,19 @@
                             <tr>
                                 <th>Description</th>
                                 <td>{{ $registration->description }}</td>
+                            </tr>
+                            <tr>
+                                <th>Type d'activité</th>
+                                <td>
+                                    @php
+                                        // Débogage
+                                        if(isset($registration->activity_type)) {
+                                            echo "Type d'activité : " . $registration->activity_type;
+                                        } else {
+                                            echo "Aucun type d'activité défini";
+                                        }
+                                    @endphp
+                                </td>
                             </tr>
                             <tr>
                                 <th>Tarif horaire</th>

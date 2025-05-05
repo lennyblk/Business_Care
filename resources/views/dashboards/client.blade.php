@@ -18,6 +18,7 @@
                     <a href="{{ route('employees.index') }}" class="list-group-item list-group-item-action">Collaborateurs</a>
                     <a href="{{ route('payments.index') }}" class="list-group-item list-group-item-action">Paiements</a>
                     <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action">Facturation</a>
+                    <a href="{{ route('client.event_proposals.index') }}" class="list-group-item list-group-item-action">Demande d'activités</a>
                 </div>
             </div>
         </div>

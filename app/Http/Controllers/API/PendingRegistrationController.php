@@ -12,6 +12,8 @@ use PHPMailer\PHPMailer\Exception;
 
 class PendingRegistrationController extends Controller
 {
+
+
     public function register(Request $request)
     {
         \Log::info('Données reçues dans PendingRegistrationController', $request->all());
@@ -43,12 +45,18 @@ class PendingRegistrationController extends Controller
                 'telephone' => 'nullable|string|max:20',
             ],
             'prestataire' => [
-                'first_name' => 'required|string|max:100',
-                'last_name' => 'required|string|max:100',
-                'domains' => 'required|string',
+                'name' => 'required|string|max:100',
+                'prenom' => 'required|string|max:100',
+                'specialite' => 'required|string',
                 'telephone' => 'required|string|max:20',
-                'description' => 'nullable|string',
-                'tarif_horaire' => 'nullable|numeric|min:0',
+                'bio' => 'nullable|string',
+                'tarif_horaire' => 'required|numeric|min:0',
+                'activity_type' => 'required|string',
+                'other_activity' => 'required_if:activity_type,autre|nullable|string',
+                'adresse' => 'nullable|string|max:255',
+                'code_postal' => 'nullable|string|max:10',
+                'ville' => 'nullable|string|max:100',
+                'siret' => 'nullable|string|max:14',
             ],
         ];
 
@@ -63,18 +71,38 @@ class PendingRegistrationController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
+        // Le reste du code reste inchangé...
+
         try {
             // Hashage du mot de passe
             $data = $request->all();
             $data['password'] = Hash::make($data['password']);
             $data['status'] = 'pending';
+
+            // Pour les prestataires, gérer correctement les champs spécifiques
+            if ($userType === 'prestataire') {
+                // Adaptation explicite des noms de champs
+                $data['first_name'] = $data['prenom'];
+                $data['last_name'] = $data['name'];
+                $data['domains'] = $data['specialite'];
+                $data['description'] = $data['bio'] ?? 'Pas de description';
+
+                // Gestion de l'activité personnalisée
+                if (isset($data['activity_type']) && $data['activity_type'] === 'autre' && !empty($data['other_activity'])) {
+                    // Stocker dans additional_data (format JSON)
+                    $additionalData = [
+                        'custom_activity' => $data['other_activity']
+                    ];
+                    $data['additional_data'] = json_encode($additionalData);
+                }
+            }
+
             \Log::info('Données préparées pour insertion', ['data' => array_diff_key($data, ['password' => ''])]);
 
             // Stockage de la demande d'inscription en attente
             $pendingRegistration = PendingRegistration::create($data);
 
             \Log::info('Inscription en attente créée', ['id' => $pendingRegistration->id]);
-
 
             // Envoi d'email à l'administrateur et aux utilisateurs
             $this->sendAdminNotification($pendingRegistration);

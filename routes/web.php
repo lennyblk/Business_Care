@@ -22,6 +22,7 @@ use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\API\AdminPendingRegistrationController;
 use App\Http\Controllers\StripePaymentController;
+use App\Http\Controllers\EventProposalController;
 
 
 // Pages principales
@@ -199,4 +200,27 @@ Route::middleware(['check.auth'])->group(function () {
         ->name('stripe.success');
     Route::get('/stripe/cancel/{contract}', [StripePaymentController::class, 'cancel'])
         ->name('stripe.cancel');
+});
+
+// Routes pour les propositions d'activités (côté client/company)
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/dashboard/client/event_proposals', [EventProposalController::class, 'index'])->name('client.event_proposals.index');
+    Route::get('/dashboard/client/event_proposals/create', [EventProposalController::class, 'create'])->name('client.event_proposals.create');
+    Route::post('/dashboard/client/event_proposals', [EventProposalController::class, 'store'])->name('client.event_proposals.store');
+    Route::get('/dashboard/client/event_proposals/{id}', [EventProposalController::class, 'show'])->name('client.event_proposals.show');
+});
+
+// Routes pour la gestion des propositions (côté admin)
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/dashboard/gestion_admin/event_proposals', [AdminEventProposalController::class, 'index'])->name('admin.event_proposals.index');
+    Route::get('/dashboard/gestion_admin/event_proposals/{id}', [AdminEventProposalController::class, 'show'])->name('admin.event_proposals.show');
+    Route::post('/dashboard/gestion_admin/event_proposals/{id}/assign', [AdminEventProposalController::class, 'assignProvider'])->name('admin.event_proposals.assign');
+});
+
+// Routes pour les assignations de prestataires (côté provider)
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/dashboard/provider/assignments', [ProviderAssignmentController::class, 'index'])->name('provider.assignments.index');
+    Route::get('/dashboard/provider/assignments/{id}', [ProviderAssignmentController::class, 'show'])->name('provider.assignments.show');
+    Route::post('/dashboard/provider/assignments/{id}/accept', [ProviderAssignmentController::class, 'accept'])->name('provider.assignments.accept');
+    Route::post('/dashboard/provider/assignments/{id}/reject', [ProviderAssignmentController::class, 'reject'])->name('provider.assignments.reject');
 });

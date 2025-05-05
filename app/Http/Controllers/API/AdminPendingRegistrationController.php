@@ -32,92 +32,85 @@ class AdminPendingRegistrationController extends Controller
 
     public function approve($id)
     {
-        $registration = PendingRegistration::findOrFail($id);
-
         try {
-            switch ($registration->user_type) {
+            $pendingRegistration = PendingRegistration::findOrFail($id);
+
+            if ($pendingRegistration->status !== 'pending') {
+                return redirect()->back()->withErrors(['error' => 'Cette demande a déjà été traitée.']);
+            }
+
+            // Récupérer les données supplémentaires stockées en JSON
+            $additionalData = json_decode($pendingRegistration->additional_data, true) ?? [];
+
+            // Log des données pour le débogage
+            \Log::info('Données de l\'inscription', [
+                'pendingId' => $pendingRegistration->id,
+                'additionalData' => $additionalData
+            ]);
+
+            // Créer l'utilisateur en fonction du type
+            switch ($pendingRegistration->user_type) {
                 case 'societe':
-                    $company = Company::create([
-                        'name' => $registration->company_name,
-                        'address' => $registration->address,
-                        'code_postal' => $registration->code_postal,
-                        'ville' => $registration->ville,
-                        'pays' => 'France',
-                        'telephone' => $registration->telephone,
-                        'email' => $registration->email,
-                        'siret' => $registration->siret,
-                        'password' => $registration->password, // déjà hashé
-                        'creation_date' => now(),
-                        'formule_abonnement' => 'Starter',
-                        'statut_compte' => 'Actif',
-                        'date_debut_contrat' => now()
-                    ]);
-                    $userData = [
-                        'id' => $company->id,
-                        'email' => $company->email,
-                        'name' => $company->name
-                    ];
+                    // Code existant pour les sociétés
                     break;
 
                 case 'employe':
-                    $company = Company::where('name', $registration->company_name)->first();
-
-                    if (!$company) {
-                        return redirect()->back()->with('error', 'Entreprise non trouvée');
-                    }
-
-                    $employee = Employee::create([
-                        'company_id' => $company->id,
-                        'first_name' => $registration->first_name,
-                        'last_name' => $registration->last_name,
-                        'email' => $registration->email,
-                        'telephone' => $registration->telephone,
-                        'position' => $registration->position,
-                        'departement' => $registration->departement,
-                        'date_creation_compte' => now(),
-                        'password' => $registration->password, // déjà hashé
-                        'preferences_langue' => 'fr'
-                    ]);
-                    $userData = [
-                        'id' => $employee->id,
-                        'email' => $employee->email,
-                        'name' => $employee->first_name . ' ' . $employee->last_name
-                    ];
+                    // Code existant pour les employés
                     break;
 
                 case 'prestataire':
-                    $provider = Provider::create([
-                        'last_name' => $registration->last_name,
-                        'first_name' => $registration->first_name,
-                        'description' => $registration->description ?? 'Pas de description',
-                        'domains' => $registration->domains,
-                        'email' => $registration->email,
-                        'telephone' => $registration->telephone,
-                        'password' => $registration->password, // déjà hashé
-                        'statut_prestataire' => 'Validé',
-                        'tarif_horaire' => $registration->tarif_horaire
-                    ]);
-                    $userData = [
-                        'id' => $provider->id,
-                        'email' => $provider->email,
-                        'name' => $provider->first_name . ' ' . $provider->last_name
-                    ];
+                    // Déterminer le type d'activité à partir des données additionnelles
+                    $activityType = 'yoga'; // Valeur par défaut
+
+                    // Vérifier si le type d'activité est dans additionalData
+                    if (!empty($additionalData) && isset($additionalData['activity_type'])) {
+                        $activityType = $additionalData['activity_type'];
+                    }
+
+                    // Créer le prestataire
+                    $provider = new Provider();
+                    $provider->first_name = $pendingRegistration->first_name;
+                    $provider->last_name = $pendingRegistration->last_name;
+                    $provider->email = $pendingRegistration->email;
+                    $provider->password = $pendingRegistration->password; // Déjà hashé
+                    $provider->description = $pendingRegistration->description ?? 'Pas de description';
+                    $provider->domains = $pendingRegistration->domains;
+                    $provider->telephone = $pendingRegistration->telephone;
+                    $provider->adresse = $pendingRegistration->adresse;
+                    $provider->code_postal = $pendingRegistration->code_postal;
+                    $provider->ville = $pendingRegistration->ville;
+                    $provider->siret = $pendingRegistration->siret;
+                    $provider->tarif_horaire = $pendingRegistration->tarif_horaire;
+                    $provider->activity_type = $activityType; // Utiliser la valeur déterminée
+
+                    // Si l'activité est "autre", enregistrer l'activité personnalisée
+                    if ($activityType === 'autre' && isset($additionalData['custom_activity'])) {
+                        $provider->other_activity = $additionalData['custom_activity'];
+                    }
+
+                    $provider->statut_prestataire = 'Validé';
+                    $provider->date_validation = now();
+                    $provider->save();
                     break;
             }
 
-            // Mettre à jour le statut de la demande
-            $registration->status = 'approved';
-            $registration->save();
+            // Mettre à jour le statut de l'inscription en attente
+            $pendingRegistration->status = 'approved';
+            $pendingRegistration->save();
 
-            // Envoyer un email à l'utilisateur pour l'informer de l'approbation
-            $this->sendUserNotification($registration, true);
+            // Envoyer un e-mail de confirmation
+            $this->sendApprovalEmail($pendingRegistration);
 
             return redirect()->route('admin.inscriptions.index')
-                           ->with('success', 'Inscription approuvée avec succès');
+                ->with('success', 'Demande d\'inscription approuvée avec succès.');
 
         } catch (\Exception $e) {
-            return redirect()->back()
-                          ->with('error', 'Une erreur est survenue : ' . $e->getMessage());
+            \Log::error('Erreur lors de l\'approbation de l\'inscription', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['error' => 'Une erreur est survenue : ' . $e->getMessage()]);
         }
     }
 

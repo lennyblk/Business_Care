@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Http\Middleware;
-
 use Closure;
 use Illuminate\Http\Request;
 
@@ -24,12 +22,12 @@ class CheckAuth
                     !str_starts_with($route, 'employees.') &&
                     !str_starts_with($route, 'payments.') &&
                     !str_starts_with($route, 'invoices.') &&
-                    !str_starts_with($route, 'stripe.')) {
+                    !str_starts_with($route, 'stripe.') &&
+                    !str_starts_with($route, 'client.event_proposals.')) {
                     return redirect()->route('dashboard.client')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
-
             case 'employe':
                 if (!str_starts_with($route, 'dashboard.employee') &&
                     !str_starts_with($route, 'events.') &&
@@ -38,14 +36,13 @@ class CheckAuth
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
-
             case 'prestataire':
-                if (!str_starts_with($route, 'dashboard.provider')) {
+                if (!str_starts_with($route, 'dashboard.provider') &&
+                    !str_starts_with($route, 'provider.assignments.')) {
                     return redirect()->route('dashboard.provider')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
-
             case 'admin':
                 if (!str_starts_with($route, 'dashboard.admin') &&
                     !str_starts_with($route, 'admin.company') &&
@@ -53,12 +50,12 @@ class CheckAuth
                     !str_starts_with($route, 'admin.salaries') &&
                     !str_starts_with($route, 'admin.activities') &&
                     !str_starts_with($route, 'admin.inscriptions') &&
-                    !str_starts_with($route, 'admin.contracts')) {
+                    !str_starts_with($route, 'admin.contracts') &&
+                    !str_starts_with($route, 'admin.event_proposals.')) {
                     return redirect()->route('dashboard.admin')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
-
             default:
                 return redirect()->route('login')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
         }
