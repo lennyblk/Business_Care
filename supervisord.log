@@ -28,3 +28,13 @@
 2025-05-04 18:26:39,737 INFO waiting for nginx, php-fpm to die
 2025-05-04 18:26:39,739 INFO stopped: php-fpm (exit status 0)
 2025-05-04 18:26:39,907 INFO stopped: nginx (exit status 0)
+2025-05-05 10:17:47,807 INFO Set uid to user 0 succeeded
+2025-05-05 10:17:47,823 INFO supervisord started with pid 1
+2025-05-05 10:17:48,829 INFO spawned: 'nginx' with pid 7
+2025-05-05 10:17:48,835 INFO spawned: 'php-fpm' with pid 8
+2025-05-05 10:17:49,996 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-05-05 10:17:49,997 INFO success: php-fpm entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-05-05 10:17:58,010 WARN received SIGQUIT indicating exit request
+2025-05-05 10:17:58,011 INFO waiting for nginx, php-fpm to die
+2025-05-05 10:17:58,018 INFO stopped: php-fpm (exit status 0)
+2025-05-05 10:17:58,162 INFO stopped: nginx (exit status 0)
