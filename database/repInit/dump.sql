@@ -1,9 +1,9 @@
-/*M!999999\- enable the sandbox mode */ 
+/*M!999999\- enable the sandbox mode */
 -- MariaDB dump 10.19-11.6.2-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: businesscare2
 -- ------------------------------------------------------
--- Server version	11.6.2-MariaDB
+-- Server version	11.7.2-MariaDB-ubu2404
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -31,7 +31,7 @@ CREATE TABLE `admin` (
   `type` varchar(10) NOT NULL DEFAULT 'admin',
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -40,6 +40,8 @@ CREATE TABLE `admin` (
 
 LOCK TABLES `admin` WRITE;
 /*!40000 ALTER TABLE `admin` DISABLE KEYS */;
+INSERT INTO `admin` VALUES
+(1,'admin@admin.com','123456789','Sadmin','admin');
 /*!40000 ALTER TABLE `admin` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -180,7 +182,7 @@ CREATE TABLE `company` (
   `employee_count` int(11) DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -189,6 +191,9 @@ CREATE TABLE `company` (
 
 LOCK TABLES `company` WRITE;
 /*!40000 ALTER TABLE `company` DISABLE KEYS */;
+INSERT INTO `company` VALUES
+(1,'Sarah Corp','90 rue du Caca','90000','Paris','France','01010101','2025-05-04','kiwotap814@nutrv.com','$2y$10$UUvxi3vNi7zZmjASjDBjeeiMiG8yndcLGW9NQjIn1am1cTkXGiE7K','12345678912345','Starter','Actif','2025-05-04',NULL,NULL,0),
+(2,'Bruh Corp','12 rue Lakers','89000','Pantin','France','010011010','2025-05-04','xafeti4894@javbing.com','$2y$10$Ln1Uzybo2vJAvper2Zew5ODSCwxnGzdp9MXp7KnqJVfpr3HERnNRS','12345678912345','Starter','Actif','2025-05-04',NULL,NULL,0);
 /*!40000 ALTER TABLE `company` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -212,7 +217,7 @@ CREATE TABLE `contract` (
   `stripe_subscription_id` varchar(255) DEFAULT NULL,
   `payment_status` enum('pending','unpaid','processing','active') DEFAULT 'pending',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -221,6 +226,8 @@ CREATE TABLE `contract` (
 
 LOCK TABLES `contract` WRITE;
 /*!40000 ALTER TABLE `contract` DISABLE KEYS */;
+INSERT INTO `contract` VALUES
+(1,1,'2025-05-04','2026-05-04','Starter',1800.00,'Direct Debit','Starter','cs_test_a1bXE4UJYt4W5f0fNIAzctEKycSwHbrdn1mFGLlqWdDWPmUHkq7uhDd4xa',NULL,'active');
 /*!40000 ALTER TABLE `contract` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -281,7 +288,7 @@ CREATE TABLE `employee` (
   UNIQUE KEY `email` (`email`),
   KEY `employee_ibfk_1` (`company_id`),
   CONSTRAINT `employee_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -290,6 +297,9 @@ CREATE TABLE `employee` (
 
 LOCK TABLES `employee` WRITE;
 /*!40000 ALTER TABLE `employee` DISABLE KEYS */;
+INSERT INTO `employee` VALUES
+(1,2,'Lenny','Blackett','cocoblackett@gmail.com','01010101','Artisan','90000','2025-05-05','$2y$10$8j8auo5NQUWwtkcod/lWCOV0JZmbI4Rc7o0fPX27pdQEOR3fK5wpS','2025-05-05 02:09:18','Francais','1'),
+(2,2,'Allo','Maman','bruh@bruh.com','0101010101','Technicien','98900','2025-05-05','$2y$10$vRxkm9WTWCYc5FCidouuDuCFBdBFBPSGdwIlOzDId6xPBioM2lVSm',NULL,'fr','2');
 /*!40000 ALTER TABLE `employee` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -336,10 +346,13 @@ CREATE TABLE `event` (
   `location` varchar(255) DEFAULT NULL,
   `registrations` int(11) NOT NULL DEFAULT 0,
   `company_id` int(11) DEFAULT NULL,
+  `event_proposal_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_event_company` (`company_id`),
-  CONSTRAINT `fk_event_company` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+  KEY `fk_event_event_proposal` (`event_proposal_id`),
+  CONSTRAINT `fk_event_company` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`),
+  CONSTRAINT `fk_event_event_proposal` FOREIGN KEY (`event_proposal_id`) REFERENCES `event_proposal` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -348,7 +361,43 @@ CREATE TABLE `event` (
 
 LOCK TABLES `event` WRITE;
 /*!40000 ALTER TABLE `event` DISABLE KEYS */;
+INSERT INTO `event` VALUES
+(1,'Test Event','Test description','2025-05-15 00:00:00','Webinar',10,'Online',0,2,NULL);
 /*!40000 ALTER TABLE `event` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `event_proposal`
+--
+
+DROP TABLE IF EXISTS `event_proposal`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `event_proposal` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `company_id` int(11) NOT NULL,
+  `event_type_id` int(11) NOT NULL,
+  `proposed_date` date NOT NULL,
+  `location_id` int(11) NOT NULL,
+  `status` enum('Pending','Assigned','Accepted','Rejected','Completed') DEFAULT 'Pending',
+  `notes` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_event_proposal_company` (`company_id`),
+  KEY `fk_event_proposal_event_type` (`event_type_id`),
+  CONSTRAINT `fk_event_proposal_company` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`),
+  CONSTRAINT `fk_event_proposal_event_type` FOREIGN KEY (`event_type_id`) REFERENCES `service_type` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `event_proposal`
+--
+
+LOCK TABLES `event_proposal` WRITE;
+/*!40000 ALTER TABLE `event_proposal` DISABLE KEYS */;
+/*!40000 ALTER TABLE `event_proposal` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -479,6 +528,35 @@ CREATE TABLE `invoice` (
 LOCK TABLES `invoice` WRITE;
 /*!40000 ALTER TABLE `invoice` DISABLE KEYS */;
 /*!40000 ALTER TABLE `invoice` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `location`
+--
+
+DROP TABLE IF EXISTS `location`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `location` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  `postal_code` varchar(10) NOT NULL,
+  `city` varchar(100) NOT NULL,
+  `country` varchar(50) DEFAULT 'France',
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `location`
+--
+
+LOCK TABLES `location` WRITE;
+/*!40000 ALTER TABLE `location` DISABLE KEYS */;
+/*!40000 ALTER TABLE `location` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -622,7 +700,7 @@ CREATE TABLE `pending_registrations` (
   PRIMARY KEY (`id`),
   KEY `pending_registrations_email_index` (`email`),
   KEY `pending_registrations_status_index` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -631,6 +709,9 @@ CREATE TABLE `pending_registrations` (
 
 LOCK TABLES `pending_registrations` WRITE;
 /*!40000 ALTER TABLE `pending_registrations` DISABLE KEYS */;
+INSERT INTO `pending_registrations` VALUES
+(1,'societe','Sarah Corp',NULL,NULL,'kiwotap814@nutrv.com','$2y$10$UUvxi3vNi7zZmjASjDBjeeiMiG8yndcLGW9NQjIn1am1cTkXGiE7K','01010101',NULL,NULL,'90 rue du Caca','90000','Paris','12345678912345',NULL,NULL,NULL,NULL,'approved','2025-05-04 18:29:55','2025-05-04 18:31:12'),
+(2,'societe','Bruh Corp',NULL,NULL,'xafeti4894@javbing.com','$2y$10$Ln1Uzybo2vJAvper2Zew5ODSCwxnGzdp9MXp7KnqJVfpr3HERnNRS','010011010',NULL,NULL,'12 rue Lakers','89000','Pantin','12345678912345',NULL,NULL,NULL,NULL,'approved','2025-05-04 18:53:50','2025-05-04 18:54:14');
 /*!40000 ALTER TABLE `pending_registrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -708,6 +789,38 @@ LOCK TABLES `provider` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `provider_assignment`
+--
+
+DROP TABLE IF EXISTS `provider_assignment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `provider_assignment` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_proposal_id` int(11) NOT NULL,
+  `provider_id` int(11) NOT NULL,
+  `status` enum('Proposed','Accepted','Rejected') DEFAULT 'Proposed',
+  `proposed_at` datetime DEFAULT current_timestamp(),
+  `response_at` datetime DEFAULT NULL,
+  `payment_amount` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `fk_provider_assignment_event_proposal` (`event_proposal_id`),
+  KEY `fk_provider_assignment_provider` (`provider_id`),
+  CONSTRAINT `fk_provider_assignment_event_proposal` FOREIGN KEY (`event_proposal_id`) REFERENCES `event_proposal` (`id`),
+  CONSTRAINT `fk_provider_assignment_provider` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `provider_assignment`
+--
+
+LOCK TABLES `provider_assignment` WRITE;
+/*!40000 ALTER TABLE `provider_assignment` DISABLE KEYS */;
+/*!40000 ALTER TABLE `provider_assignment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `provider_availability`
 --
 
@@ -721,8 +834,11 @@ CREATE TABLE `provider_availability` (
   `start_time` time NOT NULL,
   `end_time` time NOT NULL,
   `status` enum('Available','Reserved','Canceled') DEFAULT 'Available',
+  `provider_assignment_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `provider_availability_ibfk_1` (`provider_id`),
+  KEY `fk_provider_availability_assignment` (`provider_assignment_id`),
+  CONSTRAINT `fk_provider_availability_assignment` FOREIGN KEY (`provider_assignment_id`) REFERENCES `provider_assignment` (`id`),
   CONSTRAINT `provider_availability_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -766,6 +882,42 @@ CREATE TABLE `provider_invoice` (
 LOCK TABLES `provider_invoice` WRITE;
 /*!40000 ALTER TABLE `provider_invoice` DISABLE KEYS */;
 /*!40000 ALTER TABLE `provider_invoice` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `provider_recommendation_log`
+--
+
+DROP TABLE IF EXISTS `provider_recommendation_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `provider_recommendation_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `event_proposal_id` int(11) NOT NULL,
+  `provider_id` int(11) NOT NULL,
+  `geographic_match` tinyint(1) DEFAULT 0,
+  `skill_match` tinyint(1) DEFAULT 0,
+  `rating_score` decimal(5,2) DEFAULT 0.00,
+  `price_score` decimal(5,2) DEFAULT 0.00,
+  `availability_score` decimal(5,2) DEFAULT 0.00,
+  `total_score` decimal(5,2) DEFAULT 0.00,
+  `recommended` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `fk_provider_recommendation_event_proposal` (`event_proposal_id`),
+  KEY `fk_provider_recommendation_provider` (`provider_id`),
+  CONSTRAINT `fk_provider_recommendation_event_proposal` FOREIGN KEY (`event_proposal_id`) REFERENCES `event_proposal` (`id`),
+  CONSTRAINT `fk_provider_recommendation_provider` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `provider_recommendation_log`
+--
+
+LOCK TABLES `provider_recommendation_log` WRITE;
+/*!40000 ALTER TABLE `provider_recommendation_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `provider_recommendation_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -932,4 +1084,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-05-04 19:35:35
+-- Dump completed on 2025-05-05 15:10:33

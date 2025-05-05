@@ -46,4 +46,14 @@ class Provider extends Model
 
     public $timestamps = false;
 
+    public function assignments()
+    {
+        return $this->hasMany(ProviderAssignment::class);
+    }
+
+    public function recommendationLogs()
+    {
+        return $this->hasMany(ProviderRecommendationLog::class);
+    }
+
 }

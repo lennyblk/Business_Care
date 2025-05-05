@@ -34,4 +34,9 @@ class Event extends Model
     {
         return $this->belongsToMany(Employee::class, 'event_registration', 'event_id', 'employee_id');
     }
+
+    public function eventProposal()
+    {
+        return $this->belongsTo(EventProposal::class);
+    }
 }

@@ -18,4 +18,9 @@ class ProviderAvailability extends Model
     {
         return $this->belongsTo(Provider::class);
     }
+
+    public function providerAssignment()
+    {
+        return $this->belongsTo(ProviderAssignment::class);
+    }
 }
