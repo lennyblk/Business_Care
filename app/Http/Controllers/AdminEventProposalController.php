@@ -5,7 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\EventProposal;
 use App\Models\Provider;
 use App\Models\ProviderAssignment;
-use App\Models\ProviderRecommendationLog;
+use App\Models\Event;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -13,15 +14,17 @@ use PHPMailer\PHPMailer\Exception;
 class AdminEventProposalController extends Controller
 {
     /**
-     * Affiche la liste des propositions d'activités en attente
+     * Affiche la liste des propositions d'activités
      */
     public function index()
     {
         $pendingProposals = EventProposal::where('status', 'Pending')
+            ->with(['company', 'eventType', 'location'])
             ->orderBy('created_at', 'asc')
             ->get();
 
-        $assignedProposals = EventProposal::where('status', 'Assigned')
+        $assignedProposals = EventProposal::whereIn('status', ['Assigned', 'Accepted'])
+            ->with(['company', 'eventType', 'location'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -32,21 +35,19 @@ class AdminEventProposalController extends Controller
     }
 
     /**
-     * Affiche les détails d'une proposition d'activité avec des recommandations de prestataires
+     * Affiche les détails d'une proposition d'activité
      */
     public function show($id)
     {
-        $eventProposal = EventProposal::findOrFail($id);
+        $eventProposal = EventProposal::with(['company', 'eventType', 'location', 'providerAssignments.provider'])
+            ->findOrFail($id);
 
-        // Si le statut est 'Pending', générer des recommandations
-        if ($eventProposal->status === 'Pending') {
-            $recommendations = $this->generateRecommendations($eventProposal);
-        } else {
-            // Sinon, récupérer les prestataires déjà assignés
-            $recommendations = Provider::whereHas('assignments', function ($query) use ($eventProposal) {
-                $query->where('event_proposal_id', $eventProposal->id);
-            })->get();
-        }
+        // Trouver des prestataires correspondant aux critères (même ville et même type d'activité)
+        $recommendations = Provider::where('statut_prestataire', 'Validé')
+            ->where('ville', $eventProposal->location->city)
+            ->where('activity_type', $eventProposal->eventType->title)
+            ->orderBy('rating', 'desc')
+            ->get();
 
         return view('dashboards.gestion_admin.event_proposals.show', [
             'eventProposal' => $eventProposal,
@@ -65,13 +66,15 @@ class AdminEventProposalController extends Controller
         ]);
 
         $eventProposal = EventProposal::findOrFail($id);
+        $provider = Provider::findOrFail($request->provider_id);
 
         // Créer l'assignation du prestataire
         $assignment = ProviderAssignment::create([
             'event_proposal_id' => $eventProposal->id,
             'provider_id' => $request->provider_id,
             'status' => 'Proposed',
-            'payment_amount' => $request->payment_amount
+            'payment_amount' => $request->payment_amount,
+            'proposed_at' => now()
         ]);
 
         // Mettre à jour le statut de la proposition
@@ -81,90 +84,37 @@ class AdminEventProposalController extends Controller
         // Envoyer une notification au prestataire
         $this->notifyProvider($assignment);
 
+        // Envoyer une notification à l'entreprise
+        $this->notifyCompany($eventProposal, $provider);
+
         return redirect()->route('admin.event_proposals.index')
             ->with('success', 'Le prestataire a été assigné avec succès à cette activité.');
     }
 
     /**
-     * Génère des recommandations de prestataires pour une proposition d'activité
+     * Refuse une proposition d'activité
      */
-    private function generateRecommendations(EventProposal $eventProposal)
+    public function rejectProposal($id)
     {
-        // Récupérer l'emplacement de la proposition
-        $location = $eventProposal->location;
+        $eventProposal = EventProposal::findOrFail($id);
+        $eventProposal->status = 'Rejected';
+        $eventProposal->save();
 
-        // Récupérer le type de service demandé
-        $serviceType = $eventProposal->eventType;
+        // Envoyer une notification à l'entreprise
+        $this->notifyCompanyRejection($eventProposal);
 
-        // Trouver des prestataires correspondant aux critères
-        $providers = Provider::where('statut_prestataire', 'Validé')
-            ->where(function($query) use ($location, $serviceType) {
-                // Correspondance géographique
-                $query->where('ville', $location->city);
-
-                // Correspondance de compétences (simplifié)
-                // Dans un cas réel, vous voudriez peut-être comparer avec domains ou une autre table de compétences
-            })
-            ->orderBy('rating', 'desc')
-            ->take(3)
-            ->get();
-
-        // Enregistrer les recommandations pour chaque prestataire
-        foreach ($providers as $provider) {
-            // Calculer les scores
-            $geographicMatch = $provider->ville === $location->city;
-
-            // Simplification: vérifier si les domaines du prestataire contiennent le titre du service
-            $skillMatch = str_contains(strtolower($provider->domains), strtolower($serviceType->title));
-
-            // Calculer le score de tarif (inversement proportionnel)
-            $priceScore = 5 - min(5, max(0, $provider->tarif_horaire / 50));
-
-            // Score total
-            $totalScore = ($geographicMatch ? 5 : 0) +
-                          ($skillMatch ? 5 : 0) +
-                          $provider->rating +
-                          $priceScore;
-
-            // Recommandé si score total > 10
-            $recommended = $totalScore > 10;
-
-            // Enregistrer la recommandation
-            ProviderRecommendationLog::create([
-                'event_proposal_id' => $eventProposal->id,
-                'provider_id' => $provider->id,
-                'geographic_match' => $geographicMatch,
-                'skill_match' => $skillMatch,
-                'rating_score' => $provider->rating,
-                'price_score' => $priceScore,
-                'total_score' => $totalScore,
-                'recommended' => $recommended
-            ]);
-        }
-
-        return $providers;
+        return redirect()->route('admin.event_proposals.index')
+            ->with('success', 'La demande d\'activité a été refusée.');
     }
 
     /**
-     * Notifie un prestataire d'une nouvelle assignation via PHPMailer
+     * Notifie un prestataire d'une nouvelle assignation
      */
     private function notifyProvider(ProviderAssignment $assignment)
     {
         $provider = $assignment->provider;
         $eventProposal = $assignment->eventProposal;
 
-        // Créer une notification pour le prestataire
-        $notification = new \App\Models\Notification();
-        $notification->recipient_id = $provider->id;
-        $notification->recipient_type = 'Provider';
-        $notification->title = 'Nouvelle proposition d\'activité';
-        $notification->message = 'Vous avez été sélectionné pour animer une activité le ' .
-            $eventProposal->proposed_date->format('d/m/Y') .
-            ' à ' . $eventProposal->location->name;
-        $notification->notification_type = 'Email';
-        $notification->save();
-
-        // Envoi d'email avec PHPMailer
         $mail = new PHPMailer(true);
 
         try {
@@ -203,9 +153,123 @@ class AdminEventProposalController extends Controller
             $mail->AltBody = "Nouvelle proposition d'activité - Vous avez été sélectionné pour animer une activité {$eventProposal->eventType->title} le {$eventProposal->proposed_date->format('d/m/Y')} à {$eventProposal->location->name}.";
 
             $mail->send();
-            return true;
+
         } catch (Exception $e) {
             \Log::error("Erreur d'envoi d'email au prestataire: {$mail->ErrorInfo}");
+            return false;
+        }
+    }
+
+    /**
+     * Notifie l'entreprise qu'un prestataire a été assigné
+     */
+    private function notifyCompany(EventProposal $eventProposal, Provider $provider)
+    {
+        $company = $eventProposal->company;
+
+        $mail = new PHPMailer(true);
+
+        try {
+            // Configuration du serveur
+            $mail->isSMTP();
+            $mail->CharSet = 'UTF-8';
+            $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
+            $mail->SMTPAuth = true;
+            $mail->Username = env('MAIL_USERNAME');
+            $mail->Password = env('MAIL_PASSWORD');
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = env('MAIL_PORT', 587);
+
+            // Destinataire (company)
+            $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
+            $mail->addAddress($company->email);
+
+            // Contenu
+            $mail->isHTML(true);
+            $mail->Subject = 'Demande d\'activité en cours de traitement';
+
+            $mail->Body = "
+                <meta charset='UTF-8'>
+                <h2>Votre demande d'activité est en cours de traitement</h2>
+                <p>Cher client {$company->name},</p>
+                <p>Nous avons le plaisir de vous informer que votre demande d'activité <strong>{$eventProposal->eventType->title}</strong> prévue le <strong>{$eventProposal->proposed_date->format('d/m/Y')}</strong> a été traitée.</p>
+                <p>Nous avons sélectionné un prestataire pour animer cette activité : <strong>{$provider->first_name} {$provider->last_name}</strong>.</p>
+                <p>Le prestataire doit maintenant confirmer sa disponibilité. Vous serez informé dès qu'il aura accepté l'activité.</p>
+                <p>Vous pouvez suivre l'avancement de votre demande dans votre espace client.</p>
+                <p><a href='" . url('/dashboard/client/event_proposals/' . $eventProposal->id) . "'>Accéder à votre espace</a></p>
+                <p>Cordialement,<br>L'équipe Business-Care</p>
+            ";
+
+            $mail->AltBody = "Votre demande d'activité est en cours de traitement - Nous avons sélectionné un prestataire pour animer votre {$eventProposal->eventType->title} du {$eventProposal->proposed_date->format('d/m/Y')}.";
+
+            $mail->send();
+
+            // Créer une notification pour l'entreprise
+            $notification = new Notification();
+            $notification->recipient_id = $company->id;
+            $notification->recipient_type = 'Company';
+            $notification->title = 'Demande d\'activité en cours de traitement';
+            $notification->message = 'Votre demande d\'activité ' . $eventProposal->eventType->title .
+                ' prévue le ' . $eventProposal->proposed_date->format('d/m/Y') .
+                ' a été assignée à un prestataire.';
+            $notification->notification_type = 'Email';
+            $notification->save();
+
+            return true;
+        } catch (Exception $e) {
+            \Log::error("Erreur d'envoi d'email à l'entreprise: {$mail->ErrorInfo}");
+            return false;
+        }
+    }
+
+    /**
+     * Notifie l'entreprise que sa demande a été refusée
+     */
+    private function notifyCompanyRejection(EventProposal $eventProposal)
+    {
+        $company = $eventProposal->company;
+
+        $mail = new PHPMailer(true);
+
+        try {
+            // Configuration du serveur
+            $mail->isSMTP();
+            $mail->CharSet = 'UTF-8';
+            $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
+            $mail->SMTPAuth = true;
+            $mail->Username = env('MAIL_USERNAME');
+            $mail->Password = env('MAIL_PASSWORD');
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = env('MAIL_PORT', 587);
+
+            // Destinataire (company)
+            $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
+            $mail->addAddress($company->email);
+
+            // Contenu
+            $mail->isHTML(true);
+            $mail->Subject = 'Demande d\'activité refusée';
+
+            $mail->Body = "
+                <meta charset='UTF-8'>
+                <h2>Votre demande d'activité a été refusée</h2>
+                <p>Cher client {$company->name},</p>
+                <p>Nous sommes désolés de vous informer que votre demande d'activité <strong>{$eventProposal->eventType->title}</strong> prévue le <strong>{$eventProposal->proposed_date->format('d/m/Y')}</strong> a été refusée.</p>
+                <p>Cela peut être dû à plusieurs raisons, notamment :</p>
+                <ul>
+                    <li>Aucun prestataire n'est disponible à cette date</li>
+                    <li>L'activité ne correspond pas aux services que nous proposons actuellement</li>
+                    <li>L'activité ne répond pas à nos critères de qualité ou de sécurité</li>
+                </ul>
+                <p>Nous vous invitons à nous contacter pour discuter de cette décision ou pour soumettre une nouvelle demande à une date différente.</p>
+                <p>Cordialement,<br>L'équipe Business-Care</p>
+            ";
+
+            $mail->AltBody = "Votre demande d'activité a été refusée - Nous sommes désolés de vous informer que votre demande pour l'activité {$eventProposal->eventType->title} du {$eventProposal->proposed_date->format('d/m/Y')} a été refusée.";
+
+            $mail->send();
+        } catch (Exception $e) {
+            \Log::error("Erreur d'envoi d'email à l'entreprise: {$mail->ErrorInfo}");
             return false;
         }
     }

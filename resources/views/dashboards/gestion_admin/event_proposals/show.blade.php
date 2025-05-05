@@ -8,6 +8,15 @@
             <a href="{{ route('admin.event_proposals.index') }}" class="btn btn-outline-secondary">
                 <i class="fas fa-arrow-left"></i> Retour à la liste
             </a>
+
+            @if($eventProposal->status == 'Pending')
+            <form action="{{ route('admin.event_proposals.reject', $eventProposal->id) }}" method="POST" class="d-inline">
+                @csrf
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir refuser cette demande?')">
+                    <i class="fas fa-times"></i> Refuser la demande
+                </button>
+            </form>
+            @endif
         </div>
     </div>
 
@@ -53,7 +62,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header bg-success text-white">
-                    <h5 class="m-0">Prestataires recommandés</h5>
+                    <h5 class="m-0">Prestataires disponibles</h5>
                 </div>
                 <div class="card-body">
                     @if($eventProposal->status == 'Pending')
@@ -116,7 +125,7 @@
                             @endforeach
                         @else
                         <div class="alert alert-warning">
-                            Aucun prestataire correspondant trouvé. Veuillez en rechercher un manuellement.
+                            Aucun prestataire correspondant trouvé dans la même ville et avec le même type d'activité.
                         </div>
                         @endif
                     @else

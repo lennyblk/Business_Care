@@ -95,6 +95,17 @@ Route::prefix('admin')->group(function () {
     Route::post('contracts/{id}/reject', [AdminContractController::class, 'rejectContract']);
 });
 
+// Routes pour les propositions d'activités
+Route::prefix('event-proposals')->group(function () {
+    Route::get('/', [App\Http\Controllers\API\EventProposalController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\API\EventProposalController::class, 'store']);
+    Route::get('/form-data', [App\Http\Controllers\API\EventProposalController::class, 'getFormData']);
+    Route::get('/company/{companyId}', [App\Http\Controllers\API\EventProposalController::class, 'getByCompany']);
+    Route::get('/{id}', [App\Http\Controllers\API\EventProposalController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\API\EventProposalController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\API\EventProposalController::class, 'destroy']);
+});
+
 
 // ROUTES POUR APP MOBILE
 

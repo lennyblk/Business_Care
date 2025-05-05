@@ -13,10 +13,11 @@
                 <div class="list-group list-group-flush">
                     <a href="{{ route('admin.company') }}" class="list-group-item list-group-item-action">Entreprises</a>
                     <a href="{{ route('admin.salaries.index') }}" class="list-group-item list-group-item-action">Salariés</a>
-                    <a href="{{ route('admin.prestataires.index') }}" class="list-group-item list-group-item-action">Prestataires</a>
+                    <a href="{{ route('admin.prestataires.index') }}" class="list-group-item list-group-item-action" target="_self">Prestataires</a>
                     <a href="{{ route('admin.activities.index') }}" class="list-group-item list-group-item-action">Activités</a>
                     <a href="{{ route('admin.inscriptions.index') }}" class="list-group-item list-group-item-action">Inscriptions en attente</a>
                     <a href="{{ route('admin.contracts.index') }}" class="list-group-item list-group-item-action">Contrats en attente</a>
+                    <a href="{{ route('admin.event_proposals.index') }}" class="list-group-item list-group-item-action">Demandes d'activités</a>
                 </div>
             </div>
         </div>

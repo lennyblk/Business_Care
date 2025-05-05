@@ -32,9 +32,18 @@ class AdminPendingRegistrationController extends Controller
 
     public function approve($id)
     {
+        \Log::info('Début de la méthode approve', ['id' => $id]);
+
         try {
             $pendingRegistration = PendingRegistration::findOrFail($id);
 
+            \Log::info('PendingRegistration trouvé', [
+                'id' => $id,
+                'status' => $pendingRegistration->status,
+                'type' => $pendingRegistration->user_type
+            ]);
+
+            // Vérifier que la demande est toujours en attente
             if ($pendingRegistration->status !== 'pending') {
                 return redirect()->back()->withErrors(['error' => 'Cette demande a déjà été traitée.']);
             }
@@ -42,30 +51,32 @@ class AdminPendingRegistrationController extends Controller
             // Récupérer les données supplémentaires stockées en JSON
             $additionalData = json_decode($pendingRegistration->additional_data, true) ?? [];
 
-            // Log des données pour le débogage
-            \Log::info('Données de l\'inscription', [
-                'pendingId' => $pendingRegistration->id,
-                'additionalData' => $additionalData
-            ]);
-
-            // Créer l'utilisateur en fonction du type
+            // Traitement selon le type d'utilisateur
             switch ($pendingRegistration->user_type) {
                 case 'societe':
-                    // Code existant pour les sociétés
-                    break;
+                    // Créer la société
+                    $company = new Company();
+                    $company->name = $pendingRegistration->company_name;
+                    $company->email = $pendingRegistration->email;
+                    $company->password = $pendingRegistration->password; // Déjà hashé
+                    $company->address = $pendingRegistration->address;
+                    $company->code_postal = $pendingRegistration->code_postal;
+                    $company->ville = $pendingRegistration->ville;
+                    $company->telephone = $pendingRegistration->telephone;
+                    $company->creation_date = now();
+                    $company->siret = $pendingRegistration->siret;
+                    $company->formule_abonnement = 'Starter'; // Valeur par défaut
+                    $company->statut_compte = 'Actif';
+                    $company->date_debut_contrat = now();
+                    $company->date_fin_contrat = now()->addYear();
+                    $company->save();
 
-                case 'employe':
-                    // Code existant pour les employés
+                    \Log::info('Société créée avec succès', ['company_id' => $company->id]);
                     break;
 
                 case 'prestataire':
                     // Déterminer le type d'activité à partir des données additionnelles
-                    $activityType = 'yoga'; // Valeur par défaut
-
-                    // Vérifier si le type d'activité est dans additionalData
-                    if (!empty($additionalData) && isset($additionalData['activity_type'])) {
-                        $activityType = $additionalData['activity_type'];
-                    }
+                    $activityType = $pendingRegistration->activity_type ?? 'yoga'; // Valeur par défaut
 
                     // Créer le prestataire
                     $provider = new Provider();
@@ -81,7 +92,7 @@ class AdminPendingRegistrationController extends Controller
                     $provider->ville = $pendingRegistration->ville;
                     $provider->siret = $pendingRegistration->siret;
                     $provider->tarif_horaire = $pendingRegistration->tarif_horaire;
-                    $provider->activity_type = $activityType; // Utiliser la valeur déterminée
+                    $provider->activity_type = $activityType;
 
                     // Si l'activité est "autre", enregistrer l'activité personnalisée
                     if ($activityType === 'autre' && isset($additionalData['custom_activity'])) {
@@ -91,26 +102,41 @@ class AdminPendingRegistrationController extends Controller
                     $provider->statut_prestataire = 'Validé';
                     $provider->date_validation = now();
                     $provider->save();
+
+                    \Log::info('Prestataire créé avec succès', ['provider_id' => $provider->id]);
+                    break;
+
+                default:
+                    // Pour les autres types, simplement mettre à jour le statut
+                    \Log::info('Type d\'utilisateur non géré, uniquement mise à jour du statut', [
+                        'type' => $pendingRegistration->user_type
+                    ]);
                     break;
             }
 
-            // Mettre à jour le statut de l'inscription en attente
+            // Mettre à jour le statut de l'inscription
             $pendingRegistration->status = 'approved';
             $pendingRegistration->save();
 
-            // Envoyer un e-mail de confirmation
-            $this->sendApprovalEmail($pendingRegistration);
+            \Log::info('Statut de la demande mis à jour avec succès', [
+                'id' => $id,
+                'nouveau_status' => 'approved'
+            ]);
+
+            // Envoyer une notification à l'utilisateur
+            $this->sendUserNotification($pendingRegistration, true);
 
             return redirect()->route('admin.inscriptions.index')
                 ->with('success', 'Demande d\'inscription approuvée avec succès.');
 
         } catch (\Exception $e) {
             \Log::error('Erreur lors de l\'approbation de l\'inscription', [
+                'id' => $id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return back()->withErrors(['error' => 'Une erreur est survenue : ' . $e->getMessage()]);
+            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()]);
         }
     }
 

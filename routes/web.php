@@ -23,6 +23,7 @@ use App\Http\Controllers\MailController;
 use App\Http\Controllers\API\AdminPendingRegistrationController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\EventProposalController;
+use App\Http\Controllers\AdminEventProposalController;
 
 
 // Pages principales
@@ -204,10 +205,20 @@ Route::middleware(['check.auth'])->group(function () {
 
 // Routes pour les propositions d'activités (côté client/company)
 Route::middleware(['check.auth'])->group(function () {
-    Route::get('/dashboard/client/event_proposals', [EventProposalController::class, 'index'])->name('client.event_proposals.index');
-    Route::get('/dashboard/client/event_proposals/create', [EventProposalController::class, 'create'])->name('client.event_proposals.create');
-    Route::post('/dashboard/client/event_proposals', [EventProposalController::class, 'store'])->name('client.event_proposals.store');
-    Route::get('/dashboard/client/event_proposals/{id}', [EventProposalController::class, 'show'])->name('client.event_proposals.show');
+    Route::get('/dashboard/client/event_proposals', [App\Http\Controllers\EventProposalController::class, 'index'])
+        ->name('client.event_proposals.index');
+    Route::get('/dashboard/client/event_proposals/create', [App\Http\Controllers\EventProposalController::class, 'create'])
+        ->name('client.event_proposals.create');
+    Route::post('/dashboard/client/event_proposals', [App\Http\Controllers\EventProposalController::class, 'store'])
+        ->name('client.event_proposals.store');
+    Route::get('/dashboard/client/event_proposals/{id}', [App\Http\Controllers\EventProposalController::class, 'show'])
+        ->name('client.event_proposals.show');
+    Route::get('/dashboard/client/event_proposals/{id}/edit', [App\Http\Controllers\EventProposalController::class, 'edit'])
+        ->name('client.event_proposals.edit');
+    Route::put('/dashboard/client/event_proposals/{id}', [App\Http\Controllers\EventProposalController::class, 'update'])
+        ->name('client.event_proposals.update');
+    Route::delete('/dashboard/client/event_proposals/{id}', [App\Http\Controllers\EventProposalController::class, 'destroy'])
+        ->name('client.event_proposals.destroy');
 });
 
 // Routes pour la gestion des propositions (côté admin)
@@ -215,6 +226,7 @@ Route::middleware(['check.auth'])->group(function () {
     Route::get('/dashboard/gestion_admin/event_proposals', [AdminEventProposalController::class, 'index'])->name('admin.event_proposals.index');
     Route::get('/dashboard/gestion_admin/event_proposals/{id}', [AdminEventProposalController::class, 'show'])->name('admin.event_proposals.show');
     Route::post('/dashboard/gestion_admin/event_proposals/{id}/assign', [AdminEventProposalController::class, 'assignProvider'])->name('admin.event_proposals.assign');
+    Route::post('/dashboard/gestion_admin/event_proposals/{id}/reject', [AdminEventProposalController::class, 'rejectProposal'])->name('admin.event_proposals.reject');
 });
 
 // Routes pour les assignations de prestataires (côté provider)

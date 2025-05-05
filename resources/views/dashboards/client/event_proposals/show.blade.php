@@ -104,31 +104,6 @@
                     </div>
                     @endif
 
-                    <div class="row mt-4">
-                        <div class="col-12">
-                            <h5 class="border-bottom pb-2 mb-3">Statut de la demande</h5>
-                            <div class="progress" style="height: 30px;">
-                                @if($eventProposal->status == 'Pending')
-                                    <div class="progress-bar bg-warning text-dark" style="width: 25%">
-                                        En attente de traitement (25%)
-                                    </div>
-                                @elseif($eventProposal->status == 'Assigned')
-                                    <div class="progress-bar bg-info" style="width: 50%">
-                                        Assigné à un prestataire (50%)
-                                    </div>
-                                @elseif($eventProposal->status == 'Accepted')
-                                    <div class="progress-bar bg-success" style="width: 100%">
-                                        Activité confirmée (100%)
-                                    </div>
-                                @elseif($eventProposal->status == 'Rejected')
-                                    <div class="progress-bar bg-danger" style="width: 100%">
-                                        Demande rejetée
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
                     @if($eventProposal->status == 'Accepted')
                         @if(isset($eventProposal->event))
                         <div class="row mt-4">
@@ -180,11 +155,6 @@
                             </div>
                         </div>
                     @endif
-                </div>
-                <div class="card-footer bg-white">
-                    <a href="{{ route('client.event_proposals.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Retour à la liste
-                    </a>
                 </div>
             </div>
         </div>
