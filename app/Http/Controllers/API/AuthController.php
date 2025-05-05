@@ -10,11 +10,15 @@ use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
     public function login(Request $request)
     {
+        // Ajouter des logs pour le debugging
+        \Log::info('Tentative de connexion API', $request->all());
+
         $validator = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required',
@@ -23,7 +27,8 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            \Log::error('Validation échouée', $validator->errors()->toArray());
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
         }
 
         $credentials = $request->only('email', 'password');
@@ -48,8 +53,8 @@ class AuthController extends Controller
         }
         elseif ($userType === 'societe') {
             $user = Company::where('email', $credentials['email'])
-                          ->where('name', $companyName)
-                          ->first();
+                        ->where('name', $companyName)
+                        ->first();
 
             if ($user && Hash::check($credentials['password'], $user->password)) {
                 $userData = [
@@ -61,21 +66,36 @@ class AuthController extends Controller
             }
         }
         elseif ($userType === 'employe') {
-            $user = Employee::with('company')
-                          ->whereHas('company', function($query) use ($companyName) {
-                              $query->where('name', $companyName);
-                          })
-                          ->where('email', $credentials['email'])
-                          ->first();
+            \Log::info('Recherche d\'un employé', [
+                'email' => $credentials['email'],
+                'company' => $companyName
+            ]);
 
-            if ($user && Hash::check($credentials['password'], $user->password)) {
-                $userData = [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'name' => $user->first_name . ' ' . $user->last_name,
-                    'type' => 'employe',
-                    'company_id' => $user->company_id
-                ];
+            $user = Employee::with('company')
+                        ->whereHas('company', function($query) use ($companyName) {
+                            $query->where('name', $companyName);
+                        })
+                        ->where('email', $credentials['email'])
+                        ->first();
+
+            if ($user) {
+                \Log::info('Employé trouvé', ['id' => $user->id]);
+
+                // Pour le debugging, vérifier si le mot de passe correspond
+                $passwordCorrect = Hash::check($credentials['password'], $user->password);
+                \Log::info('Mot de passe correct: ' . ($passwordCorrect ? 'oui' : 'non'));
+
+                if ($passwordCorrect) {
+                    $userData = [
+                        'id' => $user->id,
+                        'email' => $user->email,
+                        'name' => $user->first_name . ' ' . $user->last_name,
+                        'type' => 'employe',
+                        'company_id' => $user->company_id
+                    ];
+                }
+            } else {
+                \Log::error('Employé non trouvé');
             }
         }
         elseif ($userType === 'prestataire') {
@@ -92,11 +112,22 @@ class AuthController extends Controller
         }
 
         if (isset($userData)) {
+            // Génération d'un token simple (pour l'application mobile)
+            // Dans une application de production, utilisez Sanctum ou Passport
+            $token = 'bc_' . Str::random(60);
+
+            \Log::info('Connexion réussie', ['user_id' => $userData['id'], 'type' => $userData['type']]);
+
+            // Format de réponse compatible avec l'application Android
             return response()->json([
                 'success' => true,
+                'message' => 'Connexion réussie',
+                'token' => $token,
                 'user' => $userData
             ]);
         }
+
+        \Log::error('Échec de la connexion - identifiants invalides');
 
         return response()->json([
             'success' => false,
@@ -108,7 +139,7 @@ class AuthController extends Controller
     {
         // Adaptation pour la validation avec les champs du formulaire web
         $userType = $request->input('user_type');
-        
+
         // Validation commune pour tous les types d'utilisateurs
         $commonRules = [
             'email' => 'required|email',

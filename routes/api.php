@@ -94,3 +94,101 @@ Route::prefix('admin')->group(function () {
     Route::post('contracts/{id}/approve', [AdminContractController::class, 'approveContract']);
     Route::post('contracts/{id}/reject', [AdminContractController::class, 'rejectContract']);
 });
+
+
+// ROUTES POUR APP MOBILE
+
+Route::get('/events', [EventController::class, 'index']);
+
+// Route pour obtenir les événements de l'employé connecté
+Route::get('/employee/events', function (Request $request) {
+    // Pour le développement, utiliser un ID d'employé par défaut
+    // Dans une version de production, extraire l'ID de l'employé du token
+    $employeeId = $request->header('Employee-Id', 1);
+
+    // Récupérer les événements de l'employé via le contrôleur existant
+    $employee = \App\Models\Employee::find($employeeId);
+    if (!$employee) {
+        return response()->json([]);
+    }
+
+    $registeredEvents = \App\Models\EventRegistration::where('employee_id', $employeeId)
+        ->with('event')
+        ->get()
+        ->map(function($registration) {
+            $event = $registration->event;
+            return [
+                'id' => $event->id,
+                'name' => $event->title ?? $event->name,
+                'description' => $event->description,
+                'date' => $event->date,
+                'location' => $event->location
+            ];
+        });
+
+    return response()->json($registeredEvents);
+});
+
+// Route pour s'inscrire à un événement
+Route::post('/events/{id}/register', function (Request $request, $id) {
+    $employeeId = $request->header('Employee-Id', 1);
+
+    // Vérifier si l'événement existe
+    $event = \App\Models\Event::find($id);
+    if (!$event) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Événement non trouvé'
+        ], 404);
+    }
+
+    // Vérifier si l'employé est déjà inscrit
+    $existingRegistration = \App\Models\EventRegistration::where('event_id', $id)
+        ->where('employee_id', $employeeId)
+        ->first();
+
+    if ($existingRegistration) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Vous êtes déjà inscrit à cet événement'
+        ], 422);
+    }
+
+    // Créer l'inscription
+    \App\Models\EventRegistration::create([
+        'event_id' => $id,
+        'employee_id' => $employeeId,
+        'registration_date' => now(),
+        'status' => 'confirmed'
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Inscription réussie'
+    ]);
+});
+
+// Route pour se désinscrire d'un événement
+Route::delete('/events/{id}/unregister', function (Request $request, $id) {
+    $employeeId = $request->header('Employee-Id', 1);
+
+    // Vérifier si l'inscription existe
+    $registration = \App\Models\EventRegistration::where('event_id', $id)
+        ->where('employee_id', $employeeId)
+        ->first();
+
+    if (!$registration) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Vous n\'êtes pas inscrit à cet événement'
+        ], 404);
+    }
+
+    // Supprimer l'inscription
+    $registration->delete();
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Désinscription réussie'
+    ]);
+});
