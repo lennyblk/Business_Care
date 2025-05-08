@@ -30,9 +30,9 @@
                 <div class="mb-3">
                     <label for="user_type" class="form-label">Type d'utilisateur</label>
                     <select id="user_type" name="user_type" class="form-select @error('user_type') is-invalid @enderror" required>
-                        <option value="societe">Société</option>
+                        <option value="societe" selected>Société</option>
                         <option value="employe">Employé</option>
-                        <option value="prestataire" selected>Prestataire</option>
+                        <option value="prestataire">Prestataire</option>
                     </select>
                     @error('user_type')
                         <div class="invalid-feedback">{{ $message }}</div>
@@ -61,35 +61,35 @@
                 </div>
 
                 <!-- Section société -->
-                <div class="company-fields" style="display: none;">
+                <div class="company-fields">
                     <div class="mb-3">
                         <label for="company_name" class="form-label">Nom de la société *</label>
-                        <input type="text" id="company_name" name="company_name" class="form-control">
+                        <input type="text" id="company_name" name="company_name" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="address" class="form-label">Adresse *</label>
-                        <input type="text" id="address" name="address" class="form-control">
+                        <input type="text" id="address" name="address" class="form-control" required>
                     </div>
 
                     <div class="row">
                         <div class="col-md-4">
                             <div class="mb-3">
-                                <label for="code_postal_company" class="form-label">Code postal *</label>
-                                <input type="text" id="code_postal_company" name="code_postal" class="form-control">
+                                <label for="code_postal" class="form-label">Code postal *</label>
+                                <input type="text" id="code_postal" name="code_postal" class="form-control" required>
                             </div>
                         </div>
                         <div class="col-md-8">
                             <div class="mb-3">
-                                <label for="ville_company" class="form-label">Ville *</label>
-                                <input type="text" id="ville_company" name="ville" class="form-control">
+                                <label for="ville" class="form-label">Ville *</label>
+                                <input type="text" id="ville" name="ville" class="form-control" required>
                             </div>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label for="telephone_company" class="form-label">Téléphone *</label>
-                        <input type="tel" id="telephone_company" name="telephone" class="form-control">
+                        <label for="telephone" class="form-label">Téléphone *</label>
+                        <input type="tel" id="telephone" name="telephone" class="form-control" required>
                     </div>
 
                     <div class="mb-3">
@@ -128,7 +128,7 @@
 
                     <div class="mb-3">
                         <label for="company_name_employee" class="form-label">Nom de l'entreprise *</label>
-                        <input type="text" id="company_name_employee" name="company_name" class="form-control">
+                        <input type="text" id="company_name_employee" name="company_name_employee" class="form-control">
                     </div>
 
                     <div class="mb-3">
@@ -143,40 +143,40 @@
 
                     <div class="mb-3">
                         <label for="telephone_employee" class="form-label">Téléphone</label>
-                        <input type="tel" id="telephone_employee" name="telephone" class="form-control">
+                        <input type="tel" id="telephone_employee" name="telephone_employee" class="form-control">
                     </div>
                 </div>
 
                 <!-- Section prestataire -->
-                <div class="provider-fields">
+                <div class="provider-fields" style="display: none;">
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="name" class="form-label">Nom *</label>
-                                <input type="text" id="name" name="name" class="form-control" required>
+                                <input type="text" id="name" name="name" class="form-control">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
                                 <label for="prenom" class="form-label">Prénom *</label>
-                                <input type="text" id="prenom" name="prenom" class="form-control" required>
+                                <input type="text" id="prenom" name="prenom" class="form-control">
                             </div>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="specialite" class="form-label">Spécialité *</label>
-                        <input type="text" id="specialite" name="specialite" class="form-control" required>
+                        <input type="text" id="specialite" name="specialite" class="form-control">
                     </div>
 
                     <div class="mb-3">
                         <label for="telephone_provider" class="form-label">Téléphone *</label>
-                        <input type="tel" id="telephone_provider" name="telephone" class="form-control" required>
+                        <input type="tel" id="telephone_provider" name="telephone_provider" class="form-control">
                     </div>
 
                     <div class="mb-3">
                         <label for="activity_type" class="form-label">Type d'activité *</label>
-                        <select id="activity_type" name="activity_type" class="form-select" required>
+                        <select id="activity_type" name="activity_type" class="form-select">
                             <option value="">Choisissez un type d'activité</option>
                             <option value="rencontre sportive">Rencontre sportive</option>
                             <option value="conférence">Conférence</option>
@@ -203,30 +203,30 @@
                         <div class="col-md-4">
                             <div class="mb-3">
                                 <label for="code_postal_provider" class="form-label">Code postal</label>
-                                <input type="text" id="code_postal_provider" name="code_postal" class="form-control">
+                                <input type="text" id="code_postal_provider" name="code_postal_provider" class="form-control">
                             </div>
                         </div>
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="ville_provider" class="form-label">Ville</label>
-                                <input type="text" id="ville_provider" name="ville" class="form-control">
+                                <input type="text" id="ville_provider" name="ville_provider" class="form-control">
                             </div>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label for="siret_provider" class="form-label">SIRET</label>
-                        <input type="text" id="siret_provider" name="siret" class="form-control" pattern="[0-9]{14}" minlength="14" maxlength="14">
+                        <input type="text" id="siret_provider" name="siret_provider" class="form-control" pattern="[0-9]{14}" minlength="14" maxlength="14">
                     </div>
 
                     <div class="mb-3">
                         <label for="bio" class="form-label">Description *</label>
-                        <textarea id="bio" name="bio" class="form-control" rows="3" required></textarea>
+                        <textarea id="bio" name="bio" class="form-control" rows="3"></textarea>
                     </div>
 
                     <div class="mb-3">
                         <label for="tarif_horaire" class="form-label">Tarif horaire (€) *</label>
-                        <input type="number" id="tarif_horaire" name="tarif_horaire" class="form-control" step="0.01" required>
+                        <input type="number" id="tarif_horaire" name="tarif_horaire" class="form-control" step="0.01">
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary w-100 py-2">S'inscrire</button>
@@ -252,9 +252,9 @@
         const companyRequiredFields = [
             document.getElementById('company_name'),
             document.getElementById('address'),
-            document.getElementById('code_postal_company'),
-            document.getElementById('ville_company'),
-            document.getElementById('telephone_company')
+            document.getElementById('code_postal'),
+            document.getElementById('ville'),
+            document.getElementById('telephone')
         ];
 
         // Éléments requis pour les employés
@@ -374,6 +374,23 @@
                 e.target.setCustomValidity('');
             }
         });
+    });
+
+    // Ajout d'une vérification du formulaire avant envoi
+    document.querySelector('form').addEventListener('submit', function(e) {
+        // Vérifier si on est dans le mode "société"
+        if (document.getElementById('user_type').value === 'societe') {
+            // Vérifier que les champs requis sont remplis
+            const companyName = document.getElementById('company_name').value.trim();
+            const codePostal = document.getElementById('code_postal').value.trim();
+            const ville = document.getElementById('ville').value.trim();
+            const telephone = document.getElementById('telephone').value.trim();
+
+            if (!companyName || !codePostal || !ville || !telephone) {
+                e.preventDefault();
+                alert('Veuillez remplir tous les champs obligatoires pour l\'inscription d\'une société.');
+            }
+        }
     });
 </script>
 @endpush

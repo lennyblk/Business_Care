@@ -190,4 +190,87 @@ class CompanyController extends Controller
             return response()->json(['message' => 'Une erreur est survenue lors de la récupération des contrats'], 500);
         }
     }
+
+    public function updateContractInfo(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'date_fin_contrat' => 'required|date',
+                'formule_abonnement' => 'nullable|string|in:Starter,Basic,Premium',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation échouée',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $company = Company::findOrFail($id);
+
+            // Mise à jour de la date de fin de contrat
+            $company->date_fin_contrat = $request->date_fin_contrat;
+
+            // Mise à jour de la formule d'abonnement si elle est fournie
+            if ($request->has('formule_abonnement') && !empty($request->formule_abonnement)) {
+                // Vérifier que la valeur est l'une des valeurs autorisées par l'enum
+                $allowedFormules = ['Starter', 'Basic', 'Premium'];
+                if (in_array($request->formule_abonnement, $allowedFormules)) {
+                    $company->formule_abonnement = $request->formule_abonnement;
+                    Log::info('Formule d\'abonnement mise à jour: ' . $request->formule_abonnement);
+                } else {
+                    Log::warning('Tentative de définir une formule non autorisée: ' . $request->formule_abonnement);
+                }
+            }
+
+            $company->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Informations du contrat mises à jour avec succès',
+                'data' => $company
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la mise à jour des informations du contrat: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la mise à jour des informations du contrat'
+            ], 500);
+        }
+    }
+
+
+    public function updateContractEndDate(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'date_fin_contrat' => 'required|date',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation échouée',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $company = Company::findOrFail($id);
+            $company->date_fin_contrat = $request->date_fin_contrat;
+            $company->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Date de fin de contrat mise à jour avec succès',
+                'data' => $company
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la mise à jour de la date de fin de contrat: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la mise à jour de la date de fin de contrat'
+            ], 500);
+        }
+    }
 }

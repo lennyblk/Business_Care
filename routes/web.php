@@ -26,7 +26,6 @@ use App\Http\Controllers\EventProposalController;
 use App\Http\Controllers\AdminEventProposalController;
 use App\Http\Controllers\ProviderAssignmentController;
 
-
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/about', [PageController::class, 'about'])->name('about');
@@ -148,6 +147,9 @@ Route::middleware(['check.auth'])->group(function () {
         ->name('contracts.request-change');
     Route::post('/contracts/{contract}/change', [ContractController::class, 'submitChange'])
         ->name('contracts.submit-change');
+    // Nouvelle route pour la résiliation de contrat
+    Route::post('/contracts/{contract}/terminate', [ContractController::class, 'terminate'])
+        ->name('contracts.terminate');
 });
 
 // Routes pour les devis

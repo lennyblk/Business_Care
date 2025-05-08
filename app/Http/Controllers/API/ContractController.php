@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Log;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
+
 class ContractController extends Controller
 {
     public function index()
@@ -245,6 +246,42 @@ private function sendAdminNotification($contract)
         } catch (\Exception $e) {
             Log::error('Exception lors de l\'édition d\'un contrat: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue lors de l\'édition du contrat');
+        }
+    }
+
+     public function terminate($id)
+    {
+        try {
+            $contract = Contract::with('company')->findOrFail($id);
+
+            // Utiliser 'pending' ou 'unpaid' au lieu de 'terminated'
+            // 'pending' a du sens car ça peut indiquer "en attente de traitement de résiliation"
+            $contract->payment_status = 'pending';
+            $contract->save();
+
+            // Mettre à jour le statut du compte de l'entreprise
+            $company = Company::findOrFail($contract->company_id);
+            $company->statut_compte = 'Non Actif';
+            $company->save();
+
+            Log::info('Contrat résilié et compte désactivé', [
+                'contract_id' => $id,
+                'company_id' => $contract->company_id,
+                'new_account_status' => $company->statut_compte,
+                'contract_status' => $contract->payment_status
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Contrat résilié avec succès',
+                'data' => $contract
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la résiliation du contrat: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue lors de la résiliation du contrat: ' . $e->getMessage()
+            ], 500);
         }
     }
 

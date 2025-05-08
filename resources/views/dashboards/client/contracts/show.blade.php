@@ -212,9 +212,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <form action="{{ route('contracts.destroy', $contract->id) }}" method="POST">
+                <form action="{{ route('contracts.terminate', $contract->id) }}" method="POST">
                     @csrf
-                    @method('DELETE')
                     <button type="submit" class="btn btn-danger">Confirmer la demande</button>
                 </form>
             </div>
