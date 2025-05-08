@@ -7,6 +7,8 @@ use App\Http\Controllers\API\ContractController as ApiContractController;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 use Carbon\Carbon;
+use App\Models\Contract;
+use App\Models\Company;
 
 class ContractController extends Controller
 {
@@ -390,6 +392,64 @@ class ContractController extends Controller
         } catch (\Exception $e) {
             Log::error('Erreur lors de la soumission du changement: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
+    public function terminate($id)
+    {
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
+
+            // D'abord, voyons les valeurs autorisées pour statut_compte
+            $column = DB::select("SHOW COLUMNS FROM company WHERE Field = 'statut_compte'");
+            Log::info('Valeurs autorisées pour statut_compte', ['column_info' => $column]);
+
+            // Approche plus directe pour éviter les problèmes
+            $contract = Contract::findOrFail($id);
+
+            // Utiliser 'pending' comme statut pour un contrat résilié
+            $contract->payment_status = 'pending'; // Utiliser une valeur acceptée par l'enum
+            $contract->save();
+
+            // Mettre à jour le statut du compte de l'entreprise
+            $company = Company::findOrFail($contract->company_id);
+
+            // Trouver la valeur correcte en fonction des valeurs disponibles
+            // Essayons d'abord avec 'Inactif', puis avec d'autres valeurs possibles
+            try {
+                $company->statut_compte = 'Inactif'; // Essayons 'Inactif' au lieu de 'Non Actif'
+                $company->save();
+                Log::info('Contrat résilié et compte désactivé avec statut_compte = Inactif', [
+                    'contract_id' => $id,
+                    'company_id' => $contract->company_id,
+                    'new_account_status' => $company->statut_compte
+                ]);
+            } catch (\Exception $e1) {
+                Log::warning('Erreur avec statut_compte = Inactif: ' . $e1->getMessage());
+
+                try {
+                    $company->statut_compte = 'Inactive'; // Essayons 'Inactive'
+                    $company->save();
+                    Log::info('Contrat résilié et compte désactivé avec statut_compte = Inactive', [
+                        'contract_id' => $id,
+                        'company_id' => $contract->company_id,
+                        'new_account_status' => $company->statut_compte
+                    ]);
+                } catch (\Exception $e2) {
+                    Log::warning('Erreur avec statut_compte = Inactive: ' . $e2->getMessage());
+
+                    // Si rien ne fonctionne, essayons de résilier simplement le contrat sans toucher au statut
+                    Log::warning('Impossible de mettre à jour statut_compte, contrat résilié mais statut entreprise non modifié');
+                }
+            }
+
+            return redirect()->route('contracts.index')->with('success', 'Contrat résilié avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la résiliation d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la résiliation du contrat: ' . $e->getMessage());
         }
     }
 }

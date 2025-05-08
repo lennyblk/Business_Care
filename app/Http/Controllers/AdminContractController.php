@@ -39,16 +39,10 @@ class AdminContractController extends Controller
     public function show($id)
     {
         try {
-            $contractController = new \App\Http\Controllers\API\ContractController();
-            $response = $contractController->show($id);
-            $data = json_decode($response->getContent(), true);
+            // Chargement direct du modèle avec sa relation 'company'
+            $contract = \App\Models\Contract::with('company')->findOrFail($id);
 
-            if ($response->getStatusCode() !== 200) {
-                return back()->with('error', 'Contrat non trouvé');
-            }
-
-            $contract = $this->arrayToObject($data['data'] ?? []);
-
+            // Ici, on garde le nom de variable "contract" pour correspondre à ce que la vue attend
             return view('dashboards.gestion_admin.contracts.show', compact('contract'));
         } catch (\Exception $e) {
             Log::error('Exception lors de l\'affichage du contrat: ' . $e->getMessage());
