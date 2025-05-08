@@ -18,6 +18,8 @@
                     <a href="{{ route('admin.inscriptions.index') }}" class="list-group-item list-group-item-action">Inscriptions en attente</a>
                     <a href="{{ route('admin.contracts.index') }}" class="list-group-item list-group-item-action">Contrats en attente</a>
                     <a href="{{ route('admin.event_proposals.index') }}" class="list-group-item list-group-item-action">Demandes d'activités</a>
+                    <a href="{{ route('admin.advice.index') }}" class="list-group-item list-group-item-action">Conseils</a>
+
                 </div>
             </div>
         </div>

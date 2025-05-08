@@ -31,7 +31,9 @@ class CheckAuth
             case 'employe':
                 if (!str_starts_with($route, 'dashboard.employee') &&
                     !str_starts_with($route, 'events.') &&
-                    !str_starts_with($route, 'employee.events')) {
+                    !str_starts_with($route, 'employee.events') &&
+                    !str_starts_with($route, 'employee.advice') &&
+                    !str_starts_with($route, 'employee.preferences')) { // Ajout des routes employee.advice
                     return redirect()->route('dashboard.employee')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
@@ -51,7 +53,8 @@ class CheckAuth
                     !str_starts_with($route, 'admin.activities') &&
                     !str_starts_with($route, 'admin.inscriptions') &&
                     !str_starts_with($route, 'admin.contracts') &&
-                    !str_starts_with($route, 'admin.event_proposals.')) {
+                    !str_starts_with($route, 'admin.event_proposals.') &&
+                    !str_starts_with($route, 'admin.advice')) { // Ajout des routes admin.advice
                     return redirect()->route('dashboard.admin')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }

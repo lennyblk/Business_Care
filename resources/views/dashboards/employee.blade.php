@@ -15,6 +15,7 @@
                     <a href="#" class="list-group-item list-group-item-action">Mon profil</a>
                     <a href="#" class="list-group-item list-group-item-action">Planning médical</a>
                     <a href="{{ route('employee.events.index') }}" class="list-group-item list-group-item-action">Mes événements</a>
+                    <a href="{{ route('employee.advice.index') }}" class="list-group-item list-group-item-action">Mes conseils</a>
                     <a href="#" class="list-group-item list-group-item-action">Assistance</a>
                 </div>
             </div>
@@ -52,6 +53,14 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5 class="card-title">Conseils</h5>
+                                    <p class="card-text display-6">{{ $advicesCount ?? 0 }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Upcoming events -->
@@ -72,6 +81,27 @@
                     @else
                         <div class="alert alert-info">
                             Vous n'avez pas d'événements à venir. <a href="{{ route('employee.events.index') }}">Parcourir les événements disponibles</a>.
+                        </div>
+                    @endif
+
+                    <!-- Upcoming advices -->
+                    <h5 class="mb-3">Derniers conseils</h5>
+                    @if(isset($latestAdvices) && count($latestAdvices) > 0)
+                        <div class="list-group">
+                            @foreach($latestAdvices as $advice)
+                            <div class="list-group-item">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1">{{ $advice['title'] }}</h6>
+                                    <small>{{ date('d/m/Y', strtotime($advice['publish_date'])) }}</small>
+                                </div>
+                                <p class="mb-1">{{ \Illuminate\Support\Str::limit($advice['content'], 100) }}</p>
+                                <a href="{{ route('employee.advice.show', $advice['id']) }}" class="btn btn-sm btn-primary mt-2">Voir plus</a>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="alert alert-info">
+                            Aucun conseil disponible pour le moment. <a href="{{ route('employee.advice.index') }}">Voir tous les conseils</a>.
                         </div>
                     @endif
                 </div>
