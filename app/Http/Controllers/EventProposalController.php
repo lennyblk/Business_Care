@@ -13,15 +13,11 @@ use PHPMailer\PHPMailer\Exception;
 
 class EventProposalController extends Controller
 {
-    /**
-     * Affiche la liste des propositions d'activités pour la société connectée
-     */
+
     public function index()
     {
-        // Récupérer l'ID de la société à partir de la session
         $companyId = session('user_id');
 
-        // Récupérer les propositions pour cette entreprise
         $eventProposals = EventProposal::with(['eventType', 'location'])
             ->where('company_id', $companyId)
             ->orderBy('created_at', 'desc')
@@ -31,9 +27,7 @@ class EventProposalController extends Controller
         return view('dashboards.client.event_proposals.index', compact('eventProposals'));
     }
 
-    /**
-     * Affiche le formulaire de création d'une nouvelle proposition d'activité
-     */
+
     public function create()
     {
         // Récupérer les types d'activités
@@ -48,16 +42,28 @@ class EventProposalController extends Controller
             'autre' => 'Autre'
         ];
 
+        // Durées prédéfinies pour le formulaire
+        $defaultDurations = [
+            30 => '30 minutes',
+            45 => '45 minutes',
+            60 => '1 heure',
+            90 => '1 heure 30',
+            120 => '2 heures',
+            180 => '3 heures',
+            240 => '4 heures',
+            360 => '6 heures',
+            480 => '8 heures'
+        ];
+
         // Récupérer les emplacements
         $locations = Location::whereIn('city', ['Paris', 'Troyes', 'Biarritz', 'Nice'])->get();
 
         // Notez le changement de chemin de vue ici
-        return view('dashboards.client.event_proposals.create', compact('activityTypes', 'locations'));
+        return view('dashboards.client.event_proposals.create', compact('activityTypes', 'locations', 'defaultDurations'));
     }
 
-    /**
-     * Enregistre une nouvelle proposition d'activité
-     */
+
+
     public function store(Request $request)
     {
         // Valider les données
@@ -65,6 +71,7 @@ class EventProposalController extends Controller
             'activity_type' => 'required|string',
             'proposed_date' => 'required|date|after:today',
             'location_id' => 'required|exists:location,id',
+            'duration' => 'required|integer|min:30|max:480', // Ajout de la validation de durée
             'notes' => 'nullable|string|max:1000'
         ]);
 
@@ -80,6 +87,7 @@ class EventProposalController extends Controller
             'event_type_id' => $serviceType->id,
             'proposed_date' => $request->proposed_date,
             'location_id' => $request->location_id,
+            'duration' => $request->duration, // Ajout de la durée
             'notes' => $request->notes,
             'status' => 'Pending'
         ]);
@@ -90,9 +98,8 @@ class EventProposalController extends Controller
         return redirect()->route('client.event_proposals.index')
             ->with('success', 'Votre demande d\'activité a été soumise avec succès.');
     }
-    /**
-     * Affiche les détails d'une proposition d'activité
-     */
+
+
     public function show($id)
     {
         $eventProposal = EventProposal::with(['eventType', 'location', 'company', 'event'])
@@ -111,9 +118,7 @@ class EventProposalController extends Controller
         return view('dashboards.client.event_proposals.show', compact('eventProposal'));
     }
 
-    /**
-     * Affiche le formulaire de modification d'une proposition d'activité
-     */
+
     public function edit($id)
     {
         $eventProposal = EventProposal::findOrFail($id);
@@ -152,15 +157,14 @@ class EventProposalController extends Controller
         return view('dashboards.client.event_proposals.edit', compact('eventProposal', 'activityTypes', 'locations'));
     }
 
-    /**
-     * Met à jour une proposition d'activité
-     */
+
     public function update(Request $request, $id)
     {
         // Valider les données
         $validated = $request->validate([
             'proposed_date' => 'required|date|after:today',
             'location_id' => 'required|exists:location,id',
+            'duration' => 'required|integer|min:30|max:480', // Ajout de la validation de durée
             'notes' => 'nullable|string|max:1000'
         ]);
 
@@ -185,6 +189,7 @@ class EventProposalController extends Controller
         $eventProposal->update([
             'proposed_date' => $request->proposed_date,
             'location_id' => $request->location_id,
+            'duration' => $request->duration, // Ajout de la durée
             'notes' => $request->notes
         ]);
 
@@ -192,9 +197,6 @@ class EventProposalController extends Controller
             ->with('success', 'Votre demande d\'activité a été mise à jour avec succès.');
     }
 
-    /**
-     * Supprime une proposition d'activité
-     */
     public function destroy($id)
     {
         $eventProposal = EventProposal::findOrFail($id);
@@ -221,9 +223,7 @@ class EventProposalController extends Controller
             ->with('success', 'Votre demande d\'activité a été supprimée avec succès.');
     }
 
-    /**
-     * Trouve ou crée un ServiceType à partir du type d'activité
-     */
+
     private function findOrCreateServiceType($activityType)
     {
         // Chercher un prestataire par défaut
@@ -309,16 +309,6 @@ class EventProposalController extends Controller
 
             $mail->send();
 
-            // Créer également une notification en base de données
-            $notification = new \App\Models\Notification();
-            $notification->recipient_id = 1; // ID de l'admin par défaut
-            $notification->recipient_type = 'Admin';
-            $notification->title = 'Nouvelle demande d\'activité';
-            $notification->message = 'Une nouvelle demande d\'activité a été soumise par ' .
-                $eventProposal->company->name . ' pour ' . $eventProposal->eventType->title .
-                ' le ' . $eventProposal->proposed_date->format('d/m/Y');
-            $notification->notification_type = 'Email';
-            $notification->save();
 
             return true;
         } catch (\PHPMailer\PHPMailer\Exception $e) {

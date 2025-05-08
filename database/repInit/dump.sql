@@ -1,4 +1,4 @@
-/*M!999999\- enable the sandbox mode */
+/*M!999999\- enable the sandbox mode */ 
 -- MariaDB dump 10.19-11.6.2-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: businesscare2
@@ -43,6 +43,208 @@ LOCK TABLES `admin` WRITE;
 INSERT INTO `admin` VALUES
 (1,'admin@admin.com','123456789','Sadmin','admin');
 /*!40000 ALTER TABLE `admin` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `advice`
+--
+
+DROP TABLE IF EXISTS `advice`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advice` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `content` text NOT NULL,
+  `category_id` int(11) NOT NULL,
+  `publish_date` date NOT NULL,
+  `expiration_date` date DEFAULT NULL,
+  `is_personalized` tinyint(1) DEFAULT 0,
+  `min_formule` enum('Starter','Basic','Premium') DEFAULT 'Basic',
+  `is_published` tinyint(1) DEFAULT 0,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `advice_ibfk_1` (`category_id`),
+  CONSTRAINT `advice_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `advice_category` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `advice`
+--
+
+LOCK TABLES `advice` WRITE;
+/*!40000 ALTER TABLE `advice` DISABLE KEYS */;
+/*!40000 ALTER TABLE `advice` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `advice_category`
+--
+
+DROP TABLE IF EXISTS `advice_category`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advice_category` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `advice_category`
+--
+
+LOCK TABLES `advice_category` WRITE;
+/*!40000 ALTER TABLE `advice_category` DISABLE KEYS */;
+/*!40000 ALTER TABLE `advice_category` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `advice_feedback`
+--
+
+DROP TABLE IF EXISTS `advice_feedback`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advice_feedback` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `employee_id` int(11) NOT NULL,
+  `advice_id` int(11) NOT NULL,
+  `rating` int(11) NOT NULL COMMENT 'Rating from 1 to 5',
+  `comment` text DEFAULT NULL,
+  `is_helpful` tinyint(1) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_employee_advice_feedback` (`employee_id`,`advice_id`),
+  KEY `advice_feedback_ibfk_2` (`advice_id`),
+  CONSTRAINT `advice_feedback_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`),
+  CONSTRAINT `advice_feedback_ibfk_2` FOREIGN KEY (`advice_id`) REFERENCES `advice` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `advice_feedback`
+--
+
+LOCK TABLES `advice_feedback` WRITE;
+/*!40000 ALTER TABLE `advice_feedback` DISABLE KEYS */;
+/*!40000 ALTER TABLE `advice_feedback` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `advice_has_tag`
+--
+
+DROP TABLE IF EXISTS `advice_has_tag`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advice_has_tag` (
+  `advice_id` int(11) NOT NULL,
+  `tag_id` int(11) NOT NULL,
+  PRIMARY KEY (`advice_id`,`tag_id`),
+  KEY `advice_has_tag_ibfk_2` (`tag_id`),
+  CONSTRAINT `advice_has_tag_ibfk_1` FOREIGN KEY (`advice_id`) REFERENCES `advice` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `advice_has_tag_ibfk_2` FOREIGN KEY (`tag_id`) REFERENCES `advice_tag` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `advice_has_tag`
+--
+
+LOCK TABLES `advice_has_tag` WRITE;
+/*!40000 ALTER TABLE `advice_has_tag` DISABLE KEYS */;
+/*!40000 ALTER TABLE `advice_has_tag` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `advice_media`
+--
+
+DROP TABLE IF EXISTS `advice_media`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advice_media` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `advice_id` int(11) NOT NULL,
+  `media_type` enum('image','video','document','other') NOT NULL,
+  `media_url` varchar(255) NOT NULL,
+  `title` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `advice_media_ibfk_1` (`advice_id`),
+  CONSTRAINT `advice_media_ibfk_1` FOREIGN KEY (`advice_id`) REFERENCES `advice` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `advice_media`
+--
+
+LOCK TABLES `advice_media` WRITE;
+/*!40000 ALTER TABLE `advice_media` DISABLE KEYS */;
+/*!40000 ALTER TABLE `advice_media` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `advice_schedule`
+--
+
+DROP TABLE IF EXISTS `advice_schedule`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advice_schedule` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `advice_id` int(11) NOT NULL,
+  `scheduled_date` date NOT NULL,
+  `is_sent` tinyint(1) DEFAULT 0,
+  `sent_at` datetime DEFAULT NULL,
+  `target_audience` enum('All','Specific') DEFAULT 'All',
+  `target_criteria` text DEFAULT NULL COMMENT 'JSON encoded targeting criteria if specific',
+  PRIMARY KEY (`id`),
+  KEY `advice_schedule_ibfk_1` (`advice_id`),
+  CONSTRAINT `advice_schedule_ibfk_1` FOREIGN KEY (`advice_id`) REFERENCES `advice` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `advice_schedule`
+--
+
+LOCK TABLES `advice_schedule` WRITE;
+/*!40000 ALTER TABLE `advice_schedule` DISABLE KEYS */;
+/*!40000 ALTER TABLE `advice_schedule` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `advice_tag`
+--
+
+DROP TABLE IF EXISTS `advice_tag`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `advice_tag` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_tag_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `advice_tag`
+--
+
+LOCK TABLES `advice_tag` WRITE;
+/*!40000 ALTER TABLE `advice_tag` DISABLE KEYS */;
+/*!40000 ALTER TABLE `advice_tag` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -283,6 +485,7 @@ CREATE TABLE `employee` (
   `password` varchar(255) NOT NULL,
   `derniere_connexion` datetime DEFAULT NULL,
   `preferences_langue` varchar(10) DEFAULT 'fr',
+  `advice_notification_enabled` tinyint(1) DEFAULT 1,
   `id_carte_nfc` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
@@ -298,9 +501,39 @@ CREATE TABLE `employee` (
 LOCK TABLES `employee` WRITE;
 /*!40000 ALTER TABLE `employee` DISABLE KEYS */;
 INSERT INTO `employee` VALUES
-(1,2,'Lenny','Blackett','cocoblackett@gmail.com','01010101','Artisan','90000','2025-05-05','$2y$10$8j8auo5NQUWwtkcod/lWCOV0JZmbI4Rc7o0fPX27pdQEOR3fK5wpS','2025-05-05 02:09:18','Francais','1'),
-(2,2,'Allo','Maman','bruh@bruh.com','0101010101','Technicien','98900','2025-05-05','$2y$10$vRxkm9WTWCYc5FCidouuDuCFBdBFBPSGdwIlOzDId6xPBioM2lVSm',NULL,'fr','2');
+(1,2,'Lenny','Blackett','cocoblackett@gmail.com','01010101','Artisan','90000','2025-05-05','$2y$10$8j8auo5NQUWwtkcod/lWCOV0JZmbI4Rc7o0fPX27pdQEOR3fK5wpS','2025-05-05 02:09:18','Francais',1,'1'),
+(2,2,'Allo','Maman','bruh@bruh.com','0101010101','Technicien','98900','2025-05-05','$2y$10$vRxkm9WTWCYc5FCidouuDuCFBdBFBPSGdwIlOzDId6xPBioM2lVSm',NULL,'fr',1,'2');
 /*!40000 ALTER TABLE `employee` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `employee_advice_preference`
+--
+
+DROP TABLE IF EXISTS `employee_advice_preference`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `employee_advice_preference` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `employee_id` int(11) NOT NULL,
+  `preferred_categories` text DEFAULT NULL COMMENT 'JSON encoded list of preferred categories',
+  `preferred_tags` text DEFAULT NULL COMMENT 'JSON encoded list of preferred tags',
+  `interests` text DEFAULT NULL COMMENT 'JSON encoded list of interests',
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_employee_preference` (`employee_id`),
+  CONSTRAINT `employee_advice_preference_ibfk_1` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `employee_advice_preference`
+--
+
+LOCK TABLES `employee_advice_preference` WRITE;
+/*!40000 ALTER TABLE `employee_advice_preference` DISABLE KEYS */;
+/*!40000 ALTER TABLE `employee_advice_preference` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -347,12 +580,13 @@ CREATE TABLE `event` (
   `registrations` int(11) NOT NULL DEFAULT 0,
   `company_id` int(11) DEFAULT NULL,
   `event_proposal_id` int(11) DEFAULT NULL,
+  `duration` int(11) NOT NULL DEFAULT 60 COMMENT 'Durée en minutes',
   PRIMARY KEY (`id`),
   KEY `fk_event_company` (`company_id`),
   KEY `fk_event_event_proposal` (`event_proposal_id`),
   CONSTRAINT `fk_event_company` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`),
   CONSTRAINT `fk_event_event_proposal` FOREIGN KEY (`event_proposal_id`) REFERENCES `event_proposal` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -362,7 +596,9 @@ CREATE TABLE `event` (
 LOCK TABLES `event` WRITE;
 /*!40000 ALTER TABLE `event` DISABLE KEYS */;
 INSERT INTO `event` VALUES
-(1,'Test Event','Test description','2025-05-15 00:00:00','Webinar',10,'Online',0,2,NULL);
+(1,'Test Event','Test description','2025-05-15 00:00:00','Webinar',10,'Online',0,2,NULL,60),
+(2,'Yoga','Prestation : Yoga','2026-03-06 00:00:00','Workshop',30,'Business Care Troyes',0,2,NULL,60),
+(3,'Yoga','Prestation : Yoga','2026-03-08 00:00:00','Workshop',30,'Business Care Troyes',0,2,NULL,60);
 /*!40000 ALTER TABLE `event` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -383,12 +619,13 @@ CREATE TABLE `event_proposal` (
   `notes` text DEFAULT NULL,
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `duration` int(11) NOT NULL DEFAULT 60 COMMENT 'Durée en minutes',
   PRIMARY KEY (`id`),
   KEY `fk_event_proposal_company` (`company_id`),
   KEY `fk_event_proposal_event_type` (`event_type_id`),
   CONSTRAINT `fk_event_proposal_company` FOREIGN KEY (`company_id`) REFERENCES `company` (`id`),
   CONSTRAINT `fk_event_proposal_event_type` FOREIGN KEY (`event_type_id`) REFERENCES `service_type` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -397,6 +634,9 @@ CREATE TABLE `event_proposal` (
 
 LOCK TABLES `event_proposal` WRITE;
 /*!40000 ALTER TABLE `event_proposal` DISABLE KEYS */;
+INSERT INTO `event_proposal` VALUES
+(2,2,2,'2026-03-06',2,'Accepted','J\'adore le yoga','2025-05-07 09:08:45','2025-05-08 16:23:25',60),
+(3,2,2,'2026-03-08',2,'Accepted','Test durée','2025-05-08 17:08:17','2025-05-08 17:28:52',60);
 /*!40000 ALTER TABLE `event_proposal` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -418,7 +658,7 @@ CREATE TABLE `event_registration` (
   KEY `event_registration_ibfk_2` (`employee_id`),
   CONSTRAINT `event_registration_ibfk_1` FOREIGN KEY (`event_id`) REFERENCES `event` (`id`),
   CONSTRAINT `event_registration_ibfk_2` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -427,6 +667,8 @@ CREATE TABLE `event_registration` (
 
 LOCK TABLES `event_registration` WRITE;
 /*!40000 ALTER TABLE `event_registration` DISABLE KEYS */;
+INSERT INTO `event_registration` VALUES
+(1,2,2,'2025-05-08 16:34:25','Confirmed');
 /*!40000 ALTER TABLE `event_registration` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -547,7 +789,7 @@ CREATE TABLE `location` (
   `is_active` tinyint(1) DEFAULT 1,
   `created_at` datetime DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -556,6 +798,11 @@ CREATE TABLE `location` (
 
 LOCK TABLES `location` WRITE;
 /*!40000 ALTER TABLE `location` DISABLE KEYS */;
+INSERT INTO `location` VALUES
+(1,'Business Care Paris (1er)','110, rue de Rivoli','75001','Paris','France',1,'2025-05-05 15:48:14'),
+(2,'Business Care Troyes','13 rue Antoine Parmentier','10000','Troyes','France',1,'2025-05-05 15:48:14'),
+(3,'Business Care Biarritz','47 rue Lisboa','64200','Biarritz','France',1,'2025-05-05 15:48:14'),
+(4,'Business Care Nice','8 rue Beaumont','06000','Nice','France',1,'2025-05-05 15:48:14');
 /*!40000 ALTER TABLE `location` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -700,7 +947,7 @@ CREATE TABLE `pending_registrations` (
   PRIMARY KEY (`id`),
   KEY `pending_registrations_email_index` (`email`),
   KEY `pending_registrations_status_index` (`status`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -711,7 +958,13 @@ LOCK TABLES `pending_registrations` WRITE;
 /*!40000 ALTER TABLE `pending_registrations` DISABLE KEYS */;
 INSERT INTO `pending_registrations` VALUES
 (1,'societe','Sarah Corp',NULL,NULL,'kiwotap814@nutrv.com','$2y$10$UUvxi3vNi7zZmjASjDBjeeiMiG8yndcLGW9NQjIn1am1cTkXGiE7K','01010101',NULL,NULL,'90 rue du Caca','90000','Paris','12345678912345',NULL,NULL,NULL,NULL,'approved','2025-05-04 18:29:55','2025-05-04 18:31:12'),
-(2,'societe','Bruh Corp',NULL,NULL,'xafeti4894@javbing.com','$2y$10$Ln1Uzybo2vJAvper2Zew5ODSCwxnGzdp9MXp7KnqJVfpr3HERnNRS','010011010',NULL,NULL,'12 rue Lakers','89000','Pantin','12345678912345',NULL,NULL,NULL,NULL,'approved','2025-05-04 18:53:50','2025-05-04 18:54:14');
+(2,'societe','Bruh Corp',NULL,NULL,'xafeti4894@javbing.com','$2y$10$Ln1Uzybo2vJAvper2Zew5ODSCwxnGzdp9MXp7KnqJVfpr3HERnNRS','010011010',NULL,NULL,'12 rue Lakers','89000','Pantin','12345678912345',NULL,NULL,NULL,NULL,'approved','2025-05-04 18:53:50','2025-05-04 18:54:14'),
+(3,'prestataire',NULL,'Jean','Norbert','noted81482@javbing.com','$2y$10$.kDpCN0ejd3DzSzLNHBAC.vvfHXCXC8GYaiqgZMiLukFv6zVReNe.','0690101010',NULL,NULL,NULL,'93500','Pantin','12345678912345','Allo','Artisan',45.00,NULL,'approved','2025-05-05 15:03:12','2025-05-05 15:20:37'),
+(4,'prestataire',NULL,'Hector','Hibo','bayadi4488@nutrv.com','$2y$10$nRtS2jg6vkRBup8plk0hmeSTurNH6g8qDXQvPu.GTzr3k4FpENHTu','0606060606',NULL,NULL,NULL,'78000','Biarritz','12345678912345','Ojd','Demai',89.00,NULL,'rejected','2025-05-05 15:09:54','2025-05-05 15:17:52'),
+(5,'prestataire',NULL,'Lenny','Blackett','yiteg72041@javbing.com','$2y$10$2MrrGGkoYrLI3Io4Lt3nRemi3WVHkL8KEENoPJGg39zJsPtZb55EW','0649755621',NULL,NULL,NULL,'93500','Pantin','12345678912345','Allo','Sport',67.00,'\"{\\\"custom_activity\\\":\\\"Futsall\\\"}\"','approved','2025-05-05 15:22:33','2025-05-05 15:26:36'),
+(6,'prestataire',NULL,'Kobbie','Mainoo','yiteg72041@javbing.com','$2y$10$AxFHA31EqhRdEFHa0VFh2uWaZ1GVToG0acqqtPFIpcSF9gdtFpIdq','0101010101',NULL,NULL,NULL,'75000','Paris','12345678912345','Bonsoir','Artisan',23.00,NULL,'rejected','2025-05-05 20:54:01','2025-05-05 21:02:05'),
+(7,'prestataire',NULL,'Désiré','Douéa','yiteg72041@javbing.com','$2y$10$aIqMSFq5Srrjh6tULwyE8OLtoCtOpxgDVoLwBN6a/apmFoD.nHDDa','0101010101',NULL,NULL,NULL,'75006','Paris','11223435456464','Ici c\'est PARIS','Foot',54.00,NULL,'approved','2025-05-05 21:04:43','2025-05-05 21:09:08'),
+(8,'prestataire',NULL,'Sandrine','Vigot','vejayas914@javbing.com','$2y$10$mR9odwXf2AQ0TXN34MKZWeocLbec.lUm/x3oF7gag269FPy3wWTtW','0101010101',NULL,NULL,NULL,'78211','Troyes','12345678912345','Bonjour accepter moi svp','Sportive',30.00,NULL,'approved','2025-05-07 09:13:53','2025-05-07 09:14:39');
 /*!40000 ALTER TABLE `pending_registrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -748,6 +1001,31 @@ LOCK TABLES `personal_access_tokens` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `personalized_advice`
+--
+
+DROP TABLE IF EXISTS `personalized_advice`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `personalized_advice` (
+  `advice_id` int(11) NOT NULL,
+  `target_criteria` text NOT NULL COMMENT 'JSON encoded criteria for targeting',
+  `suggested_activities` text DEFAULT NULL COMMENT 'JSON encoded list of suggested activities',
+  PRIMARY KEY (`advice_id`),
+  CONSTRAINT `personalized_advice_ibfk_1` FOREIGN KEY (`advice_id`) REFERENCES `advice` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `personalized_advice`
+--
+
+LOCK TABLES `personalized_advice` WRITE;
+/*!40000 ALTER TABLE `personalized_advice` DISABLE KEYS */;
+/*!40000 ALTER TABLE `personalized_advice` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `provider`
 --
 
@@ -774,9 +1052,11 @@ CREATE TABLE `provider` (
   `validation_documents` text DEFAULT NULL,
   `tarif_horaire` decimal(10,2) DEFAULT NULL,
   `nombre_evaluations` int(11) DEFAULT 0,
+  `activity_type` enum('rencontre sportive','conférence','webinar','yoga','pot','séance d''art plastiques','session jeu vidéo','autre') NOT NULL,
+  `other_activity` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -785,6 +1065,10 @@ CREATE TABLE `provider` (
 
 LOCK TABLES `provider` WRITE;
 /*!40000 ALTER TABLE `provider` DISABLE KEYS */;
+INSERT INTO `provider` VALUES
+(1,'Norbert','Jean','Allo',0.00,'Artisan','noted81482@javbing.com','0690101010','$2y$10$.kDpCN0ejd3DzSzLNHBAC.vvfHXCXC8GYaiqgZMiLukFv6zVReNe.',NULL,'93500','Pantin','12345678912345',NULL,'Validé','2025-05-05',NULL,45.00,0,'yoga',NULL),
+(2,'Blackett','Lenny','Allo',0.00,'Sport','yiteg72041@javbing.com','0649755621','$2y$10$2MrrGGkoYrLI3Io4Lt3nRemi3WVHkL8KEENoPJGg39zJsPtZb55EW',NULL,'93500','Pantin','12345678912345',NULL,'Validé','2025-05-05',NULL,67.00,0,'yoga',NULL),
+(41,'Vigot','Sandrine','Bonjour accepter moi svp',0.00,'Sportive','vejayas914@javbing.com','0101010101','$2y$10$mR9odwXf2AQ0TXN34MKZWeocLbec.lUm/x3oF7gag269FPy3wWTtW',NULL,'78211','Troyes','12345678912345',NULL,'Validé','2025-05-07',NULL,30.00,0,'yoga',NULL);
 /*!40000 ALTER TABLE `provider` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -808,7 +1092,7 @@ CREATE TABLE `provider_assignment` (
   KEY `fk_provider_assignment_provider` (`provider_id`),
   CONSTRAINT `fk_provider_assignment_event_proposal` FOREIGN KEY (`event_proposal_id`) REFERENCES `event_proposal` (`id`),
   CONSTRAINT `fk_provider_assignment_provider` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -817,6 +1101,14 @@ CREATE TABLE `provider_assignment` (
 
 LOCK TABLES `provider_assignment` WRITE;
 /*!40000 ALTER TABLE `provider_assignment` DISABLE KEYS */;
+INSERT INTO `provider_assignment` VALUES
+(1,1,40,'Proposed','2025-05-05 21:15:16',NULL,24.00),
+(2,1,40,'Proposed','2025-05-05 21:17:10',NULL,24.00),
+(3,1,40,'Proposed','2025-05-05 21:17:36',NULL,24.03),
+(4,2,41,'Accepted','2025-05-07 09:17:27','2025-05-08 16:23:25',60.00),
+(5,2,41,'Rejected','2025-05-07 09:18:13','2025-05-08 16:23:17',60.00),
+(6,2,41,'Rejected','2025-05-07 09:18:51','2025-05-08 16:23:12',60.00),
+(7,3,41,'Accepted','2025-05-08 17:23:16','2025-05-08 17:28:52',20.00);
 /*!40000 ALTER TABLE `provider_assignment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1007,7 +1299,7 @@ CREATE TABLE `service_type` (
   PRIMARY KEY (`id`),
   KEY `provider_id` (`provider_id`),
   CONSTRAINT `service_type_ibfk_1` FOREIGN KEY (`provider_id`) REFERENCES `provider` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1016,6 +1308,9 @@ CREATE TABLE `service_type` (
 
 LOCK TABLES `service_type` WRITE;
 /*!40000 ALTER TABLE `service_type` DISABLE KEYS */;
+INSERT INTO `service_type` VALUES
+(1,1,'Conférence','Prestation : Conférence',100.00,60),
+(2,1,'Yoga','Prestation : Yoga',100.00,60);
 /*!40000 ALTER TABLE `service_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1084,4 +1379,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2025-05-05 15:10:33
+-- Dump completed on 2025-05-08 21:57:38

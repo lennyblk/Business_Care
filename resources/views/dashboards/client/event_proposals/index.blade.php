@@ -77,6 +77,15 @@
                                                 <a href="{{ route('client.event_proposals.show', $proposal->id) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i> Voir
                                                 </a>
+                                                @if($proposal->status == 'Pending')
+                                                    <form method="POST" action="{{ route('client.event_proposals.destroy', $proposal->id) }}" class="d-inline">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir annuler cette demande?')">
+                                                            <i class="fas fa-times"></i> Annuler
+                                                        </button>
+                                                    </form>
+                                                @endif
                                             </td>
                                         </tr>
                                     @endforeach
