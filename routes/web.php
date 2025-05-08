@@ -126,6 +126,37 @@ Route::middleware(['check.auth'])->group(function () {
     });
 });
 
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/gestion_admin/advice')->group(function () {
+        Route::get('/', [App\Http\Controllers\AdminAdviceController::class, 'index'])->name('admin.advice.index');
+        Route::get('/create', [App\Http\Controllers\AdminAdviceController::class, 'create'])->name('admin.advice.create');
+        Route::post('/', [App\Http\Controllers\AdminAdviceController::class, 'store'])->name('admin.advice.store');
+        Route::get('/{id}/edit', [App\Http\Controllers\AdminAdviceController::class, 'edit'])->name('admin.advice.edit');
+        Route::put('/{id}', [App\Http\Controllers\AdminAdviceController::class, 'update'])->name('admin.advice.update');
+        Route::delete('/{id}', [App\Http\Controllers\AdminAdviceController::class, 'destroy'])->name('admin.advice.destroy');
+
+        // Nouvelles routes pour les catégories
+        Route::get('/categories', [App\Http\Controllers\AdminAdviceCategoryController::class, 'index'])
+            ->name('admin.advice-categories.index');
+        Route::post('/categories', [App\Http\Controllers\AdminAdviceCategoryController::class, 'store'])
+            ->name('admin.advice-categories.store');
+        Route::put('/categories/{id}', [App\Http\Controllers\AdminAdviceCategoryController::class, 'update'])
+            ->name('admin.advice-categories.update');
+        Route::delete('/categories/{id}', [App\Http\Controllers\AdminAdviceCategoryController::class, 'destroy'])
+            ->name('admin.advice-categories.destroy');
+
+        // Routes pour les tags
+        Route::get('/tags', [App\Http\Controllers\AdminAdviceTagController::class, 'index'])
+            ->name('admin.advice-tags.index');
+        Route::post('/tags', [App\Http\Controllers\AdminAdviceTagController::class, 'store'])
+            ->name('admin.advice-tags.store');
+        Route::put('/tags/{id}', [App\Http\Controllers\AdminAdviceTagController::class, 'update'])
+            ->name('admin.advice-tags.update');
+        Route::delete('/tags/{id}', [App\Http\Controllers\AdminAdviceTagController::class, 'destroy'])
+            ->name('admin.advice-tags.destroy');
+    });
+});
+
 // ============= ESPACE CLIENT
 
 Route::middleware(['auth', 'client'])->group(function () {
@@ -187,6 +218,15 @@ Route::middleware(['check.auth'])->group(function () {
     Route::get('/dashboard/employee/events', [EmployeeController::class, 'index'])->name('employee.events.index');
     Route::post('/dashboard/employee/events/{id}/register', [EmployeeController::class, 'register'])->name('employee.events.register');
     Route::post('/dashboard/employee/events/{id}/cancel', [EmployeeController::class, 'cancelRegistration'])->name('employee.events.cancel');
+});
+
+// Routes pour les conseils des salariés
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/employee/advice')->group(function () {
+        Route::get('/', [\App\Http\Controllers\EmployeeAdviceController::class, 'index'])->name('employee.advice.index');
+        Route::get('/{id}', [\App\Http\Controllers\EmployeeAdviceController::class, 'show'])->name('employee.advice.show');
+        Route::post('/{id}/feedback', [\App\Http\Controllers\EmployeeAdviceController::class, 'storeFeedback'])->name('employee.advice.feedback');
+    });
 });
 
 Route::get('/test-email', [MailController::class, 'envoyerEmail'])->name('test.email');

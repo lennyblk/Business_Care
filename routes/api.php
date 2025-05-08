@@ -10,6 +10,9 @@ use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\ContractController;
 use App\Http\Controllers\API\AdminPendingRegistrationController;
 use App\Http\Controllers\API\PendingRegistrationController;
+use App\Http\Controllers\API\AdviceCategoryController;
+use App\Http\Controllers\API\AdviceTagController;
+use App\Http\Controllers\API\AdviceFeedbackController;
 
 Route::get('/test', function() {
     return response()->json(['message' => 'API fonctionne correctement']);
@@ -72,7 +75,6 @@ Route::prefix('admin')->group(function () {
 Route::post('password/reset', [AuthController::class, 'resetPassword']);
 Route::post('password/forgot', [AuthController::class, 'sendResetLinkEmail']);
 
-
 Route::prefix('employees')->group(function () {
     // Routes existantes
     Route::get('/', [EmployeeController::class, 'index']);
@@ -94,7 +96,6 @@ Route::prefix('admin')->group(function () {
     Route::post('contracts/{id}/approve', [AdminContractController::class, 'approveContract']);
     Route::post('contracts/{id}/reject', [AdminContractController::class, 'rejectContract']);
 });
-
 
 // ROUTES POUR APP MOBILE
 
@@ -191,4 +192,38 @@ Route::delete('/events/{id}/unregister', function (Request $request, $id) {
         'success' => true,
         'message' => 'Désinscription réussie'
     ]);
+});
+
+// Routes pour les conseils
+Route::get('/advices', [\App\Http\Controllers\API\AdviceController::class, 'index'])->name('api.advices.index');
+Route::get('/advices/{id}', [\App\Http\Controllers\API\AdviceController::class, 'show'])->name('api.advices.show');
+
+Route::prefix('advices')->group(function () {
+    Route::get('/', [\App\Http\Controllers\API\AdviceController::class, 'index']);
+    Route::get('/formule/{formule}', [\App\Http\Controllers\API\AdviceController::class, 'getByFormule']);
+    Route::get('/personalized', [\App\Http\Controllers\API\AdviceController::class, 'getPersonalizedAdvices']);
+    Route::get('/categories', [\App\Http\Controllers\API\AdviceController::class, 'categories']);
+    Route::get('/tags', [\App\Http\Controllers\API\AdviceController::class, 'tags']);
+    Route::get('/{id}', [\App\Http\Controllers\API\AdviceController::class, 'show']);
+});
+
+// Routes pour les catégories de conseils
+Route::prefix('advice-categories')->group(function () {
+    Route::get('/', [AdviceCategoryController::class, 'index']);
+    Route::post('/', [AdviceCategoryController::class, 'store']);
+    Route::put('/{id}', [AdviceCategoryController::class, 'update']);
+    Route::delete('/{id}', [AdviceCategoryController::class, 'destroy']);
+});
+
+// Routes pour les tags de conseils
+Route::prefix('advice-tags')->group(function () {
+    Route::get('/', [AdviceTagController::class, 'index']);
+    Route::post('/', [AdviceTagController::class, 'store']);
+    Route::delete('/{id}', [AdviceTagController::class, 'destroy']);
+});
+
+// Routes pour les feedbacks des conseils
+Route::prefix('advice-feedback')->group(function () {
+    Route::get('/advice/{id}', [AdviceFeedbackController::class, 'getByAdvice']);
+    Route::post('/', [AdviceFeedbackController::class, 'store']);
 });

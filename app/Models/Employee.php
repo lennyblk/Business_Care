@@ -12,7 +12,7 @@ class Employee extends Model
     protected $table = 'employee';
     protected $fillable = [
         'company_id', 'first_name', 'last_name', 'email', 'telephone', 'position', 'departement',
-        'date_creation_compte', 'password', 'derniere_connexion', 'preferences_langue', 'id_carte_nfc'
+        'date_creation_compte', 'password', 'derniere_connexion', 'preferences_langue', 'id_carte_nfc', 'advice_notification_enabled'
     ];
     protected $hidden = ['password'];
     public $timestamps = false;
@@ -33,4 +33,23 @@ class Employee extends Model
         return $this->belongsToMany(Event::class, 'event_registration', 'employee_id', 'event_id');
     }
 
+    public function adviceViews()
+    {
+        return $this->hasMany(EmployeeAdviceView::class, 'employee_id');
+    }
+
+    public function adviceFeedbacks()
+    {
+        return $this->hasMany(AdviceFeedback::class, 'employee_id');
+    }
+
+    public function advicePreferences()
+    {
+        return $this->hasOne(EmployeeAdvicePreference::class, 'employee_id');
+    }
+
+    public function preferences()
+    {
+        return $this->hasOne(EmployeeAdvicePreference::class, 'employee_id');
+    }
 }
