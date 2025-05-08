@@ -204,16 +204,6 @@ class AdminEventProposalController extends Controller
 
             $mail->send();
 
-            // Créer une notification pour l'entreprise
-            $notification = new Notification();
-            $notification->recipient_id = $company->id;
-            $notification->recipient_type = 'Company';
-            $notification->title = 'Demande d\'activité en cours de traitement';
-            $notification->message = 'Votre demande d\'activité ' . $eventProposal->eventType->title .
-                ' prévue le ' . $eventProposal->proposed_date->format('d/m/Y') .
-                ' a été assignée à un prestataire.';
-            $notification->notification_type = 'Email';
-            $notification->save();
 
             return true;
         } catch (Exception $e) {

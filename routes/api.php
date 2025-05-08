@@ -106,8 +106,21 @@ Route::prefix('event-proposals')->group(function () {
     Route::delete('/{id}', [App\Http\Controllers\API\EventProposalController::class, 'destroy']);
 });
 
+// Routes pour les assignations de prestataires
+Route::prefix('provider-assignments')->group(function () {
+    Route::get('/', [App\Http\Controllers\API\ProviderAssignmentController::class, 'index']);
+    Route::post('/', [App\Http\Controllers\API\ProviderAssignmentController::class, 'store']);
+    Route::get('/{id}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'show']);
+    Route::put('/{id}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'update']);
+    Route::delete('/{id}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'destroy']);
+    Route::get('/provider/{providerId}/status/{status}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'getByProviderAndStatus']);
+    Route::get('/provider/{providerId}/assignment/{id}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'getByIdAndProvider']);
+    Route::post('/{id}/accept/{providerId}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'acceptAssignment']);
+    Route::post('/{id}/reject/{providerId}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'rejectAssignment']);
+    Route::get('/event-proposal/{eventProposalId}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'getByEventProposal']);
+});
 
-// ROUTES POUR APP MOBILE
+// ROUTES POUR APP MOBILE ==========================================================================================================================
 
 Route::get('/events', [EventController::class, 'index']);
 
@@ -140,11 +153,9 @@ Route::get('/employee/events', function (Request $request) {
     return response()->json($registeredEvents);
 });
 
-// Route pour s'inscrire à un événement
 Route::post('/events/{id}/register', function (Request $request, $id) {
     $employeeId = $request->header('Employee-Id', 1);
 
-    // Vérifier si l'événement existe
     $event = \App\Models\Event::find($id);
     if (!$event) {
         return response()->json([
@@ -153,7 +164,6 @@ Route::post('/events/{id}/register', function (Request $request, $id) {
         ], 404);
     }
 
-    // Vérifier si l'employé est déjà inscrit
     $existingRegistration = \App\Models\EventRegistration::where('event_id', $id)
         ->where('employee_id', $employeeId)
         ->first();
@@ -165,7 +175,6 @@ Route::post('/events/{id}/register', function (Request $request, $id) {
         ], 422);
     }
 
-    // Créer l'inscription
     \App\Models\EventRegistration::create([
         'event_id' => $id,
         'employee_id' => $employeeId,
@@ -179,11 +188,9 @@ Route::post('/events/{id}/register', function (Request $request, $id) {
     ]);
 });
 
-// Route pour se désinscrire d'un événement
 Route::delete('/events/{id}/unregister', function (Request $request, $id) {
     $employeeId = $request->header('Employee-Id', 1);
 
-    // Vérifier si l'inscription existe
     $registration = \App\Models\EventRegistration::where('event_id', $id)
         ->where('employee_id', $employeeId)
         ->first();
@@ -195,7 +202,6 @@ Route::delete('/events/{id}/unregister', function (Request $request, $id) {
         ], 404);
     }
 
-    // Supprimer l'inscription
     $registration->delete();
 
     return response()->json([

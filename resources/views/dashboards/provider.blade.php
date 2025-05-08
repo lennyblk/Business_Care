@@ -17,6 +17,7 @@
                     <a href="#" class="list-group-item list-group-item-action">Calendrier</a>
                     <a href="#" class="list-group-item list-group-item-action">Facturation</a>
                     <a href="#" class="list-group-item list-group-item-action">Services</a>
+                    <a href="{{ route('provider.assignments.index') }}" class="list-group-item list-group-item-action">Activités</a>
                 </div>
             </div>
         </div>
@@ -63,79 +64,6 @@
                                     <h5 class="card-title">En attente</h5>
                                     <p class="card-text display-6">3</p>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Calendrier des rendez-vous -->
-                    <h5 class="mb-3">Planning des rendez-vous</h5>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-bordered">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Client</th>
-                                    <th>Date</th>
-                                    <th>Heure</th>
-                                    <th>Service</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Entreprise XYZ</td>
-                                    <td>20/03/2025</td>
-                                    <td>09:00 - 12:00</td>
-                                    <td>Évaluation ergonomique</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">Modifier</button>
-                                        <button class="btn btn-sm btn-outline-danger">Annuler</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Tech Solutions</td>
-                                    <td>22/03/2025</td>
-                                    <td>14:00 - 16:00</td>
-                                    <td>Consultation bien-être</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">Modifier</button>
-                                        <button class="btn btn-sm btn-outline-danger">Annuler</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Groupe Santé</td>
-                                    <td>25/03/2025</td>
-                                    <td>10:00 - 15:00</td>
-                                    <td>Atelier prévention</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-primary">Modifier</button>
-                                        <button class="btn btn-sm btn-outline-danger">Annuler</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Nouvelles demandes -->
-                    <h5 class="mb-3">Nouvelles demandes</h5>
-                    <div class="list-group">
-                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Digital Services</strong> - Consultation de santé au travail
-                                <div class="text-muted small">Demande reçue le 18/03/2025</div>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-success me-1">Accepter</button>
-                                <button class="btn btn-sm btn-danger">Refuser</button>
-                            </div>
-                        </div>
-                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Groupe Finance</strong> - Évaluation du stress
-                                <div class="text-muted small">Demande reçue le 17/03/2025</div>
-                            </div>
-                            <div>
-                                <button class="btn btn-sm btn-success me-1">Accepter</button>
-                                <button class="btn btn-sm btn-danger">Refuser</button>
                             </div>
                         </div>
                     </div>

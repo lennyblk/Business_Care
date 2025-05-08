@@ -24,6 +24,7 @@ use App\Http\Controllers\API\AdminPendingRegistrationController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\EventProposalController;
 use App\Http\Controllers\AdminEventProposalController;
+use App\Http\Controllers\ProviderAssignmentController;
 
 
 // Pages principales
@@ -229,10 +230,10 @@ Route::middleware(['check.auth'])->group(function () {
     Route::post('/dashboard/gestion_admin/event_proposals/{id}/reject', [AdminEventProposalController::class, 'rejectProposal'])->name('admin.event_proposals.reject');
 });
 
-// Routes pour les assignations de prestataires (côté provider)
-Route::middleware(['check.auth'])->group(function () {
-    Route::get('/dashboard/provider/assignments', [ProviderAssignmentController::class, 'index'])->name('provider.assignments.index');
-    Route::get('/dashboard/provider/assignments/{id}', [ProviderAssignmentController::class, 'show'])->name('provider.assignments.show');
-    Route::post('/dashboard/provider/assignments/{id}/accept', [ProviderAssignmentController::class, 'accept'])->name('provider.assignments.accept');
-    Route::post('/dashboard/provider/assignments/{id}/reject', [ProviderAssignmentController::class, 'reject'])->name('provider.assignments.reject');
+// Routes pour les assignations des prestataires
+Route::prefix('dashboard/provider/assignments')->name('provider.assignments.')->group(function () {
+    Route::get('/', [App\Http\Controllers\ProviderAssignmentController::class, 'index'])->name('index');
+    Route::get('/{id}', [App\Http\Controllers\ProviderAssignmentController::class, 'show'])->name('show');
+    Route::post('/{id}/accept', [App\Http\Controllers\ProviderAssignmentController::class, 'accept'])->name('accept');
+    Route::post('/{id}/reject', [App\Http\Controllers\ProviderAssignmentController::class, 'reject'])->name('reject');
 });
