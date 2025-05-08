@@ -89,6 +89,19 @@
                                     <th>Lieu:</th>
                                     <td>{{ $eventProposal->location->name }} ({{ $eventProposal->location->city }})</td>
                                 </tr>
+                                <th>Durée:</th>
+                                <td>
+                                    @if($eventProposal->duration >= 60)
+                                        {{ floor($eventProposal->duration / 60) }} h
+                                        @if($eventProposal->duration % 60 > 0)
+                                            {{ $eventProposal->duration % 60 }} min
+                                        @endif
+                                    @else
+                                        {{ $eventProposal->duration }} min
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
                             </table>
                         </div>
                     </div>

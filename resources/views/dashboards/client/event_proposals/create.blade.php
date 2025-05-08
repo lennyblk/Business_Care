@@ -82,6 +82,16 @@
                         </div>
 
                         <div class="form-group mb-3">
+                            <label for="duration" class="form-label">Durée de l'activité (en minutes) *</label>
+                            <input type="number" name="duration" id="duration" class="form-control @error('duration') is-invalid @enderror"
+                                value="{{ old('duration', 60) }}" min="30" max="480" step="30" required>
+                            <small class="text-muted">Minimum: 30 minutes, Maximum: 8 heures</small>
+                            @error('duration')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group mb-3">
                             <label for="notes" class="form-label">Remarques ou précisions</label>
                             <textarea name="notes" id="notes" class="form-control @error('notes') is-invalid @enderror" rows="4">{{ old('notes') }}</textarea>
                             @error('notes')

@@ -46,6 +46,17 @@
                                 {{ $eventProposal->status }}
                             </span>
                         </dd>
+                        <dt class="col-sm-4">Durée :</dt>
+                        <dd class="col-sm-8">
+                            @if($eventProposal->duration >= 60)
+                                {{ floor($eventProposal->duration / 60) }} heure{{ floor($eventProposal->duration / 60) > 1 ? 's' : '' }}
+                                @if($eventProposal->duration % 60 > 0)
+                                    {{ $eventProposal->duration % 60 }} minute{{ $eventProposal->duration % 60 > 1 ? 's' : '' }}
+                                @endif
+                            @else
+                                {{ $eventProposal->duration }} minute{{ $eventProposal->duration != 1 ? 's' : '' }}
+                            @endif
+                        </dd>
 
                         <dt class="col-sm-4">Date de demande :</dt>
                         <dd class="col-sm-8">{{ $eventProposal->created_at->format('d/m/Y H:i') }}</dd>

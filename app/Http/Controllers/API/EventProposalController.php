@@ -40,11 +40,24 @@ class EventProposalController extends Controller
             $locations = Location::whereIn('city', ['Paris', 'Troyes', 'Biarritz', 'Nice'])->get();
         }
 
+        $defaultDurations = [
+            30 => '30 minutes',
+            45 => '45 minutes',
+            60 => '1 heure',
+            90 => '1 heure 30',
+            120 => '2 heures',
+            180 => '3 heures',
+            240 => '4 heures',
+            360 => '6 heures',
+            480 => '8 heures'
+        ];
+
         return response()->json([
             'success' => true,
             'data' => [
                 'activityTypes' => $activityTypes,
-                'locations' => $locations
+                'locations' => $locations,
+                'defaultDurations' => $defaultDurations
             ]
         ]);
     }
@@ -64,9 +77,7 @@ class EventProposalController extends Controller
         ]);
     }
 
-    /**
-     * Enregistre une nouvelle proposition d'activité
-     */
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -74,6 +85,7 @@ class EventProposalController extends Controller
             'activity_type' => 'required|string',
             'proposed_date' => 'required|date|after:today',
             'location_id' => 'required|exists:location,id',
+            'duration' => 'required|integer|min:30|max:480',
             'notes' => 'nullable|string|max:1000'
         ]);
 
@@ -94,6 +106,7 @@ class EventProposalController extends Controller
                 'event_type_id' => $serviceType->id,
                 'proposed_date' => $request->proposed_date,
                 'location_id' => $request->location_id,
+                'duration' => $request->duration,
                 'notes' => $request->notes,
                 'status' => 'Pending'
             ]);
@@ -150,6 +163,7 @@ class EventProposalController extends Controller
         $validator = Validator::make($request->all(), [
             'proposed_date' => 'sometimes|required|date|after:today',
             'location_id' => 'sometimes|required|exists:location,id',
+            'duration' => 'sometimes|required|integer|min:30|max:480', // Ajout de la validation de durée
             'notes' => 'nullable|string|max:1000',
             'status' => 'sometimes|required|in:Pending,Assigned,Accepted,Rejected'
         ]);
@@ -163,7 +177,9 @@ class EventProposalController extends Controller
 
         try {
             $eventProposal = EventProposal::findOrFail($id);
-            $eventProposal->update($request->only(['proposed_date', 'location_id', 'notes', 'status']));
+
+            // Ajouter 'duration' à la liste des champs modifiables
+            $eventProposal->update($request->only(['proposed_date', 'location_id', 'duration', 'notes', 'status']));
 
             return response()->json([
                 'success' => true,

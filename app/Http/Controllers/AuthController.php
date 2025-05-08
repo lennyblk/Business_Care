@@ -33,14 +33,23 @@ class AuthController extends Controller
                 // Récupérer les données de l'utilisateur
                 $user = $responseData['user'];
 
-                // Enregistrer les données de l'utilisateur en session
-                session([
-                    'user_id' => $user['id'],
-                    'user_email' => $user['email'],
-                    'user_name' => $user['name'],
-                    'user_type' => $user['type'],
-                    'company_id' => $user['company_id'] ?? null
-                ]);
+                if ($user['type'] === 'prestataire') {
+                    session([
+                        'user_id' => $user['id'],
+                        'user_email' => $user['email'],
+                        'user_name' => $user['name'],
+                        'user_type' => $user['type'],
+                        'provider_id' => $user['id']
+                    ]);
+                } else {
+                    session([
+                        'user_id' => $user['id'],
+                        'user_email' => $user['email'],
+                        'user_name' => $user['name'],
+                        'user_type' => $user['type'],
+                        'company_id' => $user['company_id'] ?? null
+                    ]);
+                }
 
                 \Log::info('Connexion réussie', [
                     'user_id' => $user['id'],

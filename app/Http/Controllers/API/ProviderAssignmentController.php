@@ -279,6 +279,23 @@ class ProviderAssignmentController extends Controller
             $eventProposal->status = 'Accepted';
             $eventProposal->save();
 
+            // Créer un événement basé sur la proposition
+            $serviceType = $eventProposal->eventType;
+
+            $event = new Event([
+                'name' => $serviceType->title,
+                'description' => $serviceType->description,
+                'date' => $eventProposal->proposed_date,
+                'event_type' => 'Workshop', // Type par défaut
+                'capacity' => 30, // Capacité par défaut
+                'location' => $eventProposal->location->name,
+                'company_id' => $eventProposal->company_id,
+                'event_proposal_id' => $eventProposal->id,
+                'duration' => $eventProposal->duration ?? 60 // Utiliser la durée avec fallback à 60 minutes
+            ]);
+
+            $event->save();
+
             // Recharger les relations pour la réponse
             $assignment->load(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location']);
 

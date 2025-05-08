@@ -40,13 +40,23 @@
                     <p><strong>Montant:</strong> {{ number_format($assignment->payment_amount, 2, ',', ' ') }} €</p>
                 </div>
                 <div class="col-md-6">
-                    <h2 class="h5 mb-3">Lieu</h2>
-                    <p><strong>Nom:</strong> {{ $assignment->eventProposal->location->name }}</p>
-                    <p><strong>Adresse:</strong> {{ $assignment->eventProposal->location->address }}</p>
-                    <p><strong>Code postal:</strong> {{ $assignment->eventProposal->location->postal_code }}</p>
-                    <p><strong>Ville:</strong> {{ $assignment->eventProposal->location->city }}</p>
-                    <p><strong>Pays:</strong> {{ $assignment->eventProposal->location->country }}</p>
-                </div>
+                <div class="col-md-6">
+                <h2 class="h5 mb-3">Lieu</h2>
+                <p><strong>Nom:</strong> {{ $assignment->eventProposal->location->name }}</p>
+                <p><strong>Adresse:</strong> {{ $assignment->eventProposal->location->address }}</p>
+                <p><strong>Code postal:</strong> {{ $assignment->eventProposal->location->postal_code }}</p>
+                <p><strong>Ville:</strong> {{ $assignment->eventProposal->location->city }}</p>
+                <p><strong>Pays:</strong> {{ $assignment->eventProposal->location->country }}</p>
+                <p><strong>Durée:</strong>
+                    @if($assignment->eventProposal->duration >= 60)
+                        {{ floor($assignment->eventProposal->duration / 60) }} h
+                        @if($assignment->eventProposal->duration % 60 > 0)
+                            {{ $assignment->eventProposal->duration % 60 }} min
+                        @endif
+                    @else
+                        {{ $assignment->eventProposal->duration }} min
+                    @endif
+                </p>
             </div>
 
             @if($assignment->status == 'Proposed')

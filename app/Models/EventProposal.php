@@ -16,6 +16,7 @@ class EventProposal extends Model
         'event_type_id',
         'proposed_date',
         'location_id',
+        'duration',
         'status',
         'notes'
     ];
