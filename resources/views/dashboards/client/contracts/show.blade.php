@@ -166,7 +166,7 @@
                                     </div>
                                 @elseif($contract->payment_status === 'active')
                                     <div class="col-md-4 mb-3">
-                                        <a href="#" class="btn btn-outline-primary w-100">
+                                        <a href="{{ route('contracts.download', $contract->id) }}" class="btn btn-outline-primary w-100">
                                             <i class="bi bi-file-pdf"></i> Télécharger le contrat
                                         </a>
                                     </div>

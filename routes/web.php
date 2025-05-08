@@ -239,3 +239,17 @@ Route::prefix('dashboard/provider/assignments')->name('provider.assignments.')->
     Route::post('/{id}/accept', [App\Http\Controllers\ProviderAssignmentController::class, 'accept'])->name('accept');
     Route::post('/{id}/reject', [App\Http\Controllers\ProviderAssignmentController::class, 'reject'])->name('reject');
 });
+
+// Routes pour les factures à ajouter/modifier dans le fichier web.php
+Route::middleware(['check.auth'])->group(function () {
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
+    Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+    Route::get('/invoices/{invoice}/view', [InvoiceController::class, 'viewPdf'])->name('invoices.view');
+    Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+});
+
+// Routes à ajouter pour le téléchargement des contrats
+Route::get('/contracts/{contract}/download', [App\Http\Controllers\ContractPdfController::class, 'download'])
+    ->name('contracts.download');
+Route::get('/contracts/{contract}/view-pdf', [App\Http\Controllers\ContractPdfController::class, 'show'])
+    ->name('contracts.view-pdf');

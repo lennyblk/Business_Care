@@ -25,80 +25,55 @@ class StripePaymentController extends Controller
             // Configuration de Stripe avec la clé API
             Stripe::setApiKey(env('STRIPE_SECRET'));
 
-            // Log de débogage avec la clé Stripe utilisée (sans montrer la clé complète)
-            $stripeKey = env('STRIPE_SECRET');
-            if ($stripeKey) {
-                Log::info('Mode Stripe: ' . (strpos($stripeKey, 'sk_test_') === 0 ? 'TEST' : 'PRODUCTION'));
-            } else {
-                Log::error('Clé Stripe non définie dans .env');
-            }
-
-            // Ajout d'informations sur le mode de paiement
-            Log::info('Création de la session de paiement pour le contrat #' . $contractId, [
-                'amount' => $contract->amount,
-                'company' => $contract->company_id
+            // Log pour le débogage
+            Log::info('Création de session Stripe pour le contrat #' . $contractId, [
+                'mode_stripe' => strpos(env('STRIPE_SECRET'), 'test') !== false ? 'TEST' : 'PRODUCTION'
             ]);
 
-            // Configuration plus stricte pour la session Stripe
-            $sessionParams = [
-                // Forcer l'utilisation de la carte uniquement
+            // Session Stripe simplifiée mais avec configuration explicite pour la carte
+            $session = Session::create([
+                // Uniquement carte (pas d'autres méthodes)
                 'payment_method_types' => ['card'],
 
-                // Information sur le client
-                'customer_email' => $contract->company->email,
+                // Forcer le mode carte
+                'mode' => 'payment',
 
-                // Détails de l'article
+                // Configuration spécifique pour les tests
+                'payment_method_options' => [
+                    'card' => [
+                        // Ces options forcent l'affichage du formulaire de carte
+                        'setup_future_usage' => null,
+                        'request_three_d_secure' => 'any',
+                    ],
+                ],
+
+                // Désactiver l'utilisation de cartes enregistrées
+                'customer_creation' => 'always',
+
+                // Ligne d'article obligatoire
                 'line_items' => [[
                     'price_data' => [
                         'currency' => 'eur',
                         'product_data' => [
                             'name' => 'Contrat Business Care - ' . $contract->formule_abonnement,
-                            'description' => 'Contrat du ' . \Carbon\Carbon::parse($contract->start_date)->format('d/m/Y') .
-                                           ' au ' . \Carbon\Carbon::parse($contract->end_date)->format('d/m/Y'),
+                            'description' => 'Période: ' . \Carbon\Carbon::parse($contract->start_date)->format('d/m/Y') .
+                                           ' - ' . \Carbon\Carbon::parse($contract->end_date)->format('d/m/Y'),
                         ],
                         'unit_amount' => (int)($contract->amount * 100), // Conversion en centimes
                     ],
                     'quantity' => 1,
                 ]],
 
-                // Mode de paiement unique
-                'mode' => 'payment',
-
-                // Type de soumission - obligatoire pour forcer l'affichage du formulaire
-                'submit_type' => 'pay',
-
-                // Configuration de l'interface
-                'billing_address_collection' => 'required', // Demander l'adresse de facturation
-
-                // Configuration technique du paiement
-                'payment_intent_data' => [
-                    'capture_method' => 'automatic',
-                    'receipt_email' => $contract->company->email,
-                    'description' => 'Paiement du contrat #' . $contract->id,
-                ],
-
                 // URLs de redirection
                 'success_url' => route('stripe.success', ['contract' => $contractId]) . '?session_id={CHECKOUT_SESSION_ID}',
                 'cancel_url' => route('stripe.cancel', ['contract' => $contractId]),
-
-                // Métadonnées
-                'metadata' => [
-                    'contract_id' => $contract->id,
-                    'company_id' => $contract->company_id,
-                    'formule_abonnement' => $contract->formule_abonnement,
-                ],
-            ];
-
-            // Création de la session
-            $session = Session::create($sessionParams);
-
-            // Log de l'URL de la session créée
-            Log::info('Session Stripe créée: ' . $session->id . ', URL: ' . $session->url);
+            ]);
 
             // Sauvegarder l'ID de la session Stripe
             $contract->stripe_checkout_id = $session->id;
             $contract->save();
 
+            // Redirection vers la page de paiement Stripe
             return redirect($session->url);
         } catch (\Exception $e) {
             Log::error('Erreur Stripe: ' . $e->getMessage(), [
@@ -116,7 +91,7 @@ class StripePaymentController extends Controller
 
             Stripe::setApiKey(env('STRIPE_SECRET'));
 
-            // Récupérer la session de paiement
+            // Vérifier la session de paiement
             $sessionId = $request->get('session_id');
             if (!$sessionId) {
                 Log::error('Session ID manquant dans la requête de succès');
@@ -135,19 +110,61 @@ class StripePaymentController extends Controller
                 $contract->payment_status = 'active';
                 $contract->save();
 
-                // Mettre à jour directement les informations de l'entreprise
-                $company = Company::findOrFail($contract->company_id);
-                $company->date_fin_contrat = $contract->end_date;
-                $company->formule_abonnement = $contract->formule_abonnement;
-                $company->statut_compte = 'Actif'; // Assurer que le compte est actif
-                $company->save();
-
-                Log::info('Contrat et entreprise mis à jour après paiement', [
+                // Log des informations du contrat pour débogage
+                Log::info('Informations du contrat avant mise à jour de l\'entreprise', [
                     'contract_id' => $contract->id,
-                    'company_id' => $company->id,
-                    'formule' => $company->formule_abonnement,
-                    'date_fin' => $company->date_fin_contrat
+                    'formule_abonnement' => $contract->formule_abonnement,
+                    'end_date' => $contract->end_date
                 ]);
+
+                // Mettre à jour la date de fin de contrat et la formule dans la table company
+                try {
+                    $company = Company::findOrFail($contract->company_id);
+
+                    // Log de l'état actuel de l'entreprise
+                    Log::info('État actuel de l\'entreprise', [
+                        'company_id' => $company->id,
+                        'current_formule' => $company->formule_abonnement,
+                        'current_date_fin' => $company->date_fin_contrat
+                    ]);
+
+                    // Mettre à jour explicitement chaque champ
+                    $company->date_fin_contrat = $contract->end_date;
+                    $company->statut_compte = 'Actif';
+
+                    // Vérifier que la formule est une valeur autorisée
+                    $allowedFormules = ['Starter', 'Basic', 'Premium'];
+                    if (in_array($contract->formule_abonnement, $allowedFormules)) {
+                        $company->formule_abonnement = $contract->formule_abonnement;
+                        Log::info('Formule mise à jour à: ' . $contract->formule_abonnement);
+                    } else {
+                        Log::warning('Formule non valide: ' . $contract->formule_abonnement);
+                    }
+
+                    // Sauvegarder et vérifier le résultat
+                    $saved = $company->save();
+
+                    // Log de confirmation de la mise à jour
+                    Log::info('Résultat de la mise à jour de l\'entreprise', [
+                        'saved' => $saved ? 'Oui' : 'Non',
+                        'company_id' => $company->id,
+                        'new_formule' => $company->formule_abonnement,
+                        'new_date_fin' => $company->date_fin_contrat
+                    ]);
+
+                    // Double vérification
+                    $refreshedCompany = Company::find($company->id);
+                    Log::info('État de l\'entreprise après rafraîchissement', [
+                        'formule_abonnement' => $refreshedCompany->formule_abonnement,
+                        'date_fin_contrat' => $refreshedCompany->date_fin_contrat,
+                        'statut_compte' => $refreshedCompany->statut_compte
+                    ]);
+
+                } catch (\Exception $companyError) {
+                    Log::error('Erreur lors de la mise à jour de l\'entreprise: ' . $companyError->getMessage(), [
+                        'trace' => $companyError->getTraceAsString()
+                    ]);
+                }
 
                 // Envoyer un email de confirmation
                 $this->sendPaymentConfirmationEmail($contract);
@@ -156,10 +173,6 @@ class StripePaymentController extends Controller
                     ->with('success', 'Paiement effectué avec succès. Votre contrat est maintenant actif.');
             }
 
-            Log::warning('Session de paiement non payée', [
-                'session_id' => $sessionId,
-                'status' => $session->payment_status
-            ]);
             return redirect()->route('contracts.show', $contractId)
                 ->with('error', 'Le paiement n\'a pas été complété. Statut: ' . $session->payment_status);
         } catch (\Exception $e) {
@@ -173,7 +186,6 @@ class StripePaymentController extends Controller
 
     public function cancel($contractId)
     {
-        Log::info('Paiement annulé par l\'utilisateur', ['contract_id' => $contractId]);
         return redirect()->route('contracts.show', $contractId)
             ->with('info', 'Paiement annulé. Vous pouvez réessayer à tout moment.');
     }
