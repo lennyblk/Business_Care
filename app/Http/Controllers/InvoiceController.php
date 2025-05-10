@@ -27,7 +27,7 @@ class InvoiceController extends Controller
                 ->with('error', 'Vous n\'avez pas accès à cette page.');
         }
 
-        return view('invoices.index', compact('invoices'));
+        return view('dashboards.client.invoices.index', compact('invoices'));
     }
 
     public function show($id)
@@ -46,7 +46,7 @@ class InvoiceController extends Controller
             return back()->with('error', 'Vous n\'avez pas accès à cette facture.');
         }
 
-        return view('invoices.show', compact('invoice'));
+        return view('dashboards.client.invoices.show', compact('invoice'));
     }
 
 

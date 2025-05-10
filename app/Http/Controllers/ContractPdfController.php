@@ -9,22 +9,15 @@ use Illuminate\Support\Facades\Log;
 
 class ContractPdfController extends Controller
 {
-    /**
-     * Générer et télécharger le PDF d'un contrat
-     *
-     * @param int $id ID du contrat
-     * @return \Illuminate\Http\Response
-     */
+
     public function download($id)
     {
         try {
-            // Vérifier que l'utilisateur est connecté et a le droit d'accéder à ce contrat
             if (session('user_type') !== 'societe' && session('user_type') !== 'admin') {
                 return redirect()->route('login')
                     ->with('error', 'Vous devez être connecté en tant que société ou administrateur pour accéder à cette page.');
             }
 
-            // Récupérer le contrat
             $contract = Contract::findOrFail($id);
 
             // Vérifier que l'utilisateur a accès à ce contrat
@@ -48,22 +41,14 @@ class ContractPdfController extends Controller
         }
     }
 
-    /**
-     * Afficher le PDF dans le navigateur
-     *
-     * @param int $id ID du contrat
-     * @return \Illuminate\Http\Response
-     */
     public function show($id)
     {
         try {
-            // Vérifier que l'utilisateur est connecté et a le droit d'accéder à ce contrat
             if (session('user_type') !== 'societe' && session('user_type') !== 'admin') {
                 return redirect()->route('login')
                     ->with('error', 'Vous devez être connecté en tant que société ou administrateur pour accéder à cette page.');
             }
 
-            // Récupérer le contrat
             $contract = Contract::findOrFail($id);
 
             // Vérifier que l'utilisateur a accès à ce contrat

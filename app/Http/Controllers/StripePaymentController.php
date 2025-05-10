@@ -166,7 +166,33 @@ class StripePaymentController extends Controller
                     ]);
                 }
 
-                // Envoyer un email de confirmation
+                // Générer une facture pour ce paiement
+                try {
+                    $invoice = new \App\Models\Invoice();
+                    $invoice->contract_id = $contract->id;
+                    $invoice->company_id = $contract->company_id;
+                    $invoice->invoice_number = 'F' . date('Ymd') . '-' . $contract->id;
+                    $invoice->issue_date = now();
+                    $invoice->due_date = now()->addDays(15);
+                    $invoice->period_start = now();
+                    $invoice->period_end = \Carbon\Carbon::parse($contract->end_date);
+                    $invoice->amount = $contract->amount;
+                    $invoice->payment_status = 'paid';
+                    $invoice->payment_date = now();
+                    $invoice->payment_method = 'Carte bancaire via Stripe';
+                    $invoice->payment_reference = $sessionId;
+                    $invoice->save();
+
+                    Log::info('Facture générée avec succès', [
+                        'invoice_id' => $invoice->id,
+                        'invoice_number' => $invoice->invoice_number
+                    ]);
+                } catch (\Exception $invoiceError) {
+                    Log::error('Erreur lors de la génération de la facture: ' . $invoiceError->getMessage(), [
+                        'trace' => $invoiceError->getTraceAsString()
+                    ]);
+                }
+
                 $this->sendPaymentConfirmationEmail($contract);
 
                 return redirect()->route('contracts.show', $contractId)

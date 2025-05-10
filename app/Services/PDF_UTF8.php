@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Services;
 
 /**
@@ -16,14 +15,11 @@ class PDF_UTF8 extends \FPDF
     protected function utf8_to_win1252($str) {
         // Nettoyer la chaîne en entrée
         $str = mb_convert_encoding($str, 'UTF-8', 'UTF-8');
-
         // Utiliser un remplacement sécuritaire
         $result = "";
-
         // Essayer avec iconv
         if (function_exists('iconv')) {
             $result = @iconv('UTF-8', 'windows-1252//TRANSLIT//IGNORE', $str);
-
             // En cas d'échec avec iconv, utiliser une méthode alternative
             if ($result === false) {
                 $result = $this->fallback_utf8_to_win1252($str);
@@ -32,7 +28,6 @@ class PDF_UTF8 extends \FPDF
             // Méthode alternative si iconv n'est pas disponible
             $result = $this->fallback_utf8_to_win1252($str);
         }
-
         return $result;
     }
 
@@ -58,13 +53,10 @@ class PDF_UTF8 extends \FPDF
             '˜' => chr(152), '™' => chr(153), 'š' => chr(154), '›' => chr(155), 'œ' => chr(156),
             'ž' => chr(158)
         );
-
         // Remplacer les caractères spéciaux
         $str = strtr($str, $utf8_to_win1252_table);
-
         // Remplacer les caractères restants non-ASCII par des points d'interrogation
         $str = preg_replace('/[^\x00-\x7F]/u', '?', $str);
-
         return $str;
     }
 
