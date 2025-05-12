@@ -11,6 +11,7 @@ use App\Http\Controllers\API\ContractController;
 use App\Http\Controllers\API\AdminContractController;
 use App\Http\Controllers\API\AdminPendingRegistrationController;
 use App\Http\Controllers\API\PendingRegistrationController;
+use App\Http\Controllers\AdminContract2Controller;
 
 Route::get('/test', function() {
     return response()->json(['message' => 'API fonctionne correctement']);
@@ -123,6 +124,18 @@ Route::prefix('provider-assignments')->group(function () {
     Route::post('/{id}/reject/{providerId}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'rejectAssignment']);
     Route::get('/event-proposal/{eventProposalId}', [App\Http\Controllers\API\ProviderAssignmentController::class, 'getByEventProposal']);
 });
+
+Route::prefix('profile')->group(function () {
+    Route::get('/{id}/{userType}', [App\Http\Controllers\API\ProfileController::class, 'getProfile']);
+    Route::put('/{id}/{userType}', [App\Http\Controllers\API\ProfileController::class, 'updateProfile']);
+    Route::put('/{id}/{userType}/password', [App\Http\Controllers\API\ProfileController::class, 'updatePassword']);
+});
+
+Route::prefix('admin/contracts2')->group(function () {
+    Route::get('/', [App\Http\Controllers\API\AdminContract2Controller::class, 'getAllContracts']);
+    Route::get('/{id}', [App\Http\Controllers\API\AdminContract2Controller::class, 'getContract']);
+});
+Route::post('/admin/contracts2/{id}/mark-as-paid', [App\Http\Controllers\API\AdminContract2Controller::class, 'markAsPaid']);
 
 // ROUTES POUR APP MOBILE ==========================================================================================================================
 

@@ -73,12 +73,12 @@
                             <div class="d-flex">
                                 <!-- Bouton Voir -->
                                 <a href="{{ route('admin.invoices.show', $invoice->id) }}" class="btn btn-primary btn-sm me-1">
-                                    <i class="fas fa-eye"></i>
+                                    <i class="fas fa-eye">Détails</i>
                                 </a>
 
                                 <!-- Bouton Télécharger -->
                                 <a href="{{ route('admin.invoices.download', $invoice->id) }}" class="btn btn-info btn-sm me-1">
-                                    <i class="fas fa-download"></i>
+                                    <i class="fas fa-download">Télécharger</i>
                                 </a>
 
                                 <!-- Bouton Marquer comme payé -->

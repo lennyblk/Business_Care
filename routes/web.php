@@ -25,7 +25,9 @@ use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\EventProposalController;
 use App\Http\Controllers\AdminEventProposalController;
 use App\Http\Controllers\ProviderAssignmentController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminInvoiceController;
+use App\Http\Controllers\AdminContract2Controller;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -128,6 +130,14 @@ Route::middleware(['check.auth'])->group(function () {
     });
 });
 
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/gestion_admin/contracts2')->group(function () {
+        Route::get('/', [App\Http\Controllers\AdminContract2Controller::class, 'index'])->name('admin.contracts2.index');
+        Route::get('/{id}', [App\Http\Controllers\AdminContract2Controller::class, 'show'])->name('admin.contracts2.show');
+        Route::post('/{id}/mark-as-paid', [App\Http\Controllers\AdminContract2Controller::class, 'markAsPaid'])->name('admin.contracts2.mark-as-paid');
+        Route::get('/{id}/download', [App\Http\Controllers\AdminContract2Controller::class, 'download'])->name('admin.contracts2.download');
+    });
+});
 // ============= ESPACE CLIENT
 
 Route::middleware(['auth', 'client'])->group(function () {
@@ -266,4 +276,13 @@ Route::middleware(['check.auth'])->group(function () {
         Route::post('/{id}/mark-as-paid', [AdminInvoiceController::class, 'markAsPaid'])->name('admin.invoices.mark-as-paid');
         Route::post('/generate-monthly', [AdminInvoiceController::class, 'generateMonthlyInvoices'])->name('admin.invoices.generate-monthly');
     });
+});
+
+// Routes pour le profil
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/password', [ProfileController::class, 'editPassword'])->name('profile.password');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 });

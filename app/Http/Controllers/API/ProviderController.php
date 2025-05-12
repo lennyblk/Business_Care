@@ -15,7 +15,7 @@ class ProviderController extends Controller
 {
     public function index()
     {
-        $providers = Provider::with(['availabilities', 'evaluations', 'invoices'])->get();
+        $providers = Provider::all();
         return response()->json(['data' => $providers]);
     }
 
@@ -55,7 +55,7 @@ class ProviderController extends Controller
 
     public function show($id)
     {
-        $provider = Provider::with(['availabilities', 'evaluations', 'invoices'])->find($id);
+        $provider = Provider::find($id);
 
         if (!$provider) {
             return response()->json(['message' => 'Prestataire non trouvé'], 404);

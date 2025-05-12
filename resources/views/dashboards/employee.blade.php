@@ -12,7 +12,7 @@
                 </div>
                 <div class="list-group list-group-flush">
                     <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
-                    <a href="#" class="list-group-item list-group-item-action">Mon profil</a>
+                    <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action">Mon profil</a>
                     <a href="#" class="list-group-item list-group-item-action">Planning médical</a>
                     <a href="{{ route('employee.events.index') }}" class="list-group-item list-group-item-action">Mes événements</a>
                     <a href="#" class="list-group-item list-group-item-action">Assistance</a>

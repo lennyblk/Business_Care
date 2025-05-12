@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Détails de la facture #{{ $invoice->invoice_number }}</h1>
+        <h1 class="h3 mb-0 text-gray-800">Détails de la facture #{{ $invoice->invoice_number ?? 'F-'.$invoice->id }}</h1>
         <div>
             <a href="{{ route('admin.invoices.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Retour
@@ -11,7 +11,7 @@
             <a href="{{ route('admin.invoices.download', $invoice->id) }}" class="btn btn-primary ml-2">
                 <i class="fas fa-download"></i> Télécharger
             </a>
-            @if($invoice->status !== 'paid')
+            @if($invoice->payment_status !== 'Paid')
             <form action="{{ route('admin.invoices.mark-as-paid', $invoice->id) }}" method="POST" class="d-inline">
                 @csrf
                 <button type="submit" class="btn btn-success ml-2" onclick="return confirm('Marquer cette facture comme payée?')">
@@ -45,7 +45,7 @@
                         <table class="table table-bordered">
                             <tr>
                                 <th style="width: 40%">Numéro de facture</th>
-                                <td>{{ $invoice->invoice_number }}</td>
+                                <td>{{ $invoice->invoice_number ?? 'F-'.$invoice->id }}</td>
                             </tr>
                             <tr>
                                 <th>Date d'émission</th>
@@ -64,22 +64,22 @@
                             <tr>
                                 <th>Statut</th>
                                 <td>
-                                    @if($invoice->status === 'paid')
+                                    @if($invoice->payment_status === 'Paid')
                                         <span class="badge bg-success">Payée</span>
-                                    @elseif($invoice->status === 'pending')
+                                    @elseif($invoice->payment_status === 'Pending')
                                         <span class="badge bg-warning">En attente</span>
-                                    @elseif($invoice->status === 'overdue')
+                                    @elseif($invoice->payment_status === 'Overdue')
                                         <span class="badge bg-danger">En retard</span>
                                     @endif
                                 </td>
                             </tr>
-                            @if($invoice->status === 'paid' && isset($invoice->payment_date))
+                            @if($invoice->payment_status === 'Paid' && isset($invoice->payment_date))
                             <tr>
                                 <th>Date de paiement</th>
                                 <td>{{ \Carbon\Carbon::parse($invoice->payment_date)->format('d/m/Y') }}</td>
                             </tr>
                             @endif
-                            @if($invoice->status === 'paid' && isset($invoice->payment_method))
+                            @if($invoice->payment_status === 'Paid' && isset($invoice->payment_method))
                             <tr>
                                 <th>Méthode de paiement</th>
                                 <td>{{ $invoice->payment_method }}</td>
@@ -159,28 +159,28 @@
                         <tr>
                             <td>Abonnement {{ $invoice->contract->formule_abonnement }}</td>
                             <td>1</td>
-                            <td class="text-right">{{ number_format($invoice->amount * 0.8, 2, ',', ' ') }} €</td>
-                            <td class="text-right">{{ number_format($invoice->amount * 0.8, 2, ',', ' ') }} €</td>
+                            <td class="text-right">{{ number_format($invoice->total_amount * 0.8, 2, ',', ' ') }} €</td>
+                            <td class="text-right">{{ number_format($invoice->total_amount * 0.8, 2, ',', ' ') }} €</td>
                         </tr>
                         <tr>
                             <td>Services inclus</td>
                             <td>1</td>
-                            <td class="text-right">{{ number_format($invoice->amount * 0.2, 2, ',', ' ') }} €</td>
-                            <td class="text-right">{{ number_format($invoice->amount * 0.2, 2, ',', ' ') }} €</td>
+                            <td class="text-right">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
+                            <td class="text-right">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
                         </tr>
                     </tbody>
                     <tfoot>
                         <tr>
                             <th colspan="3" class="text-right">Total HT</th>
-                            <td class="text-right">{{ number_format($invoice->amount, 2, ',', ' ') }} €</td>
+                            <td class="text-right">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
                         </tr>
                         <tr>
                             <th colspan="3" class="text-right">TVA (20%)</th>
-                            <td class="text-right">{{ number_format($invoice->amount * 0.2, 2, ',', ' ') }} €</td>
+                            <td class="text-right">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
                         </tr>
                         <tr>
                             <th colspan="3" class="text-right">Total TTC</th>
-                            <td class="text-right font-weight-bold">{{ number_format($invoice->amount * 1.2, 2, ',', ' ') }} €</td>
+                            <td class="text-right font-weight-bold">{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -231,4 +231,43 @@
         </div>
     </div>
 </div>
+
+@section('styles')
+<style>
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+
+    .bg-success {
+        background-color: #198754 !important;
+    }
+
+    .bg-warning {
+        background-color: #ffc107 !important;
+        color: #000;
+    }
+
+    .bg-danger {
+        background-color: #dc3545 !important;
+    }
+
+    .bg-secondary {
+        background-color: #6c757d !important;
+    }
+
+    .text-right {
+        text-align: right !important;
+    }
+</style>
+@endsection
 @endsection

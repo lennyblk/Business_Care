@@ -12,11 +12,10 @@
                 </div>
                 <div class="list-group list-group-flush">
                     <a href="{{ route('dashboard.client') }}" class="list-group-item list-group-item-action">Tableau de bord</a>
-                    <a href="#" class="list-group-item list-group-item-action">Profil</a>
+                    <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action">Profil</a>
                     <a href="{{ route('contracts.index') }}" class="list-group-item list-group-item-action">Contrats</a>
                     <a href="{{ route('quotes.index') }}" class="list-group-item list-group-item-action">Devis</a>
                     <a href="{{ route('employees.index') }}" class="list-group-item list-group-item-action">Collaborateurs</a>
-                    <a href="{{ route('payments.index') }}" class="list-group-item list-group-item-action">Paiements</a>
                     <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action active">Facturation</a>
                 </div>
             </div>
@@ -58,14 +57,14 @@
                                 @if(count($invoices) > 0)
                                     @foreach($invoices as $invoice)
                                     <tr>
-                                        <td>{{ $invoice->invoice_number }}</td>
+                                        <td>{{ $invoice->invoice_number ?? 'F-'.$invoice->id }}</td>
                                         <td>{{ \Carbon\Carbon::parse($invoice->issue_date)->format('d/m/Y') }}</td>
                                         <td>
                                             <a href="{{ route('contracts.show', $invoice->contract_id) }}">
                                                 #{{ $invoice->contract_id }}
                                             </a>
                                         </td>
-                                        <td>{{ number_format($invoice->amount * 1.2, 2, ',', ' ') }} €</td>
+                                        <td>{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
                                         <td>
                                             @if($invoice->payment_status === 'Paid')
                                                 <span class="badge bg-success">Payée</span>
@@ -76,18 +75,18 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-sm btn-primary">
-                                                    <i class="bi bi-eye"></i>
+                                            <div class="d-flex">
+                                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-sm btn-primary me-1">
+                                                    <i class="fas fa-eye">Détails</i>
                                                 </a>
-                                                <a href="{{ route('invoices.download', $invoice->id) }}" class="btn btn-sm btn-secondary">
-                                                    <i class="bi bi-download"></i>
+                                                <a href="{{ route('invoices.download', $invoice->id) }}" class="btn btn-sm btn-secondary me-1">
+                                                    <i class="fas fa-download">Télécharger</i>
                                                 </a>
-                                                @if($invoice->status !== 'paid')
-                                                <form action="{{ route('invoices.pay', $invoice->id) }}" method="POST" class="d-inline">
+                                                @if($invoice->payment_status !== 'Paid')
+                                                <form action="{{ route('invoices.pay', $invoice->id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="btn btn-sm btn-success">
-                                                        <i class="bi bi-credit-card"></i>
+                                                        <i class="fas fa-credit-card"></i>
                                                     </button>
                                                 </form>
                                                 @endif
@@ -111,4 +110,51 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('styles')
+<style>
+    /* Styles pour les boutons d'action */
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        border-radius: 0.2rem;
+    }
+
+    .me-1 {
+        margin-right: 0.25rem !important;
+    }
+
+    .d-flex {
+        display: flex !important;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        color: #fff;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+
+    .bg-success {
+        background-color: #198754 !important;
+    }
+
+    .bg-warning {
+        background-color: #ffc107 !important;
+        color: #000;
+    }
+
+    .bg-danger {
+        background-color: #dc3545 !important;
+    }
+</style>
 @endsection
