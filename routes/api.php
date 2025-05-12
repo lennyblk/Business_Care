@@ -8,6 +8,7 @@ use App\Http\Controllers\API\EmployeeController;
 use App\Http\Controllers\API\ProviderController;
 use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\ContractController;
+use App\Http\Controllers\API\AdminContractController;
 use App\Http\Controllers\API\AdminPendingRegistrationController;
 use App\Http\Controllers\API\PendingRegistrationController;
 use App\Http\Controllers\API\AdviceCategoryController;
@@ -31,7 +32,15 @@ Route::prefix('companies')->group(function () {
     Route::get('{id}/employees', [CompanyController::class, 'getEmployees']);
     Route::get('{id}/contracts', [CompanyController::class, 'getContracts']);
     Route::get('{id}/events', [EventController::class, 'getByCompany']);
+    Route::patch('{id}/update-contract-end-date', [CompanyController::class, 'updateContractEndDate']);
+    Route::patch('{id}/update-contract-info', [CompanyController::class, 'updateContractInfo']);
 });
+
+// Routes pour les contrats
+Route::apiResource('contracts', ContractController::class);
+Route::get('contracts/by-company/{companyId}', [ContractController::class, 'getByCompany']);
+// Nouvelle route pour résiliation de contrat
+Route::post('contracts/{id}/terminate', [ContractController::class, 'terminate']);
 
 // Routes pour les employés
 Route::apiResource('employees', EmployeeController::class);
@@ -56,10 +65,6 @@ Route::prefix('events')->group(function () {
     Route::post('{id}/unregister', [EventController::class, 'unregisterEmployee']);
 });
 
-// Routes pour les contrats
-Route::apiResource('contracts', ContractController::class);
-Route::get('contracts/by-company/{companyId}', [ContractController::class, 'getByCompany']);
-
 // Routes d'administration
 Route::prefix('admin')->group(function () {
     Route::apiResource('pending-registrations', AdminPendingRegistrationController::class)->only(['index', 'show']);
@@ -69,6 +74,11 @@ Route::prefix('admin')->group(function () {
     // Nouvelles routes admin pour la gestion des employés
     Route::get('employees', [EmployeeController::class, 'adminIndex']);
     Route::get('employees/{id}', [EmployeeController::class, 'adminShow']);
+
+    // Routes pour la gestion des contrats
+    Route::get('contracts/pending', [AdminContractController::class, 'getPendingContracts']);
+    Route::post('contracts/{id}/approve', [AdminContractController::class, 'approveContract']);
+    Route::post('contracts/{id}/reject', [AdminContractController::class, 'rejectContract']);
 });
 
 // Nouvelle route pour la réinitialisation de mot de passe
@@ -89,12 +99,6 @@ Route::prefix('employees')->group(function () {
     Route::get('/{id}/events', [EmployeeController::class, 'getEmployeeEvents']);
     Route::post('/{employeeId}/events/{eventId}/register', [EmployeeController::class, 'registerForEvent']);
     Route::delete('/{employeeId}/events/{eventId}/cancel', [EmployeeController::class, 'cancelEventRegistration']);
-});
-
-Route::prefix('admin')->group(function () {
-    Route::get('contracts/pending', [AdminContractController::class, 'getPendingContracts']);
-    Route::post('contracts/{id}/approve', [AdminContractController::class, 'approveContract']);
-    Route::post('contracts/{id}/reject', [AdminContractController::class, 'rejectContract']);
 });
 
 // Routes pour les propositions d'activités

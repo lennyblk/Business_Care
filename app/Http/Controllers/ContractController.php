@@ -7,6 +7,8 @@ use App\Http\Controllers\API\ContractController as ApiContractController;
 use Illuminate\Support\Facades\Log;
 use stdClass;
 use Carbon\Carbon;
+use App\Models\Contract;
+use App\Models\Company;
 
 class ContractController extends Controller
 {
@@ -390,6 +392,39 @@ class ContractController extends Controller
         } catch (\Exception $e) {
             Log::error('Erreur lors de la soumission du changement: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
+    public function terminate($id)
+    {
+        try {
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
+            }
+
+            // Approche directe pour mettre à jour contrat et société
+            $contract = Contract::findOrFail($id);
+
+            // Mettre le contrat en statut 'pending' pour signifier qu'il est résilié
+            $contract->payment_status = 'pending';
+            $contract->save();
+
+            // Mettre à jour le statut du compte de l'entreprise avec la valeur correcte
+            $company = Company::findOrFail($contract->company_id);
+            $company->statut_compte = 'Inactif'; // La valeur correcte selon la structure de la table
+            $company->save();
+
+            Log::info('Contrat résilié et compte désactivé', [
+                'contract_id' => $id,
+                'company_id' => $contract->company_id,
+                'new_account_status' => $company->statut_compte
+            ]);
+
+            return redirect()->route('contracts.index')->with('success', 'Contrat résilié avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la résiliation d\'un contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la résiliation du contrat: ' . $e->getMessage());
         }
     }
 }

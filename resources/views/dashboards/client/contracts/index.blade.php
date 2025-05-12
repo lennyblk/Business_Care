@@ -103,7 +103,7 @@
                                                         <i class="bi bi-trash"></i> Résilier
                                                     </button>
                                                 @elseif($contract->payment_status === 'pending')
-                                                    <span class="text-muted">En attente de validation</span>
+                                                    <span class="text-muted"></span>
                                                 @endif
                                             </div>
                                         </td>
@@ -141,11 +141,21 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <form action="{{ route('contracts.destroy', $contract->id) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Confirmer</button>
-                </form>
+
+                @if($contract->payment_status === 'active')
+                    <!-- Formulaire de résiliation pour les contrats actifs -->
+                    <form action="{{ route('contracts.terminate', $contract->id) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">Confirmer</button>
+                    </form>
+                @else
+                    <!-- Formulaire de suppression pour les contrats non actifs -->
+                    <form action="{{ route('contracts.destroy', $contract->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Confirmer</button>
+                    </form>
+                @endif
             </div>
         </div>
     </div>

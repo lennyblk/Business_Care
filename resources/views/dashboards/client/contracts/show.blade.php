@@ -166,7 +166,7 @@
                                     </div>
                                 @elseif($contract->payment_status === 'active')
                                     <div class="col-md-4 mb-3">
-                                        <a href="#" class="btn btn-outline-primary w-100">
+                                        <a href="{{ route('contracts.download', $contract->id) }}" class="btn btn-outline-primary w-100">
                                             <i class="bi bi-file-pdf"></i> Télécharger le contrat
                                         </a>
                                     </div>
@@ -212,9 +212,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <form action="{{ route('contracts.destroy', $contract->id) }}" method="POST">
+                <form action="{{ route('contracts.terminate', $contract->id) }}" method="POST">
                     @csrf
-                    @method('DELETE')
                     <button type="submit" class="btn btn-danger">Confirmer la demande</button>
                 </form>
             </div>

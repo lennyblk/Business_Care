@@ -10,6 +10,7 @@ class Invoice extends Model
     use HasFactory;
 
     protected $table = 'invoice';
+    public $timestamps = false;
     protected $fillable = [
         'company_id', 'contract_id', 'issue_date', 'due_date', 'total_amount', 'payment_status', 'pdf_path', 'details'
     ];
