@@ -229,6 +229,36 @@ Route::delete('/events/{id}/unregister', function (Request $request, $id) {
     ]);
 });
 
+Route::get('/company/events', function (Request $request) {
+    // Récupérer l'employé connecté via le token
+    $employee = $request->user();
+    
+    if (!$employee) {
+        return response()->json([]);
+    }
+
+    // Récupérer les événements de la compagnie de l'employé
+    $events = \App\Models\Event::where('company_id', $employee->company_id)
+        ->where('date', '>=', now()) // Seulement les événements futurs
+        ->orderBy('date')
+        ->get()
+        ->map(function($event) {
+            return [
+                'id' => $event->id,
+                'name' => $event->title ?? $event->name,
+                'description' => $event->description,
+                'date' => $event->date,
+                'event_type' => $event->event_type,
+                'location' => $event->location,
+                'company_id' => $event->company_id,
+                'registrations' => $event->registrations()->count()
+            ];
+        });
+
+    return response()->json($events);
+})->middleware('auth:api');
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Routes pour les conseils
 Route::get('/advices', [\App\Http\Controllers\API\AdviceController::class, 'index'])->name('api.advices.index');
 Route::get('/advices/{id}', [\App\Http\Controllers\API\AdviceController::class, 'show'])->name('api.advices.show');

@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [ // ← Ajoutez cette configuration
+            'driver' => 'token', // Driver personnalisé ou 'session'
+            'provider' => 'users',
+        ],
     ],
 
     /*
