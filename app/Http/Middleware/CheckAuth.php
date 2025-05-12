@@ -59,14 +59,11 @@ class CheckAuth
                     !str_starts_with($route, 'admin.activities') &&
                     !str_starts_with($route, 'admin.inscriptions') &&
                     !str_starts_with($route, 'admin.contracts') &&
-                    !str_starts_with($route, 'admin.event_proposals.') &&
-                    !str_starts_with($route, 'admin.advice')) { // Ajout des routes admin.advice
                     !str_starts_with($route, 'admin.contracts2') &&
                     !str_starts_with($route, 'admin.invoices') &&
                     !str_starts_with($route, 'admin.event_proposals.') &&
-                    !str_starts_with($route, 'profile.')) {
                     !str_starts_with($route, 'admin.advice') && // Ajout des routes admin.advice
-                    !str_starts_with($route, 'admin.invoices')) {
+                    !str_starts_with($route, 'profile.')) {
                     return redirect()->route('dashboard.admin')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
