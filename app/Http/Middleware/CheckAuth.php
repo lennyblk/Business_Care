@@ -23,28 +23,34 @@ class CheckAuth
                     !str_starts_with($route, 'payments.') &&
                     !str_starts_with($route, 'invoices.') &&
                     !str_starts_with($route, 'stripe.') &&
-                    !str_starts_with($route, 'client.event_proposals.')) {
+                    !str_starts_with($route, 'client.event_proposals.') &&
+                    !str_starts_with($route, 'profile.')) {
                     return redirect()->route('dashboard.client')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
-            case 'employe':
-                if (!str_starts_with($route, 'dashboard.employee') &&
-                    !str_starts_with($route, 'events.') &&
-                    !str_starts_with($route, 'employee.events') &&
-                    !str_starts_with($route, 'employee.advice') &&
-                    !str_starts_with($route, 'employee.preferences')) { // Ajout des routes employee.advice
-                    return redirect()->route('dashboard.employee')
-                        ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
-                }
-                break;
-            case 'prestataire':
+
+            case 'employee':
+            if (!str_starts_with($route, 'dashboard.employee') &&
+                !str_starts_with($route, 'events.') &&
+                !str_starts_with($route, 'employee.events') &&
+                !str_starts_with($route, 'employee.advice') &&  // Ajout des routes employee.advice
+                !str_starts_with($route, 'employee.preferences') &&
+                !str_starts_with($route, 'profile.')) {
+                return redirect()->route('dashboard.employee')
+                    ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
+            }
+            break;
+
+            case 'provider':
                 if (!str_starts_with($route, 'dashboard.provider') &&
-                    !str_starts_with($route, 'provider.assignments.')) {
+                    !str_starts_with($route, 'provider.assignments.') &&
+                    !str_starts_with($route, 'profile.')) {
                     return redirect()->route('dashboard.provider')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
+
             case 'admin':
                 if (!str_starts_with($route, 'dashboard.admin') &&
                     !str_starts_with($route, 'admin.company') &&
@@ -55,10 +61,15 @@ class CheckAuth
                     !str_starts_with($route, 'admin.contracts') &&
                     !str_starts_with($route, 'admin.event_proposals.') &&
                     !str_starts_with($route, 'admin.advice')) { // Ajout des routes admin.advice
+                    !str_starts_with($route, 'admin.contracts2') &&
+                    !str_starts_with($route, 'admin.invoices') &&
+                    !str_starts_with($route, 'admin.event_proposals.') &&
+                    !str_starts_with($route, 'profile.')) {
                     return redirect()->route('dashboard.admin')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
+
             default:
                 return redirect()->route('login')->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
         }

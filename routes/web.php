@@ -25,6 +25,9 @@ use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\EventProposalController;
 use App\Http\Controllers\AdminEventProposalController;
 use App\Http\Controllers\ProviderAssignmentController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AdminInvoiceController;
+use App\Http\Controllers\AdminContract2Controller;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -158,6 +161,12 @@ Route::middleware(['check.auth'])->group(function () {
     });
 });
 
+Route::prefix('dashboard/gestion_admin/contracts2')->group(function () {
+    Route::get('/', [App\Http\Controllers\AdminContract2Controller::class, 'index'])->name('admin.contracts2.index');
+    Route::get('/{id}', [App\Http\Controllers\AdminContract2Controller::class, 'show'])->name('admin.contracts2.show');
+    Route::post('/{id}/mark-as-paid', [App\Http\Controllers\AdminContract2Controller::class, 'markAsPaid'])->name('admin.contracts2.mark-as-paid');
+    Route::get('/{id}/download', [App\Http\Controllers\AdminContract2Controller::class, 'download'])->name('admin.contracts2.download');
+});
 // ============= ESPACE CLIENT
 
 Route::middleware(['auth', 'client'])->group(function () {
@@ -278,4 +287,40 @@ Route::prefix('dashboard/provider/assignments')->name('provider.assignments.')->
     Route::get('/{id}', [App\Http\Controllers\ProviderAssignmentController::class, 'show'])->name('show');
     Route::post('/{id}/accept', [App\Http\Controllers\ProviderAssignmentController::class, 'accept'])->name('accept');
     Route::post('/{id}/reject', [App\Http\Controllers\ProviderAssignmentController::class, 'reject'])->name('reject');
+});
+
+// Routes pour les factures
+Route::middleware(['check.auth'])->group(function () {
+    Route::resource('invoices', InvoiceController::class)->only(['index', 'show']);
+    Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+    Route::get('/invoices/{invoice}/view', [InvoiceController::class, 'viewPdf'])->name('invoices.view');
+    Route::post('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+});
+
+// Routes pour le téléchargement des contrats
+Route::get('/contracts/{contract}/download', [App\Http\Controllers\ContractPdfController::class, 'download'])
+    ->name('contracts.download');
+Route::get('/contracts/{contract}/view-pdf', [App\Http\Controllers\ContractPdfController::class, 'show'])
+    ->name('contracts.view-pdf');
+
+    // Routes pour l'administration des factures
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/gestion_admin/invoices')->group(function () {
+        Route::get('/', [AdminInvoiceController::class, 'index'])->name('admin.invoices.index');
+        Route::get('/{id}', [AdminInvoiceController::class, 'show'])->name('admin.invoices.show');
+        Route::get('/company/{companyId}', [AdminInvoiceController::class, 'getByCompany'])->name('admin.invoices.company');
+        Route::get('/{id}/download', [AdminInvoiceController::class, 'download'])->name('admin.invoices.download');
+        Route::get('/{id}/view', [AdminInvoiceController::class, 'viewPdf'])->name('admin.invoices.view');
+        Route::post('/{id}/mark-as-paid', [AdminInvoiceController::class, 'markAsPaid'])->name('admin.invoices.mark-as-paid');
+        Route::post('/generate-monthly', [AdminInvoiceController::class, 'generateMonthlyInvoices'])->name('admin.invoices.generate-monthly');
+    });
+});
+
+// Routes pour le profil
+Route::middleware(['check.auth'])->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/password', [ProfileController::class, 'editPassword'])->name('profile.password');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
 });

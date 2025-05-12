@@ -12,11 +12,10 @@
                 </div>
                 <div class="list-group list-group-flush">
                     <a href="{{ route('dashboard.client') }}" class="list-group-item list-group-item-action">Tableau de bord</a>
-                    <a href="#" class="list-group-item list-group-item-action">Profil</a>
+                    <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action">Profil</a>
                     <a href="{{ route('contracts.index') }}" class="list-group-item list-group-item-action active">Contrats</a>
                     <a href="{{ route('quotes.index') }}" class="list-group-item list-group-item-action">Devis</a>
                     <a href="{{ route('employees.index') }}" class="list-group-item list-group-item-action">Collaborateurs</a>
-                    <a href="{{ route('payments.index') }}" class="list-group-item list-group-item-action">Paiements</a>
                     <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action">Facturation</a>
                 </div>
             </div>
@@ -166,7 +165,7 @@
                                     </div>
                                 @elseif($contract->payment_status === 'active')
                                     <div class="col-md-4 mb-3">
-                                        <a href="#" class="btn btn-outline-primary w-100">
+                                        <a href="{{ route('contracts.download', $contract->id) }}" class="btn btn-outline-primary w-100">
                                             <i class="bi bi-file-pdf"></i> Télécharger le contrat
                                         </a>
                                     </div>

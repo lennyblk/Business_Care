@@ -59,4 +59,5 @@ class Provider extends Model
         return $this->hasMany(ProviderRecommendationLog::class);
     }
 
+
 }

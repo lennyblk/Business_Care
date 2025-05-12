@@ -1,0 +1,260 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Invoice;
+use App\Models\Contract;
+use App\Services\InvoicePdfGenerator;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
+class InvoiceController extends Controller
+{
+
+    public function index()
+    {
+        // Vérifier le type d'utilisateur connecté
+        if (session('user_type') === 'societe') {
+            $company_id = session('user_id');
+            $invoices = Invoice::where('company_id', $company_id)
+                ->orderBy('issue_date', 'desc')
+                ->paginate(10);
+        } elseif (session('user_type') === 'admin') {
+            $invoices = Invoice::orderBy('issue_date', 'desc')
+                ->paginate(10);
+        } else {
+            return redirect()->route('login')
+                ->with('error', 'Vous n\'avez pas accès à cette page.');
+        }
+
+        return view('dashboards.client.invoices.index', compact('invoices'));
+    }
+
+    public function show($id)
+    {
+
+        // Récupérer la facture
+        $invoice = Invoice::findOrFail($id);
+
+        // Vérifier les droits d'accès
+        if (session('user_type') === 'societe' && session('user_id') != $invoice->company_id) {
+            return back()->with('error', 'Vous n\'avez pas accès à cette facture.');
+        }
+
+        return view('dashboards.client.invoices.show', compact('invoice'));
+    }
+
+
+    public function download($id)
+    {
+        try {
+            // Récupérer la facture
+            $invoice = Invoice::with(['company', 'contract'])->findOrFail($id);
+            $contract = $invoice->contract;
+            $company = $invoice->company;
+
+            // Créer un PDF avec support UTF-8
+            $pdf = new \FPDF('P', 'mm', 'A4');
+            $pdf->AddPage();
+
+            // Fonctions pour gérer l'UTF-8
+            function utf8_to_latin($text) {
+                $text = iconv('UTF-8', 'windows-1252//TRANSLIT//IGNORE', $text);
+                return $text ? $text : 'Error encoding text';
+            }
+
+            // En-tête avec logo et informations de l'entreprise
+            $pdf->SetFont('Arial', 'B', 20);
+            $pdf->Cell(0, 15, utf8_to_latin('FACTURE'), 0, 1, 'C');
+
+            // Numéro de facture
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, utf8_to_latin('N° ' . ($invoice->invoice_number ?? 'F-' . $invoice->id)), 0, 1, 'C');
+            $pdf->Ln(5);
+
+            // Date et références
+            $pdf->SetFont('Arial', '', 10);
+            $pdf->Cell(0, 7, utf8_to_latin('Date d\'émission : ' . date('d/m/Y')), 0, 1, 'R');
+            $pdf->Cell(0, 7, utf8_to_latin('Date d\'échéance : ' . date('d/m/Y', strtotime('+30 days'))), 0, 1, 'R');
+            $pdf->Cell(0, 7, utf8_to_latin('Référence : CONT-' . $contract->id), 0, 1, 'R');
+            $pdf->Ln(5);
+
+            // Bloc Business Care (émetteur)
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(95, 8, utf8_to_latin('ÉMETTEUR'), 0, 0);
+
+            // Bloc Client (destinataire)
+            $pdf->Cell(95, 8, utf8_to_latin('DESTINATAIRE'), 0, 1);
+
+            $pdf->SetFont('Arial', 'B', 10);
+            $pdf->Cell(95, 7, utf8_to_latin('Business Care'), 0, 0);
+            $pdf->Cell(95, 7, utf8_to_latin($company->name), 0, 1);
+
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->Cell(95, 5, utf8_to_latin('110, rue de Rivoli'), 0, 0);
+            $pdf->Cell(95, 5, utf8_to_latin($company->address ?? ''), 0, 1);
+
+            $pdf->Cell(95, 5, utf8_to_latin('75001 Paris'), 0, 0);
+            $pdf->Cell(95, 5, utf8_to_latin(($company->code_postal ?? '') . ' ' . ($company->ville ?? '')), 0, 1);
+
+            $pdf->Cell(95, 5, utf8_to_latin('France'), 0, 0);
+            $pdf->Cell(95, 5, utf8_to_latin($company->pays ?? 'France'), 0, 1);
+
+            $pdf->Cell(95, 5, utf8_to_latin('Tél : 01 23 45 67 89'), 0, 0);
+            $pdf->Cell(95, 5, utf8_to_latin('Tél : ' . ($company->telephone ?? 'N/A')), 0, 1);
+
+            $pdf->Cell(95, 5, utf8_to_latin('Email : contact@business-care.fr'), 0, 0);
+            $pdf->Cell(95, 5, utf8_to_latin('Email : ' . ($company->email ?? 'N/A')), 0, 1);
+
+            $pdf->Cell(95, 5, utf8_to_latin('SIRET : 123 456 789 00010'), 0, 0);
+            if (isset($company->siret)) {
+                $pdf->Cell(95, 5, utf8_to_latin('SIRET : ' . $company->siret), 0, 1);
+            } else {
+                $pdf->Cell(95, 5, '', 0, 1);
+            }
+
+            $pdf->Ln(10);
+
+            // Description du service
+            $pdf->SetFont('Arial', 'B', 12);
+            $pdf->Cell(0, 10, utf8_to_latin('DESCRIPTION DES SERVICES'), 0, 1);
+
+            // En-têtes du tableau
+            $pdf->SetFont('Arial', 'B', 9);
+            $pdf->SetFillColor(240, 240, 240);
+            $pdf->Cell(90, 8, utf8_to_latin('Description'), 1, 0, 'C', true);
+            $pdf->Cell(25, 8, utf8_to_latin('Quantité'), 1, 0, 'C', true);
+            $pdf->Cell(35, 8, utf8_to_latin('Prix unitaire HT'), 1, 0, 'C', true);
+            $pdf->Cell(40, 8, utf8_to_latin('Montant HT'), 1, 1, 'C', true);
+
+            // Contenu du tableau
+            $pdf->SetFont('Arial', '', 9);
+
+            // Abonnement de base (80% du montant)
+            $baseAmount = $contract->amount * 0.8;
+            $pdf->Cell(90, 8, utf8_to_latin('Abonnement ' . $contract->formule_abonnement), 1, 0);
+            $pdf->Cell(25, 8, '1', 1, 0, 'C');
+            $pdf->Cell(35, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 1, 'R');
+
+            // Services inclus (20% du montant)
+            $servicesAmount = $contract->amount * 0.2;
+            $pdf->Cell(90, 8, utf8_to_latin('Services inclus'), 1, 0);
+            $pdf->Cell(25, 8, '1', 1, 0, 'C');
+            $pdf->Cell(35, 8, utf8_to_latin(number_format($servicesAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($servicesAmount, 2, ',', ' ') . ' €'), 1, 1, 'R');
+
+            // Sous-total, TVA et total
+            $pdf->Ln(5);
+            $pdf->Cell(115, 8, '', 0, 0);
+            $pdf->SetFont('Arial', 'B', 9);
+            $pdf->Cell(35, 8, utf8_to_latin('Total HT'), 1, 0, 'L', true);
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+
+            $pdf->Cell(115, 8, '', 0, 0);
+            $pdf->Cell(35, 8, utf8_to_latin('TVA (20%)'), 1, 0, 'L', true);
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 0.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+
+            $pdf->Cell(115, 8, '', 0, 0);
+            $pdf->SetFont('Arial', 'B', 11);
+            $pdf->Cell(35, 8, utf8_to_latin('Total TTC'), 1, 0, 'L', true);
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 1.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+
+            $pdf->Ln(10);
+
+            // Informations de paiement
+            $pdf->SetFont('Arial', 'B', 11);
+            $pdf->Cell(0, 8, utf8_to_latin('INFORMATIONS DE PAIEMENT'), 0, 1);
+
+            $pdf->SetFont('Arial', '', 9);
+            $pdf->Cell(0, 6, utf8_to_latin('Méthode de paiement : Carte bancaire / Prélèvement automatique'), 0, 1);
+            $pdf->Cell(0, 6, utf8_to_latin('Conditions de paiement : Paiement à réception de facture'), 0, 1);
+
+            $pdf->Ln(3);
+            $pdf->Cell(0, 6, utf8_to_latin('Coordonnées bancaires :'), 0, 1);
+            $pdf->Cell(0, 6, utf8_to_latin('IBAN : FR76 1234 5678 9123 4567 8912 345'), 0, 1);
+            $pdf->Cell(0, 6, utf8_to_latin('BIC : ABCDEFGHIJK'), 0, 1);
+
+            $pdf->Ln(10);
+
+            // Notes et conditions
+            $pdf->SetFont('Arial', 'I', 8);
+            $pdf->Cell(0, 5, utf8_to_latin('Facture acquittée - TVA récupérable sur la base de cette facture'), 0, 1);
+            $pdf->Cell(0, 5, utf8_to_latin('En cas de retard de paiement, une pénalité de 3 fois le taux d\'intérêt légal sera appliquée.'), 0, 1);
+            $pdf->Cell(0, 5, utf8_to_latin('Une indemnité forfaitaire de 40€ pour frais de recouvrement sera due.'), 0, 1);
+
+            // Pied de page
+            $pdf->SetY(-15);
+            $pdf->SetFont('Arial', 'I', 8);
+            $pdf->Cell(0, 10, utf8_to_latin('Business Care - SARL au capital de 50 000€ - RCS Paris 123 456 789'), 0, 0, 'C');
+
+            // Générer et télécharger le PDF
+            return $pdf->Output('D', 'facture_' . $invoice->id . '.pdf');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du téléchargement du PDF: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
+        }
+    }
+
+    public function viewPdf($id)
+    {
+        try {
+
+            // Récupérer la facture
+            $invoice = Invoice::findOrFail($id);
+
+            // Vérifier les droits d'accès
+            if (session('user_type') === 'societe' && session('user_id') != $invoice->company_id) {
+                return back()->with('error', 'Vous n\'avez pas accès à cette facture.');
+            }
+
+            // Récupérer le contrat associé
+            $contract = Contract::findOrFail($invoice->contract_id);
+
+            // Générer le PDF
+            $pdfGenerator = new InvoicePdfGenerator($contract, $invoice->invoice_number);
+            $pdf = $pdfGenerator->generate();
+
+            // Afficher le PDF dans le navigateur
+            return $pdf->Output('I', 'facture_' . $invoice->invoice_number . '.pdf');
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'affichage du PDF de facture: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de l\'affichage du PDF de facture.');
+        }
+    }
+
+
+    public function pay($id)
+    {
+        try {
+            // Vérifier que l'utilisateur est connecté en tant que société
+            if (session('user_type') !== 'societe') {
+                return redirect()->route('login')
+                    ->with('error', 'Vous devez être connecté en tant que société pour effectuer cette action.');
+            }
+
+            // Récupérer la facture
+            $invoice = Invoice::findOrFail($id);
+
+            // Vérifier les droits d'accès
+            if (session('user_id') != $invoice->company_id) {
+                return back()->with('error', 'Vous n\'avez pas accès à cette facture.');
+            }
+
+            // Vérifier que la facture n'est pas déjà payée
+            if ($invoice->status === 'paid') {
+                return back()->with('error', 'Cette facture a déjà été payée.');
+            }
+
+            // Rediriger vers la page de paiement
+            return redirect()->route('payments.process', ['invoice' => $invoice->id]);
+
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du paiement de la facture: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors du paiement de la facture.');
+        }
+    }
+}
