@@ -16,10 +16,10 @@
         </div>
     @endif
 
-    <h1 class="my-4">Tous les Événements</h1>
+    <h1 class="my-4">Événements de mon entreprise</h1>
 
     <div class="row">
-        @foreach ($allEvents as $event)
+        @foreach ($allEvents->where('company_id', $employee->company_id) as $event)
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card h-100">
                 <div class="card-body d-flex flex-column">

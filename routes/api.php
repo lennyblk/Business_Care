@@ -66,6 +66,15 @@ Route::prefix('events')->group(function () {
     Route::post('{id}/unregister', [EventController::class, 'unregisterEmployee']);
 });
 
+// Routes pour les événements
+Route::prefix('events')->group(function () {
+    Route::get('/', [EventController::class, 'index']);
+    Route::get('/company/{companyId}', [EventController::class, 'getByCompany']);
+    Route::get('/registered/{employeeId}', [EventController::class, 'getRegisteredEmployees']);
+    Route::post('/register', [EventController::class, 'store']);
+    Route::delete('/{id}', [EventController::class, 'destroy']);
+});
+
 // Routes d'administration
 Route::prefix('admin')->group(function () {
     Route::apiResource('pending-registrations', AdminPendingRegistrationController::class)->only(['index', 'show']);

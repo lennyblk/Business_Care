@@ -32,7 +32,7 @@ class PendingRegistration extends Model
         'status',
         'created_at',
         'updated_at',
-        'activity_type' // Ajout du nouveau champ
+        'activity_type'
     ];
 
     protected $casts = [

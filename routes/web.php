@@ -28,6 +28,7 @@ use App\Http\Controllers\ProviderAssignmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminInvoiceController;
 use App\Http\Controllers\AdminContract2Controller;
+use App\Http\Controllers\EventController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -228,9 +229,20 @@ Route::middleware(['check.auth'])->group(function () {
 });
 
 Route::middleware(['check.auth'])->group(function () {
-    Route::get('/dashboard/employee/events', [EmployeeController::class, 'index'])->name('employee.events.index');
-    Route::post('/dashboard/employee/events/{id}/register', [EmployeeController::class, 'register'])->name('employee.events.register');
-    Route::post('/dashboard/employee/events/{id}/cancel', [EmployeeController::class, 'cancelRegistration'])->name('employee.events.cancel');
+    Route::prefix('dashboard/employee/events')->group(function () {
+        Route::get('/', [EventController::class, 'index'])->name('employee.events.index');
+        Route::post('/{id}/register', [EventController::class, 'register'])->name('employee.events.register');
+        Route::post('/{id}/cancel', [EventController::class, 'cancel'])->name('employee.events.cancel');
+    });
+});
+
+// Routes pour les événements employés
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/employee/events')->group(function () {
+        Route::get('/', [EventController::class, 'index'])->name('employee.events.index');
+        Route::post('/{id}/register', [EventController::class, 'register'])->name('employee.events.register');
+        Route::post('/{id}/cancel', [EventController::class, 'cancel'])->name('employee.events.cancel');
+    });
 });
 
 // Routes pour les conseils des salariés
