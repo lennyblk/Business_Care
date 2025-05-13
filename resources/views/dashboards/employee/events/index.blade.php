@@ -16,7 +16,12 @@
         </div>
     @endif
 
-    <h1 class="my-4">Événements de mon entreprise</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Événements de mon entreprise</h1>
+        <a href="{{ route('employee.events.history') }}" class="btn btn-info">
+            Voir l'historique de mes événements
+        </a>
+    </div>
 
     <div class="row">
         @foreach ($allEvents->where('company_id', $employee->company_id) as $event)

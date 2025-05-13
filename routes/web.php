@@ -29,6 +29,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminInvoiceController;
 use App\Http\Controllers\AdminContract2Controller;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\ServiceEvaluationController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -231,8 +232,11 @@ Route::middleware(['check.auth'])->group(function () {
 Route::middleware(['check.auth'])->group(function () {
     Route::prefix('dashboard/employee/events')->group(function () {
         Route::get('/', [EventController::class, 'index'])->name('employee.events.index');
+        Route::get('/history', [EventController::class, 'history'])->name('employee.events.history');
         Route::post('/{id}/register', [EventController::class, 'register'])->name('employee.events.register');
         Route::post('/{id}/cancel', [EventController::class, 'cancel'])->name('employee.events.cancel');
+        Route::get('/evaluate/{id}', [ServiceEvaluationController::class, 'create'])->name('employee.events.evaluate');
+        Route::post('/evaluate/{id}', [ServiceEvaluationController::class, 'store'])->name('employee.events.evaluate.store');
     });
 });
 

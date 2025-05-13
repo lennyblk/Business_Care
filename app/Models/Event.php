@@ -27,7 +27,7 @@ class Event extends Model
 
     public function registrations()
     {
-    return $this->hasMany(EventRegistration::class, 'event_id');
+        return $this->hasMany(EventRegistration::class, 'event_id');
     }
 
     public function registeredEmployees()
@@ -38,5 +38,10 @@ class Event extends Model
     public function eventProposal()
     {
         return $this->belongsTo(EventProposal::class);
+    }
+
+    public function serviceEvaluations()
+    {
+        return $this->hasMany(ServiceEvaluation::class);
     }
 }

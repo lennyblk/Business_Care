@@ -14,7 +14,6 @@ class EventController extends Controller
     public function index()
     {
         try {
-            // Récupérer tous les événements avec les relations
             $events = Event::with('company')->get();
             return response()->json(['data' => $events]);
         } catch (\Exception $e) {
@@ -27,7 +26,7 @@ class EventController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'employee_id' => 'required|exists:employee,id', // Updated table name
+                'employee_id' => 'required|exists:employee,id',
                 'event_id' => 'required|exists:event,id',
             ]);
 
@@ -35,13 +34,11 @@ class EventController extends Controller
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            // Check if the employee is already registered for the event
             $event = Event::find($request->event_id);
             if ($event->registeredEmployees()->where('employee_id', $request->employee_id)->exists()) {
                 return response()->json(['message' => 'Vous êtes déjà inscrit à cet événement.'], 409);
             }
 
-            // Register the employee for the event
             $event->registeredEmployees()->attach($request->employee_id);
 
             return response()->json(['message' => 'Inscription réussie.'], 201);
@@ -107,7 +104,6 @@ class EventController extends Controller
         try {
             $employeeId = $request->input('employee_id');
 
-            // Check if the registration exists
             $event = Event::find($id);
             if (!$event) {
                 return response()->json(['message' => 'Événement non trouvé'], 404);
@@ -118,7 +114,6 @@ class EventController extends Controller
                 return response()->json(['message' => 'Inscription non trouvée'], 404);
             }
 
-            // Remove the employee's registration
             $event->registeredEmployees()->detach($employeeId);
 
             return response()->json(['message' => 'Inscription annulée avec succès'], 200);
@@ -146,9 +141,7 @@ class EventController extends Controller
         }
     }
 
-    /**
-     * Convert an associative array to an object recursively.
-     */
+    
     private function arrayToObject($array)
     {
         if (!is_array($array)) {
@@ -179,6 +172,40 @@ class EventController extends Controller
         } catch (\Exception $e) {
             Log::error('API: Erreur lors de la récupération des événements inscrits: ' . $e->getMessage());
             return response()->json(['message' => 'Une erreur est survenue lors de la récupération des événements inscrits'], 500);
+        }
+    }
+
+    public function getHistory($employeeId)
+    {
+        try {
+            $events = Event::whereHas('registrations', function($query) use ($employeeId) {
+                $query->where('employee_id', $employeeId);
+            })
+            ->with(['serviceEvaluations' => function($query) use ($employeeId) {
+                $query->where('employee_id', $employeeId);
+            }])
+            ->get()
+            ->map(function($event) use ($employeeId) {
+                return [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'date' => $event->date,
+                    'location' => $event->location,
+                    'hasEvaluation' => $event->serviceEvaluations->isNotEmpty()
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $events
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur dans getHistory: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Une erreur est survenue'
+            ], 500);
         }
     }
 }

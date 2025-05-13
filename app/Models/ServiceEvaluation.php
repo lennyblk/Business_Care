@@ -2,21 +2,30 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ServiceEvaluation extends Model
 {
-    use HasFactory;
-
     protected $table = 'service_evaluation';
+    
+    public $timestamps = false;
+    
     protected $fillable = [
-        'intervention_id', 'employee_id', 'rating', 'comment', 'evaluation_date'
+        'event_id',
+        'employee_id',
+        'rating',
+        'comment',
+        'evaluation_date'
     ];
 
-    public function intervention()
+    protected $casts = [
+        'rating' => 'decimal:2',
+        'evaluation_date' => 'datetime'
+    ];
+
+    public function event()
     {
-        return $this->belongsTo(Intervention::class);
+        return $this->belongsTo(Event::class);
     }
 
     public function employee()

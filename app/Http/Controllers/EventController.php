@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\API\EventController as ApiEventController;
 use App\Models\Employee;
+use App\Models\Event;
+use App\Models\ServiceEvaluation;
 use Illuminate\Support\Facades\Log;
 
 class EventController extends Controller
@@ -54,19 +56,54 @@ class EventController extends Controller
                 json_decode($companyEventsResponse->getContent(), true)['data'] ?? []
             );
 
+            // Filtrer les événements actuels/futurs
+            $currentEvents = $allEvents->filter(function($event) {
+                return \Carbon\Carbon::parse($event->date) >= now();
+            });
+
             $myEventsResponse = $this->apiController->getRegisteredEmployees($employee->id);
             $myEvents = $this->arrayToObjects(
                 json_decode($myEventsResponse->getContent(), true)['data'] ?? []
             );
 
+            // Filtrer les événements actuels/futurs pour myEvents
+            $currentMyEvents = $myEvents->filter(function($event) {
+                return \Carbon\Carbon::parse($event->date) >= now();
+            });
+
             return view('dashboards.employee.events.index', [
-                'allEvents' => $allEvents,
-                'myEvents' => $myEvents,
+                'allEvents' => $currentEvents,
+                'myEvents' => $currentMyEvents,
                 'employee' => $employee
             ]);
         } catch (\Exception $e) {
             Log::error('Exception dans EventController@index: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
+    public function history()
+    {
+        try {
+            $employee = Employee::where('id', session('user_id'))->first();
+            
+            if (!$employee) {
+                return redirect()->back()->with('error', 'Employé non trouvé');
+            }
+
+            $response = $this->apiController->getHistory($employee->id);
+            $data = json_decode($response->getContent(), true);
+
+            if (!$data['success']) {
+                return redirect()->back()->with('error', $data['message']);
+            }
+
+            $events = $this->arrayToObjects($data['data']);
+
+            return view('dashboards.employee.events.history', compact('events'));
+        } catch (\Exception $e) {
+            Log::error('Exception dans EventController@history: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Une erreur est survenue lors du chargement de l\'historique');
         }
     }
 

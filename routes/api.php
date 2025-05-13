@@ -73,6 +73,7 @@ Route::prefix('events')->group(function () {
     Route::get('/registered/{employeeId}', [EventController::class, 'getRegisteredEmployees']);
     Route::post('/register', [EventController::class, 'store']);
     Route::delete('/{id}', [EventController::class, 'destroy']);
+    Route::get('/history/{employeeId}', [EventController::class, 'getHistory']);
 });
 
 // Routes d'administration
@@ -301,3 +302,6 @@ Route::prefix('advice-feedback')->group(function () {
     Route::get('/advice/{id}', [AdviceFeedbackController::class, 'getByAdvice']);
     Route::post('/', [AdviceFeedbackController::class, 'store']);
 });
+
+// Routes pour les évaluations de service
+Route::post('/service-evaluations/{event_id}', [App\Http\Controllers\API\ServiceEvaluationController::class, 'store']);
