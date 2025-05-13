@@ -48,15 +48,15 @@ class PendingRegistrationController extends Controller
                 'name' => 'required|string|max:100',
                 'prenom' => 'required|string|max:100',
                 'specialite' => 'required|string',
-                'telephone' => 'required|string|max:20',
+                'telephone_provider' => 'required|string|max:20',
                 'bio' => 'nullable|string',
                 'tarif_horaire' => 'required|numeric|min:0',
                 'activity_type' => 'required|string',
                 'other_activity' => 'required_if:activity_type,autre|nullable|string',
                 'adresse' => 'nullable|string|max:255',
-                'code_postal' => 'nullable|string|max:10',
-                'ville' => 'nullable|string|max:100',
-                'siret' => 'nullable|string|max:14',
+                'code_postal_provider' => 'nullable|string|max:10',
+                'ville_provider' => 'nullable|string|max:100',
+                'siret_provider' => 'nullable|string|max:14',
             ],
         ];
 
@@ -86,6 +86,10 @@ class PendingRegistrationController extends Controller
                 $data['last_name'] = $data['name'];
                 $data['domains'] = $data['specialite'];
                 $data['description'] = $data['bio'] ?? 'Pas de description';
+                $data['telephone'] = $data['telephone_provider'];
+                $data['code_postal'] = $data['code_postal_provider'];
+                $data['ville'] = $data['ville_provider'];
+                $data['siret'] = $data['siret_provider'];
 
                 // Gestion de l'activité personnalisée
                 if (isset($data['activity_type']) && $data['activity_type'] === 'autre' && !empty($data['other_activity'])) {
