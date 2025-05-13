@@ -11,15 +11,12 @@ use Illuminate\Support\Facades\Log;
 
 class AdminInvoiceController extends Controller
 {
-    /**
-     * Afficher la liste des factures pour l'administrateur
-     */
+
     public function index()
     {
         try {
-            // Récupérer toutes les factures avec pagination
             $invoices = Invoice::with(['company', 'contract'])
-                ->orderBy('issue_date', 'desc') // Modifier ici - utiliser 'issue_date' au lieu de 'created_at'
+                ->orderBy('issue_date', 'desc')
                 ->paginate(15);
 
             return view('dashboards.gestion_admin.invoices.index', compact('invoices'));
@@ -29,9 +26,7 @@ class AdminInvoiceController extends Controller
         }
     }
 
-    /**
-     * Afficher les détails d'une facture
-     */
+
     public function show($id)
     {
         try {
@@ -196,34 +191,6 @@ class AdminInvoiceController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return back()->with('error', 'Une erreur est survenue: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Visualiser une facture en PDF
-     */
-    public function viewPdf($id)
-    {
-        try {
-            // Vérifier que l'utilisateur est admin
-            if (session('user_type') !== 'admin') {
-                return redirect()->route('login')
-                    ->with('error', 'Vous devez être connecté en tant qu\'administrateur pour accéder à cette page.');
-            }
-
-            // Récupérer la facture
-            $invoice = Invoice::findOrFail($id);
-            $contract = Contract::findOrFail($invoice->contract_id);
-
-            // Générer le PDF
-            $pdfGenerator = new InvoicePdfGenerator($contract, $invoice->invoice_number);
-            $pdf = $pdfGenerator->generate();
-
-            // Afficher le PDF dans le navigateur
-            return $pdf->Output('I', 'facture_' . $invoice->invoice_number . '.pdf');
-        } catch (\Exception $e) {
-            Log::error('Erreur lors de la visualisation du PDF admin: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la visualisation du PDF.');
         }
     }
 
