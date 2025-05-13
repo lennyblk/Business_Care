@@ -35,7 +35,6 @@ class DashboardController extends Controller
 
         \Log::info('Accès autorisé au dashboard client');
 
-        // Récupération des données pour la société
         $companyId = session('user_id');
         $company = Company::find($companyId);
 
@@ -52,7 +51,6 @@ class DashboardController extends Controller
         // Date actuelle pour calculer les contrats actifs
         $today = Carbon::today()->toDateString();
 
-        // Récupération des données pour le tableau de bord
         $data = [
             'activeContracts' => Contract::where('company_id', $companyId)
                                          ->where('start_date', '<=', $today)
@@ -78,57 +76,56 @@ class DashboardController extends Controller
         return view('dashboards.client', $data);
     }
 
-public function employee()
-{
-    \Log::info('Tentative d\'accès au dashboard employé', [
-        'session_data' => [
-            'user_type' => session('user_type'),
-            'user_id' => session('user_id'),
-            'user_email' => session('user_email')
-        ]
-    ]);
-
-    if (session('user_type') !== 'employe') {
-        \Log::warning('Accès refusé au dashboard employé', [
-            'user_type' => session('user_type')
+    public function employee()
+    {
+        \Log::info('Tentative d\'accès au dashboard employé', [
+            'session_data' => [
+                'user_type' => session('user_type'),
+                'user_id' => session('user_id'),
+                'user_email' => session('user_email')
+            ]
         ]);
-        return redirect()->route('dashboard.' . session('user_type'));
+
+        if (session('user_type') !== 'employe') {
+            \Log::warning('Accès refusé au dashboard employé', [
+                'user_type' => session('user_type')
+            ]);
+            return redirect()->route('dashboard.' . session('user_type'));
+        }
+
+        \Log::info('Accès autorisé au dashboard employé');
+
+        $employeeId = session('user_id');
+        $employee = Employee::find($employeeId);
+
+        if (!$employee) {
+            $employee = Employee::first();
+        }
+
+        if ($employee) {
+            // On récupère son entreprise
+            $companyId = $employee->company_id;
+
+            // On récupère les événements auxquels l'employé est inscrit
+            $eventRegistrations = \App\Models\EventRegistration::where('employee_id', $employee->id)->get();
+            $eventsCount = $eventRegistrations->count();
+
+            // On récupère les IDs des événements auxquels l'employé est inscrit
+            $eventIds = $eventRegistrations->pluck('event_id')->toArray();
+
+            // On récupère les détails des événements à venir (date >= aujourd'hui)
+            $today = date('Y-m-d');
+            $upcomingEvents = Event::whereIn('id', $eventIds)
+                            ->where('date', '>=', $today)
+                            ->orderBy('date', 'asc')
+                            ->take(5)
+                            ->get();
+
+            return view('dashboards.employee', compact('employee', 'eventsCount', 'upcomingEvents'));
+        }
+
+        return view('dashboards.employee');
     }
-
-    \Log::info('Accès autorisé au dashboard employé');
-
-    // Récupérer l'employé connecté
-    $employeeId = session('user_id');
-    $employee = Employee::find($employeeId);
-
-    if (!$employee) {
-        $employee = Employee::first();
-    }
-
-    if ($employee) {
-        // On récupère son entreprise
-        $companyId = $employee->company_id;
-
-        // On récupère les événements auxquels l'employé est inscrit
-        $eventRegistrations = \App\Models\EventRegistration::where('employee_id', $employee->id)->get();
-        $eventsCount = $eventRegistrations->count();
-
-        // On récupère les IDs des événements auxquels l'employé est inscrit
-        $eventIds = $eventRegistrations->pluck('event_id')->toArray();
-
-        // On récupère les détails des événements à venir (date >= aujourd'hui)
-        $today = date('Y-m-d');
-        $upcomingEvents = Event::whereIn('id', $eventIds)
-                          ->where('date', '>=', $today)
-                          ->orderBy('date', 'asc')
-                          ->take(5)
-                          ->get();
-
-        return view('dashboards.employee', compact('employee', 'eventsCount', 'upcomingEvents'));
-    }
-
-    return view('dashboards.employee');
-}
 
     public function provider()
     {
@@ -155,7 +152,6 @@ public function employee()
         $contractCount = Contract::count();
         $activityCount = Event::count();
 
-        // Date actuelle pour calculer les contrats actifs
         $today = Carbon::today()->toDateString();
 
         // Nouvelles statistiques pour l'admin
