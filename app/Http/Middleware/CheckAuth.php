@@ -89,6 +89,7 @@ class CheckAuth
             case 'provider':
                 if (!str_starts_with($route, 'dashboard.provider') &&
                     !str_starts_with($route, 'provider.assignments.') &&
+                    !str_starts_with($route, 'provider.evaluations.') &&
                     !str_starts_with($route, 'profile.')) {
                     return redirect()->route('dashboard.provider')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);

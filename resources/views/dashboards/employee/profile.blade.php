@@ -54,15 +54,15 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p><strong>Prénom:</strong> {{ $profile['first_name'] }}</p>
-                                    <p><strong>Nom:</strong> {{ $profile['last_name'] }}</p>
-                                    <p><strong>Email:</strong> {{ $profile['email'] }}</p>
-                                    <p><strong>Téléphone:</strong> {{ $profile['telephone'] ?? 'Non renseigné' }}</p>
+                                    <p><strong>Prénom:</strong> {{ $profile->first_name }}</p>
+                                    <p><strong>Nom:</strong> {{ $profile->last_name }}</p>
+                                    <p><strong>Email:</strong> {{ $profile->email }}</p>
+                                    <p><strong>Téléphone:</strong> {{ $profile->telephone ?? 'Non renseigné' }}</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <p><strong>Fonction:</strong> {{ $profile['function'] ?? 'Non renseignée' }}</p>
-                                    <p><strong>Département:</strong> {{ $profile['department'] ?? 'Non renseigné' }}</p>
-                                    <p><strong>Date d'inscription:</strong> {{ isset($profile['created_at']) ? \Carbon\Carbon::parse($profile['created_at'])->format('d/m/Y') : 'Non disponible' }}</p>
+                                    <p><strong>Position:</strong> {{ $profile->position ?? 'Non renseignée' }}</p>
+                                    <p><strong>Département:</strong> {{ $profile->departement ?? 'Non renseigné' }}</p>
+                                    <p><strong>Date d'inscription:</strong> {{ isset($profile->date_creation_compte) ? \Carbon\Carbon::parse($profile->date_creation_compte)->format('d/m/Y') : 'Non disponible' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -74,11 +74,11 @@
                             Entreprise
                         </div>
                         <div class="card-body">
-                            <p><strong>Entreprise:</strong> {{ $profile['company']['name'] ?? 'Non disponible' }}</p>
-                            @if(isset($profile['company']))
-                                <p><strong>Adresse:</strong> {{ $profile['company']['address'] ?? 'Non disponible' }}</p>
-                                <p><strong>Ville:</strong> {{ $profile['company']['ville'] ?? 'Non disponible' }}</p>
-                                <p><strong>Pays:</strong> {{ $profile['company']['pays'] ?? 'Non disponible' }}</p>
+                            <p><strong>Entreprise:</strong> {{ $profile->company->name ?? 'Non disponible' }}</p>
+                            @if(isset($profile->company))
+                                <p><strong>Adresse:</strong> {{ $profile->company->address ?? 'Non disponible' }}</p>
+                                <p><strong>Ville:</strong> {{ $profile->company->ville ?? 'Non disponible' }}</p>
+                                <p><strong>Pays:</strong> {{ $profile->company->pays ?? 'Non disponible' }}</p>
                             @endif
                         </div>
                     </div>
@@ -94,7 +94,7 @@
                                     <div class="card bg-primary text-white h-100">
                                         <div class="card-body">
                                             <h5 class="card-title">Événements auxquels vous êtes inscrit</h5>
-                                            <p class="display-4">{{ $profile['events_count'] ?? 0 }}</p>
+                                            <p class="display-4">{{ $profile->events_count ?? 0 }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -102,7 +102,7 @@
                                     <div class="card bg-success text-white h-100">
                                         <div class="card-body">
                                             <h5 class="card-title">Consultations médicales</h5>
-                                            <p class="display-4">{{ $profile['medical_appointments_count'] ?? 0 }}</p>
+                                            <p class="display-4">{{ $profile->medical_appointments_count ?? 0 }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -110,7 +110,7 @@
                                     <div class="card bg-info text-white h-100">
                                         <div class="card-body">
                                             <h5 class="card-title">Communautés</h5>
-                                            <p class="display-4">{{ $profile['communities_count'] ?? 0 }}</p>
+                                            <p class="display-4">{{ $profile->communities_count ?? 0 }}</p>
                                         </div>
                                     </div>
                                 </div>

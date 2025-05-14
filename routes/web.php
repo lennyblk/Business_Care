@@ -30,6 +30,7 @@ use App\Http\Controllers\AdminInvoiceController;
 use App\Http\Controllers\AdminContract2Controller;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ServiceEvaluationController;
+use App\Http\Controllers\ProviderEvaluationController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -319,7 +320,7 @@ Route::get('/contracts/{contract}/download', [App\Http\Controllers\ContractPdfCo
 Route::get('/contracts/{contract}/view-pdf', [App\Http\Controllers\ContractPdfController::class, 'show'])
     ->name('contracts.view-pdf');
 
-    // Routes pour l'administration des factures
+// Routes pour l'administration des factures
 Route::middleware(['check.auth'])->group(function () {
     Route::prefix('dashboard/gestion_admin/invoices')->group(function () {
         Route::get('/', [AdminInvoiceController::class, 'index'])->name('admin.invoices.index');
@@ -337,6 +338,16 @@ Route::middleware(['check.auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/profile/password', [ProfileController::class, 'editPassword'])->name('profile.password');
+    Route::get('/profile/password', function (Request $request) {
+        $userType = session('user_type');
+        $userId = session('user_id');
+        return view('dashboards.provider.profile-password', compact('userType', 'userId'));
+    })->name('profile.password');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+});
+
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/provider')->group(function () {
+        Route::get('/evaluations', [ProviderEvaluationController::class, 'index'])->name('provider.evaluations.index');
+    });
 });

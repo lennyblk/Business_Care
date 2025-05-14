@@ -15,6 +15,7 @@ use App\Http\Controllers\API\AdviceCategoryController;
 use App\Http\Controllers\API\AdviceTagController;
 use App\Http\Controllers\API\AdviceFeedbackController;
 use App\Http\Controllers\AdminContract2Controller;
+use App\Http\Controllers\API\ProviderEvaluationController;
 
 Route::get('/test', function() {
     return response()->json(['message' => 'API fonctionne correctement']);
@@ -56,6 +57,10 @@ Route::prefix('providers')->group(function () {
     Route::get('{id}/availabilities', [ProviderController::class, 'getAvailabilities']);
     Route::get('{id}/evaluations', [ProviderController::class, 'getEvaluations']);
     Route::get('{id}/invoices', [ProviderController::class, 'getInvoices']);
+});
+
+Route::prefix('provider')->group(function () {
+    Route::get('/{id}/evaluations', [ProviderEvaluationController::class, 'getProviderEvaluations']);
 });
 
 // Routes pour les événements

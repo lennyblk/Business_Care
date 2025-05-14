@@ -19,17 +19,68 @@ class ProfileController extends Controller
     public function getProfile($id, $userType)
     {
         try {
+            $data = null;
+
             switch ($userType) {
-                case 'societe':
-                    $profile = Company::findOrFail($id);
-                    break;
+                case 'employe':
                 case 'employee':
                     $profile = Employee::findOrFail($id);
+                    $data = (object)[
+                        'id' => $profile->id,
+                        'first_name' => $profile->first_name,
+                        'last_name' => $profile->last_name,
+                        'name' => $profile->first_name . ' ' . $profile->last_name,
+                        'email' => $profile->email,
+                        'telephone' => $profile->telephone,
+                        'position' => $profile->position ?? '',
+                        'departement' => $profile->departement ?? ''
+                    ];
                     break;
+                    
+                case 'prestataire':    
                 case 'provider':
-                    $profile = Provider::findOrFail($id);
+                    $profile = Provider::where('id', $id)->firstOrFail();
+                    $data = (object)[
+                        'id' => $profile->id,
+                        'first_name' => $profile->first_name,
+                        'last_name' => $profile->last_name,
+                        'email' => $profile->email,
+                        'telephone' => $profile->telephone,
+                        'adresse' => $profile->adresse,
+                        'code_postal' => $profile->code_postal,
+                        'ville' => $profile->ville,
+                        'activity_type' => $profile->activity_type ?? '',
+                        'other_activity' => $profile->other_activity ?? '',
+                        'description' => $profile->description ?? '',
+                        'domains' => $profile->domains ?? '',
+                        'tarif_horaire' => $profile->tarif_horaire ?? 0,
+                        'siret' => $profile->siret ?? ''
+                    ];
                     break;
+                    
+                case 'societe':
+                case 'company':    
+                    $profile = Company::findOrFail($id);
+                    $data = (object)[
+                        'id' => $profile->id,
+                        'name' => $profile->name,
+                        'email' => $profile->email,
+                        'telephone' => $profile->telephone,
+                        'address' => $profile->address,
+                        'code_postal' => $profile->code_postal,
+                        'ville' => $profile->ville,
+                        'pays' => $profile->pays,
+                        'siret' => $profile->siret,
+                        'formule_abonnement' => $profile->formule_abonnement,
+                        'statut_compte' => $profile->statut_compte,
+                        'date_debut_contrat' => $profile->date_debut_contrat,
+                        'date_fin_contrat' => $profile->date_fin_contrat,
+                        'employee_count' => $profile->employee_count
+                    ];
+                    break;
+
                 default:
+                    Log::error('Type utilisateur invalide dans getProfile', ['type' => $userType, 'id' => $id]);
                     return response()->json([
                         'success' => false,
                         'message' => 'Type d\'utilisateur non valide'
@@ -38,15 +89,19 @@ class ProfileController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $profile
+                'data' => $data
             ]);
+            
         } catch (\Exception $e) {
-            Log::error('Erreur lors de la récupération du profil: ' . $e->getMessage());
-
+            Log::error('Erreur dans getProfile', [
+                'message' => $e->getMessage(),
+                'type' => $userType,
+                'id' => $id
+            ]);
+            
             return response()->json([
                 'success' => false,
-                'message' => 'Erreur lors de la récupération du profil',
-                'error' => $e->getMessage()
+                'message' => 'Erreur lors de la récupération du profil: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -57,6 +112,28 @@ class ProfileController extends Controller
     public function updateProfile(Request $request, $id, $userType)
     {
         try {
+            // Normalisation du type d'utilisateur
+            switch ($userType) {
+                case 'employe':
+                case 'employee':
+                    $type = 'employee';
+                    break;
+                case 'prestataire':    
+                case 'provider':
+                    $type = 'provider';
+                    break;
+                case 'societe':
+                case 'company':
+                    $type = 'societe';
+                    break;
+                default:
+                    Log::error('Type utilisateur invalide dans updateProfile', ['type' => $userType]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Type d\'utilisateur non valide'
+                    ], 400);
+            }
+
             // Validation commune à tous les types d'utilisateurs
             $commonRules = [
                 'email' => 'required|email|max:255',
@@ -64,7 +141,7 @@ class ProfileController extends Controller
             ];
 
             // Validation spécifique selon le type d'utilisateur
-            switch ($userType) {
+            switch ($type) {
                 case 'societe':
                     $validationRules = array_merge($commonRules, [
                         'name' => 'required|string|max:255',
@@ -72,26 +149,30 @@ class ProfileController extends Controller
                         'code_postal' => 'required|string|max:10',
                         'ville' => 'required|string|max:100',
                         'pays' => 'required|string|max:100',
-                        'siret' => 'nullable|string|max:14',
-                        'effectif' => 'nullable|integer',
-                        'secteur_activite' => 'nullable|string|max:100'
+                        'siret' => 'nullable|string|max:14'
                     ]);
                     break;
                 case 'employee':
                     $validationRules = array_merge($commonRules, [
                         'first_name' => 'required|string|max:100',
                         'last_name' => 'required|string|max:100',
-                        'function' => 'nullable|string|max:100',
-                        'department' => 'nullable|string|max:100'
+                        'position' => 'required|string|max:100',
+                        'departement' => 'nullable|string|max:100'
                     ]);
                     break;
                 case 'provider':
                     $validationRules = array_merge($commonRules, [
-                        'name' => 'required|string|max:255',
-                        'address' => 'nullable|string|max:255',
-                        'speciality' => 'required|string|max:100',
-                        'description' => 'nullable|string',
-                        'website' => 'nullable|url'
+                        'first_name' => 'required|string|max:100',
+                        'last_name' => 'required|string|max:100',
+                        'description' => 'required|string',
+                        'domains' => 'nullable|string',
+                        'adresse' => 'nullable|string|max:255',
+                        'code_postal' => 'nullable|string|max:10',
+                        'ville' => 'nullable|string|max:100',
+                        'activity_type' => 'nullable|string',
+                        'other_activity' => 'required_if:activity_type,autre|nullable|string',
+                        'tarif_horaire' => 'required|numeric|min:0',
+                        'siret' => 'nullable|string|max:14'
                     ]);
                     break;
                 default:
@@ -113,7 +194,7 @@ class ProfileController extends Controller
             }
 
             // Mise à jour selon le type d'utilisateur
-            switch ($userType) {
+            switch ($type) {
                 case 'societe':
                     $profile = Company::findOrFail($id);
                     $profile->name = $request->name;
@@ -124,8 +205,6 @@ class ProfileController extends Controller
                     $profile->pays = $request->pays;
                     $profile->telephone = $request->telephone;
                     $profile->siret = $request->siret;
-                    $profile->effectif = $request->effectif;
-                    $profile->secteur_activite = $request->secteur_activite;
                     break;
                 case 'employee':
                     $profile = Employee::findOrFail($id);
@@ -133,18 +212,22 @@ class ProfileController extends Controller
                     $profile->last_name = $request->last_name;
                     $profile->email = $request->email;
                     $profile->telephone = $request->telephone;
-                    $profile->function = $request->function;
-                    $profile->department = $request->department;
+                    $profile->position = $request->position;
+                    $profile->departement = $request->departement;
                     break;
                 case 'provider':
                     $profile = Provider::findOrFail($id);
-                    $profile->name = $request->name;
-                    $profile->email = $request->email;
-                    $profile->telephone = $request->telephone;
-                    $profile->address = $request->address;
-                    $profile->speciality = $request->speciality;
+                    $profile->first_name = $request->first_name;
+                    $profile->last_name = $request->last_name;
                     $profile->description = $request->description;
-                    $profile->website = $request->website;
+                    $profile->domains = $request->domains ?? '';
+                    $profile->adresse = $request->adresse;
+                    $profile->code_postal = $request->code_postal;
+                    $profile->ville = $request->ville;
+                    $profile->activity_type = $request->activity_type;
+                    $profile->other_activity = $request->other_activity;
+                    $profile->tarif_horaire = $request->tarif_horaire;
+                    $profile->siret = $request->siret;
                     break;
             }
 
@@ -173,6 +256,27 @@ class ProfileController extends Controller
     public function updatePassword(Request $request, $id, $userType)
     {
         try {
+            switch ($userType) {
+                case 'employe':
+                case 'employee':
+                    $type = 'employee';
+                    break;
+                case 'prestataire':
+                case 'provider':
+                    $type = 'provider';
+                    break;
+                case 'societe':
+                case 'company':
+                    $type = 'societe';
+                    break;
+                default:
+                    Log::error('Type utilisateur invalide dans updatePassword', ['type' => $userType]);
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Type d\'utilisateur non valide'
+                    ], 400);
+            }
+
             // Validation des données
             $validator = Validator::make($request->all(), [
                 'current_password' => 'required|string',
@@ -187,8 +291,8 @@ class ProfileController extends Controller
                 ], 422);
             }
 
-            // Récupération du profil selon le type d'utilisateur
-            switch ($userType) {
+            // Récupération du profil selon le type d'utilisateur normalisé
+            switch ($type) {
                 case 'societe':
                     $profile = Company::findOrFail($id);
                     break;

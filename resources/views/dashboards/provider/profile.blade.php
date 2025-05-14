@@ -56,100 +56,32 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p><strong>Nom/Raison sociale:</strong> {{ $profile['name'] }}</p>
-                                    <p><strong>Email:</strong> {{ $profile['email'] }}</p>
-                                    <p><strong>Téléphone:</strong> {{ $profile['telephone'] }}</p>
-                                    <p><strong>Spécialité:</strong> {{ $profile['speciality'] }}</p>
+                                    <p><strong>Nom/Raison sociale:</strong> {{ $profile->first_name }} {{ $profile->last_name }}</p>
+                                    <p><strong>Email:</strong> {{ $profile->email }}</p>
+                                    <p><strong>Téléphone:</strong> {{ $profile->telephone }}</p>
+                                    <p><strong>Type d'activité:</strong> {{ $profile->activity_type }}</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <p><strong>Adresse:</strong> {{ $profile['address'] ?? 'Non renseignée' }}</p>
-                                    <p><strong>Site web:</strong> {{ $profile['website'] ?? 'Non renseigné' }}</p>
-                                    <p><strong>Date d'inscription:</strong> {{ isset($profile['created_at']) ? \Carbon\Carbon::parse($profile['created_at'])->format('d/m/Y') : 'Non disponible' }}</p>
+                                    <p><strong>Adresse:</strong> {{ $profile->adresse ?? 'Non renseignée' }}</p>
+                                    <p><strong>Code postal:</strong> {{ $profile->code_postal ?? 'Non renseigné' }}</p>
+                                    <p><strong>Ville:</strong> {{ $profile->ville ?? 'Non renseignée' }}</p>
+                                    <p><strong>SIRET:</strong> {{ $profile->siret ?? 'Non renseigné' }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Description -->
-                    @if(isset($profile['description']) && !empty($profile['description']))
+                    @if(isset($profile->description) && !empty($profile->description))
                     <div class="card mb-4">
                         <div class="card-header">
                             Description
                         </div>
                         <div class="card-body">
-                            <p>{{ $profile['description'] }}</p>
+                            <p>{{ $profile->description }}</p>
                         </div>
                     </div>
                     @endif
-
-                    <!-- Statistiques -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            Statistiques
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 text-center mb-3">
-                                    <div class="card bg-primary text-white h-100">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Missions réalisées</h5>
-                                            <p class="display-4">{{ $profile['completed_assignments_count'] ?? 0 }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-center mb-3">
-                                    <div class="card bg-info text-white h-100">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Missions en cours</h5>
-                                            <p class="display-4">{{ $profile['ongoing_assignments_count'] ?? 0 }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-center mb-3">
-                                    <div class="card bg-success text-white h-100">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Note moyenne</h5>
-                                            <p class="display-4">{{ number_format($profile['average_rating'] ?? 0, 1) }}/5</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Dernières évaluations -->
-                    <div class="card mb-4">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span>Dernières évaluations</span>
-                            <a href="#" class="btn btn-sm btn-outline-primary">Voir toutes</a>
-                        </div>
-                        <div class="card-body">
-                            @if(isset($profile['recent_evaluations']) && count($profile['recent_evaluations']) > 0)
-                                @foreach($profile['recent_evaluations'] as $evaluation)
-                                    <div class="mb-3 p-3 border rounded">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <p class="mb-0 fw-bold">{{ $evaluation['title'] }}</p>
-                                                <p class="text-muted small">{{ \Carbon\Carbon::parse($evaluation['date'])->format('d/m/Y') }}</p>
-                                            </div>
-                                            <div>
-                                                @for($i = 1; $i <= 5; $i++)
-                                                    @if($i <= $evaluation['rating'])
-                                                        <i class="fas fa-star text-warning"></i>
-                                                    @else
-                                                        <i class="far fa-star text-warning"></i>
-                                                    @endif
-                                                @endfor
-                                            </div>
-                                        </div>
-                                        <p class="mt-2">{{ $evaluation['content'] }}</p>
-                                    </div>
-                                @endforeach
-                            @else
-                                <p class="text-muted">Aucune évaluation pour le moment.</p>
-                            @endif
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
