@@ -15,6 +15,7 @@ use App\Http\Controllers\AdminActivityController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\AdminQuoteController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ClientEmployeeController;
 use App\Http\Controllers\PaymentController;
@@ -197,10 +198,23 @@ Route::middleware(['check.auth'])->group(function () {
 
 // Routes pour les devis
 Route::middleware(['check.auth'])->group(function () {
+    // Routes existantes des devis
     Route::resource('quotes', QuoteController::class);
-    Route::post('/quotes/calculate', [QuoteController::class, 'calculate'])->name('quotes.calculate');
+    
+    // Routes supplémentaires pour les devis
+    Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])->name('quotes.download');
+    Route::get('/quotes/{quote}/preview', [QuoteController::class, 'preview'])->name('quotes.preview');
     Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
     Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
+    Route::post('/quotes/{quote}/convert-to-contract', [QuoteController::class, 'convertToContract'])
+        ->name('quotes.convert-to-contract');
+    
+    // Routes pour la gestion des devis côté admin
+    Route::prefix('admin')->group(function () {
+        Route::get('/quotes', [AdminQuoteController::class, 'index'])->name('admin.quotes.index');
+        Route::get('/quotes/{quote}', [AdminQuoteController::class, 'show'])->name('admin.quotes.show');
+        Route::post('/quotes/{quote}/validate', [AdminQuoteController::class, 'validate'])->name('admin.quotes.validate');
+    });
 });
 
 // Gestion Employee en tant que client

@@ -83,7 +83,6 @@ class EventProposalController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'company_id' => 'required|exists:company,id',
             'activity_type' => 'required|string',
             'proposed_date' => 'required|date|after:today',
             'location_id' => 'required|exists:location,id',
@@ -93,16 +92,17 @@ class EventProposalController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false,
+                'status' => 'error',
+                'message' => 'Erreur de validation',
                 'errors' => $validator->errors()
             ], 422);
         }
 
-        $serviceType = $this->findOrCreateServiceType($request->activity_type);
-
         try {
+            $serviceType = $this->findOrCreateServiceType($request->activity_type);
+            
             $eventProposal = EventProposal::create([
-                'company_id' => $request->company_id,
+                'company_id' => session('user_id'),
                 'event_type_id' => $serviceType->id,
                 'proposed_date' => $request->proposed_date,
                 'location_id' => $request->location_id,
@@ -112,14 +112,14 @@ class EventProposalController extends Controller
             ]);
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Demande d\'activité créée avec succès',
                 'data' => $eventProposal
             ], 201);
         } catch (\Exception $e) {
             Log::error('API Error in EventProposalController@store: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la création de la demande',
                 'error' => $e->getMessage()
             ], 500);
@@ -133,13 +133,15 @@ class EventProposalController extends Controller
                 ->findOrFail($id);
 
             return response()->json([
-                'success' => true,
-                'data' => $eventProposal
+                'status' => 'success',
+                'data' => [
+                    'eventProposal' => $eventProposal
+                ]
             ]);
         } catch (\Exception $e) {
             Log::error('API Error in EventProposalController@show: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la récupération des détails'
             ], 500);
         }
@@ -154,13 +156,13 @@ class EventProposalController extends Controller
                 ->get();
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'data' => $eventProposals
             ]);
         } catch (\Exception $e) {
             Log::error('API Error in EventProposalController@getByCompany: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la récupération des propositions'
             ], 500);
         }
@@ -178,7 +180,7 @@ class EventProposalController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -188,14 +190,14 @@ class EventProposalController extends Controller
             $eventProposal->update($request->only(['proposed_date', 'location_id', 'duration', 'notes', 'status']));
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Demande d\'activité mise à jour avec succès',
                 'data' => $eventProposal
             ]);
         } catch (\Exception $e) {
             Log::error('API Error in EventProposalController@update: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la mise à jour de la demande',
                 'error' => $e->getMessage()
             ], 500);
@@ -209,13 +211,13 @@ class EventProposalController extends Controller
             $eventProposal->delete();
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Demande d\'activité supprimée avec succès'
             ]);
         } catch (\Exception $e) {
             Log::error('API Error in EventProposalController@destroy: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la suppression de la demande',
                 'error' => $e->getMessage()
             ], 500);

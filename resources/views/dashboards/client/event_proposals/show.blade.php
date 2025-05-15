@@ -25,7 +25,7 @@
         <div class="col-md-9">
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h4 class="mb-0">Détails de la demande d'activité #{{ $eventProposal->id }}</h4>
+                    <h4 class="mb-0">Détails de la demande d'activité #{{ $eventProposal['id'] }}</h4>
                     <a href="{{ route('client.event_proposals.index') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Retour à la liste
                     </a>
@@ -43,32 +43,32 @@
                             <table class="table table-borderless">
                                 <tr>
                                     <th style="width: 40%">ID de la demande:</th>
-                                    <td>{{ $eventProposal->id }}</td>
+                                    <td>{{ $eventProposal['id'] }}</td>
                                 </tr>
                                 <tr>
                                     <th>Statut:</th>
                                     <td>
-                                        @if($eventProposal->status == 'Pending')
+                                        @if($eventProposal['status'] == 'Pending')
                                             <span class="badge bg-warning text-dark">En attente</span>
-                                        @elseif($eventProposal->status == 'Assigned')
+                                        @elseif($eventProposal['status'] == 'Assigned')
                                             <span class="badge bg-info">Assigné à un prestataire</span>
-                                        @elseif($eventProposal->status == 'Accepted')
+                                        @elseif($eventProposal['status'] == 'Accepted')
                                             <span class="badge bg-success">Accepté</span>
-                                        @elseif($eventProposal->status == 'Rejected')
+                                        @elseif($eventProposal['status'] == 'Rejected')
                                             <span class="badge bg-danger">Rejeté</span>
                                         @else
-                                            <span class="badge bg-secondary">{{ $eventProposal->status }}</span>
+                                            <span class="badge bg-secondary">{{ $eventProposal['status'] }}</span>
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <th>Date de soumission:</th>
-                                    <td>{{ $eventProposal->created_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($eventProposal['created_at'])->format('d/m/Y H:i') }}</td>
                                 </tr>
-                                @if($eventProposal->updated_at->diffInSeconds($eventProposal->created_at) > 1)
+                                @if(\Carbon\Carbon::parse($eventProposal['updated_at'])->diffInSeconds(\Carbon\Carbon::parse($eventProposal['created_at'])) > 1)
                                 <tr>
                                     <th>Dernière mise à jour:</th>
-                                    <td>{{ $eventProposal->updated_at->format('d/m/Y H:i') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($eventProposal['updated_at'])->format('d/m/Y H:i') }}</td>
                                 </tr>
                                 @endif
                             </table>
@@ -78,25 +78,25 @@
                             <table class="table table-borderless">
                                 <tr>
                                     <th style="width: 40%">Type d'activité:</th>
-                                    <td>{{ $eventProposal->eventType->title }}</td>
+                                    <td>{{ $eventProposal['event_type']['title'] }}</td>
                                 </tr>
                                 <tr>
                                     <th>Date souhaitée:</th>
-                                    <td>{{ $eventProposal->proposed_date->format('d/m/Y') }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($eventProposal['proposed_date'])->format('d/m/Y') }}</td>
                                 </tr>
                                 <tr>
                                     <th>Lieu:</th>
-                                    <td>{{ $eventProposal->location->name }} ({{ $eventProposal->location->city }})</td>
+                                    <td>{{ $eventProposal['location']['name'] }} ({{ $eventProposal['location']['city'] }})</td>
                                 </tr>
                                 <th>Durée:</th>
                                 <td>
-                                    @if($eventProposal->duration >= 60)
-                                        {{ floor($eventProposal->duration / 60) }} h
-                                        @if($eventProposal->duration % 60 > 0)
-                                            {{ $eventProposal->duration % 60 }} min
+                                    @if($eventProposal['duration'] >= 60)
+                                        {{ floor($eventProposal['duration'] / 60) }} h
+                                        @if($eventProposal['duration'] % 60 > 0)
+                                            {{ $eventProposal['duration'] % 60 }} min
                                         @endif
                                     @else
-                                        {{ $eventProposal->duration }} min
+                                        {{ $eventProposal['duration'] }} min
                                     @endif
                                 </td>
                             </tr>
@@ -105,24 +105,24 @@
                         </div>
                     </div>
 
-                    @if($eventProposal->notes)
+                    @if($eventProposal['notes'])
                     <div class="row mt-3">
                         <div class="col-12">
                             <h5 class="border-bottom pb-2 mb-3">Remarques</h5>
                             <div class="p-3 bg-light rounded">
-                                {{ $eventProposal->notes }}
+                                {{ $eventProposal['notes'] }}
                             </div>
                         </div>
                     </div>
                     @endif
 
-                    @if($eventProposal->status == 'Accepted')
-                        @if(isset($eventProposal->event))
+                    @if($eventProposal['status'] == 'Accepted')
+                        @if(isset($eventProposal['event']))
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="alert alert-success">
                                     <h5 class="alert-heading">Activité confirmée!</h5>
-                                    <p>Votre activité <strong>{{ $eventProposal->event->name }}</strong> a été confirmée et planifiée pour le <strong>{{ $eventProposal->event->date->format('d/m/Y') }}</strong>.</p>
+                                    <p>Votre activité <strong>{{ $eventProposal['event']['name'] }}</strong> a été confirmée et planifiée pour le <strong>{{ \Carbon\Carbon::parse($eventProposal['event']['date'])->format('d/m/Y') }}</strong>.</p>
                                     <hr>
                                     <p class="mb-0">Vos employés peuvent maintenant s'y inscrire via leur espace personnel.</p>
                                 </div>
@@ -138,7 +138,7 @@
                             </div>
                         </div>
                         @endif
-                    @elseif($eventProposal->status == 'Assigned')
+                    @elseif($eventProposal['status'] == 'Assigned')
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="alert alert-info">
@@ -148,7 +148,7 @@
                                 </div>
                             </div>
                         </div>
-                    @elseif($eventProposal->status == 'Pending')
+                    @elseif($eventProposal['status'] == 'Pending')
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="alert alert-warning">
@@ -157,7 +157,7 @@
                                 </div>
                             </div>
                         </div>
-                    @elseif($eventProposal->status == 'Rejected')
+                    @elseif($eventProposal['status'] == 'Rejected')
                         <div class="row mt-4">
                             <div class="col-12">
                                 <div class="alert alert-danger">

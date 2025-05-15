@@ -50,24 +50,20 @@
                                     <td>{{ \Carbon\Carbon::parse($quote->creation_date)->format('d/m/Y') }}</td>
                                     <td>{{ \Carbon\Carbon::parse($quote->expiration_date)->format('d/m/Y') }}</td>
                                     <td>
-                                        <span class="badge badge-pill 
-                                            @if($quote->formule_abonnement == 'Starter') badge-secondary
-                                            @elseif($quote->formule_abonnement == 'Basic') badge-primary
-                                            @elseif($quote->formule_abonnement == 'Premium') badge-warning
-                                            @endif">
-                                            {{ $quote->formule_abonnement }}
-                                        </span>
+                                        <span class="text-dark">{{ $quote->formule_abonnement }}</span>
                                     </td>
                                     <td>{{ $quote->company_size }} salariés</td>
                                     <td>{{ number_format($quote->total_amount, 2, ',', ' ') }} €</td>
                                     <td>
-                                        @if($quote->status == 'Pending')
-                                            <span class="badge badge-warning">En attente</span>
-                                        @elseif($quote->status == 'Accepted')
-                                            <span class="badge badge-success">Accepté</span>
-                                        @elseif($quote->status == 'Rejected')
-                                            <span class="badge badge-danger">Rejeté</span>
-                                        @endif
+                                        <span class="text-dark">
+                                            @if($quote->status == 'Pending')
+                                                En attente
+                                            @elseif($quote->status == 'Accepted')
+                                                Accepté
+                                            @elseif($quote->status == 'Rejected')
+                                                Rejeté
+                                            @endif
+                                        </span>
                                     </td>
                                     <td>
                                         <div class="btn-group">

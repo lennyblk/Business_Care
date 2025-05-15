@@ -6,9 +6,11 @@ use App\Models\Quote;
 use App\Models\Service;
 use App\Models\Activity;
 use App\Models\Invoice;
+use App\Models\Contract;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Services\QuotePdfGenerator;
 
 class QuoteController extends Controller
 {
@@ -20,15 +22,17 @@ class QuoteController extends Controller
                 ->with('error', 'Vous devez être connecté pour accéder à cette page.');
         }
 
-        $companyId = session('user_id');
+        // user_id est l'ID de la table company pour les sociétés
+        $companyId = session('user_id'); // Dans ce cas, user_id est l'id de la company
         
         if (session('user_type') !== 'societe') {
             return redirect()->route('dashboard.' . session('user_type'))
                 ->with('error', 'Vous n\'avez pas accès à cette fonctionnalité.');
         }
         
+        // Utiliser company_id pour la requête car c'est le nom de la colonne dans la table quote
         $quotes = Quote::where('company_id', $companyId)
-                    ->latest()
+                    ->orderBy('creation_date', 'desc')
                     ->paginate(10);
         
         return view('dashboards.client.quotes.index', compact('quotes'));
@@ -43,76 +47,80 @@ class QuoteController extends Controller
     
     public function store(Request $request)
     {
-        // Validation des champs du formulaire
-        $validated = $request->validate([
-            'company_name' => 'required|string|max:255',
+        $request->validate([
+            'formule_abonnement' => 'required',
             'company_size' => 'required|integer|min:1',
-            'contract_duration' => 'required|integer|min:1|max:5',
-            'formule_abonnement' => 'required|string|in:Starter,Basic,Premium',
-            'price_per_employee' => 'required|numeric',
-            'total_amount' => 'required|numeric',
+            'price_per_employee' => 'required|numeric|min:0'
         ]);
-        
-        // Récupération des informations utilisateur et société
-        if (Auth::check()) {
-            $user = Auth::user();
-            $companyId = $user->company_id;
-        } else {
-            $companyId = session('user_id');
-        }
-        
-        if (!$companyId) {
-            return redirect()->back()
-                ->with('error', 'Vous devez être associé à une société pour créer un devis.')
-                ->withInput();
-        }
-        
-        // dates
-        $creationDate = Carbon::now();
-        $expirationDate = Carbon::now()->addDays(30);
-        
-        // Générer le numéro de référence unique
-        $referenceNumber = 'DEVIS-' . strtoupper(substr($request->formule_abonnement, 0, 3)) . '-' . time() . '-' . $companyId;
-        
-        // Création du devis
-        $quote = new Quote([
-            'company_id' => $companyId,
-            'company_name' => $request->company_name,
-            'company_size' => $request->company_size,
-            'contract_duration' => $request->contract_duration,
+
+        // Définir les caractéristiques de chaque formule
+        $formulesDetails = [
+            'Starter' => [
+                'max_employees' => 30,
+                'activities_count' => 2,
+                'medical_appointments' => 1,
+                'extra_appointment_fee' => 75,
+                'chatbot_questions' => '6 questions', // Raccourci
+                'weekly_advice' => false,
+                'personalized_advice' => false,
+                'price' => 180,
+                'events_access' => false,
+                'pratical_guides_access' => true
+            ],
+            'Basic' => [
+                'min_employees' => 31,
+                'max_employees' => 250,
+                'activities_count' => 3,
+                'medical_appointments' => 2,
+                'extra_appointment_fee' => 75,
+                'chatbot_questions' => '20 questions', // Raccourci
+                'weekly_advice' => true,
+                'personalized_advice' => false,
+                'price' => 150,
+                'events_access' => true,
+                'pratical_guides_access' => true
+            ],
+            'Premium' => [
+                'min_employees' => 251,
+                'activities_count' => 4,
+                'medical_appointments' => 3,
+                'extra_appointment_fee' => 50,
+                'chatbot_questions' => 'illimité', // Raccourci
+                'weekly_advice' => true,
+                'personalized_advice' => true,
+                'price' => 100,
+                'events_access' => true,
+                'pratical_guides_access' => true
+            ]
+        ];
+
+        // Récupérer les détails de la formule choisie
+        $formuleDetails = $formulesDetails[$request->formule_abonnement];
+
+        // Calculer le montant total
+        $totalAmount = $request->company_size * $formuleDetails['price'];
+
+        // Créer le devis avec toutes les informations
+        $quote = Quote::create([
+            'company_id' => session('user_id'),
             'formule_abonnement' => $request->formule_abonnement,
-            'price_per_employee' => $request->price_per_employee,
-            'activities_count' => $request->activities_count,
-            'medical_appointments' => $request->medical_appointments,
-            'extra_appointment_fee' => $request->extra_appointment_fee,
-            'chatbot_questions' => $request->chatbot_questions,
-            'weekly_advice' => $request->weekly_advice,
-            'personalized_advice' => $request->personalized_advice,
-            'annual_amount' => $request->annual_amount,
-            'total_amount' => $request->total_amount,
-            'total_amount_ttc' => $request->total_amount_ttc,
-            'reference_number' => $referenceNumber,
-            'creation_date' => $creationDate,
-            'expiration_date' => $expirationDate,
+            'company_size' => $request->company_size,
+            'price_per_employee' => $formuleDetails['price'],
+            'activities_count' => $formuleDetails['activities_count'],
+            'medical_appointments' => $formuleDetails['medical_appointments'],
+            'extra_appointment_fee' => $formuleDetails['extra_appointment_fee'],
+            'chatbot_questions' => $formuleDetails['chatbot_questions'],
+            'weekly_advice' => $formuleDetails['weekly_advice'],
+            'personalized_advice' => $formuleDetails['personalized_advice'],
+            'events_access' => $formuleDetails['events_access'],
+            'pratical_guides_access' => $formuleDetails['pratical_guides_access'],
+            'total_amount' => $totalAmount,
+            'creation_date' => now(),
+            'expiration_date' => now()->addMonth(),
             'status' => 'Pending',
-            'services_details' => $request->services_details ?? null,
+            'services_details' => $request->services_details ?? ''
         ]);
-        
-        $quote->save();
-        
-        // Enregistrement de l'activité si le modèle Activity existe
-        if (class_exists('App\Models\Activity')) {
-            Activity::create([
-                'company_id' => $companyId,
-                'user_id' => $user->id ?? session('user_id'),
-                'title' => 'Nouveau devis créé',
-                'description' => 'Devis pour ' . $request->company_size . ' salariés avec formule ' . $request->formule_abonnement,
-                'type' => 'quote',
-                'subject_type' => Quote::class,
-                'subject_id' => $quote->id,
-            ]);
-        }
-        
+
         return redirect()->route('quotes.index')
             ->with('success', 'Devis créé avec succès.');
     }
@@ -120,8 +128,6 @@ class QuoteController extends Controller
 
     public function show(Quote $quote)
     {
-        $this->checkQuoteOwnership($quote);
-        
         return view('dashboards.client.quotes.show', compact('quote'));
     }
 
@@ -328,6 +334,42 @@ class QuoteController extends Controller
         
         return redirect()->route('quotes.index')
             ->with('info', 'Devis rejeté.');
+    }
+
+
+    public function download(Quote $quote)
+    {
+        $pdf = new QuotePdfGenerator($quote);
+        return $pdf->generate()->Output('Devis-'.$quote->id.'.pdf', 'D');
+    }
+
+    public function preview(Quote $quote)
+    {
+        $pdf = new QuotePdfGenerator($quote);
+        return $pdf->generate()->Output('Devis-'.$quote->id.'.pdf', 'I');
+    }
+
+    public function convertToContract(Quote $quote)
+    {
+        // Vérifier que le devis est accepté
+        if ($quote->status !== 'Accepted') {
+            return redirect()->back()->with('error', 'Le devis doit être accepté pour être converti en contrat.');
+        }
+
+        // Créer le contrat
+        $contract = Contract::create([
+            'company_id' => $quote->company_id,
+            'quote_id' => $quote->id,
+            'formule_abonnement' => $quote->formule_abonnement,
+            'start_date' => now(),
+            'end_date' => now()->addYear(),
+            'amount' => $quote->total_amount,
+            'status' => 'Pending',
+            // autres champs nécessaires...
+        ]);
+
+        return redirect()->route('contracts.show', $contract)
+            ->with('success', 'Le devis a été converti en contrat avec succès.');
     }
 
 

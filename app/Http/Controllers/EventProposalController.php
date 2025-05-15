@@ -56,15 +56,19 @@ class EventProposalController extends Controller
             $response = $this->apiController->store($request);
             $data = json_decode($response->getContent(), true);
 
-            if ($response->getStatusCode() !== 200) {
-                return redirect()->back()->with('error', $data['message'])->withInput();
+            if ($data['status'] === 'success') {
+                return redirect()->route('client.event_proposals.index')
+                               ->with('success', $data['message']);
             }
 
-            return redirect()->route('client.event_proposals.index')
-                           ->with('success', 'Proposition créée avec succès');
+            return redirect()->back()
+                           ->with('error', $data['message'])
+                           ->withInput();
         } catch (\Exception $e) {
             Log::error('Error in EventProposalController@store: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Une erreur est survenue')->withInput();
+            return redirect()->back()
+                           ->with('error', 'Une erreur est survenue')
+                           ->withInput();
         }
     }
 
@@ -74,12 +78,12 @@ class EventProposalController extends Controller
             $response = $this->apiController->show($id);
             $data = json_decode($response->getContent(), true);
 
-            if ($response->getStatusCode() !== 200) {
+            if ($data['status'] !== 'success') {
                 return redirect()->route('client.event_proposals.index')
                     ->withErrors(['error' => $data['message'] ?? 'Une erreur est survenue']);
             }
 
-            $eventProposal = $data['data'];
+            $eventProposal = $data['data']['eventProposal'];
             return view('dashboards.client.event_proposals.show', compact('eventProposal'));
         } catch (\Exception $e) {
             Log::error('Error in EventProposalController@show: ' . $e->getMessage());
