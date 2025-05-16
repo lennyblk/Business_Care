@@ -31,7 +31,6 @@
                     <label for="user_type" class="form-label">Type d'utilisateur</label>
                     <select id="user_type" name="user_type" class="form-select @error('user_type') is-invalid @enderror" required>
                         <option value="societe" selected>Société</option>
-                        <option value="employe">Employé</option>
                         <option value="prestataire">Prestataire</option>
                     </select>
                     @error('user_type')
@@ -106,44 +105,6 @@
                         @error('siret')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
-                    </div>
-                </div>
-
-                <!-- Section employé -->
-                <div class="employee-fields" style="display: none;">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="first_name" class="form-label">Prénom *</label>
-                                <input type="text" id="first_name" name="first_name" class="form-control">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="last_name" class="form-label">Nom *</label>
-                                <input type="text" id="last_name" name="last_name" class="form-control">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="company_name_employee" class="form-label">Nom de l'entreprise *</label>
-                        <input type="text" id="company_name_employee" name="company_name_employee" class="form-control">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="position" class="form-label">Poste *</label>
-                        <input type="text" id="position" name="position" class="form-control">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="departement" class="form-label">Département</label>
-                        <input type="text" id="departement" name="departement" class="form-control">
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="telephone_employee" class="form-label">Téléphone</label>
-                        <input type="tel" id="telephone_employee" name="telephone_employee" class="form-control">
                     </div>
                 </div>
 
@@ -240,13 +201,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         const userTypeSelect = document.getElementById('user_type');
         const companyFields = document.querySelector('.company-fields');
-        const employeeFields = document.querySelector('.employee-fields');
         const providerFields = document.querySelector('.provider-fields');
-
-        // Nouveaux champs pour le type d'activité
-        const activityTypeSelect = document.getElementById('activity_type');
-        const otherActivityField = document.querySelector('.other-activity-field');
-        const otherActivityInput = document.getElementById('other_activity');
 
         // Éléments requis pour les sociétés
         const companyRequiredFields = [
@@ -255,14 +210,6 @@
             document.getElementById('code_postal'),
             document.getElementById('ville'),
             document.getElementById('telephone')
-        ];
-
-        // Éléments requis pour les employés
-        const employeeRequiredFields = [
-            document.getElementById('first_name'),
-            document.getElementById('last_name'),
-            document.getElementById('company_name_employee'),
-            document.getElementById('position')
         ];
 
         // Éléments requis pour les prestataires
@@ -279,11 +226,10 @@
         function toggleFields() {
             // Masquer tous les champs
             companyFields.style.display = 'none';
-            employeeFields.style.display = 'none';
             providerFields.style.display = 'none';
 
             // Réinitialiser les attributs required
-            [...companyRequiredFields, ...employeeRequiredFields, ...providerRequiredFields].forEach(field => {
+            [...companyRequiredFields, ...providerRequiredFields].forEach(field => {
                 if (field) {
                     field.removeAttribute('required');
                 }
@@ -293,18 +239,7 @@
             switch(userTypeSelect.value) {
                 case 'societe':
                     companyFields.style.display = 'block';
-                    // Ajouter required aux champs obligatoires
                     companyRequiredFields.forEach(field => {
-                        if (field) {
-                            field.setAttribute('required', 'required');
-                        }
-                    });
-                    break;
-
-                case 'employe':
-                    employeeFields.style.display = 'block';
-                    // Ajouter required aux champs obligatoires
-                    employeeRequiredFields.forEach(field => {
                         if (field) {
                             field.setAttribute('required', 'required');
                         }
@@ -313,18 +248,20 @@
 
                 case 'prestataire':
                     providerFields.style.display = 'block';
-                    // Ajouter required aux champs obligatoires
                     providerRequiredFields.forEach(field => {
                         if (field) {
                             field.setAttribute('required', 'required');
                         }
                     });
-
-                    // Gérer le champ "autre activité"
                     toggleOtherActivityField();
                     break;
             }
         }
+
+        // Nouveaux champs pour le type d'activité
+        const activityTypeSelect = document.getElementById('activity_type');
+        const otherActivityField = document.querySelector('.other-activity-field');
+        const otherActivityInput = document.getElementById('other_activity');
 
         function toggleOtherActivityField() {
             if (activityTypeSelect.value === 'autre') {
