@@ -1,0 +1,39 @@
+@echo off
+echo Création du dossier lib...
+mkdir lib 2>nul
+cd lib
+
+echo Téléchargement des dépendances...
+echo [1/10] Téléchargement de iText kernel...
+curl -L -o kernel-7.2.3.jar https://repo1.maven.org/maven2/com/itextpdf/kernel/7.2.3/kernel-7.2.3.jar
+
+echo [2/10] Téléchargement de iText layout...
+curl -L -o layout-7.2.3.jar https://repo1.maven.org/maven2/com/itextpdf/layout/7.2.3/layout-7.2.3.jar
+
+echo [3/10] Téléchargement de iText io...
+curl -L -o io-7.2.3.jar https://repo1.maven.org/maven2/com/itextpdf/io/7.2.3/io-7.2.3.jar
+
+echo [4/10] Téléchargement de iText commons...
+curl -L -o commons-7.2.3.jar https://repo1.maven.org/maven2/com/itextpdf/commons/7.2.3/commons-7.2.3.jar
+
+echo [5/10] Téléchargement de SLF4J (requis par iText)...
+curl -L -o slf4j-api-1.7.36.jar https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar
+
+echo [6/10] Téléchargement de JFreeChart...
+curl -L -o jfreechart-1.5.3.jar https://repo1.maven.org/maven2/org/jfree/jfreechart/1.5.3/jfreechart-1.5.3.jar
+
+echo [7/10] Téléchargement de MySQL Connector...
+curl -L -o mysql-connector-java-8.0.27.jar https://repo1.maven.org/maven2/mysql/mysql-connector-java/8.0.27/mysql-connector-java-8.0.27.jar
+
+echo [8/10] Téléchargement de JavaFaker...
+curl -L -o javafaker-1.0.2.jar https://repo1.maven.org/maven2/com/github/javafaker/javafaker/1.0.2/javafaker-1.0.2.jar
+
+echo [9/10] Téléchargement de Snakeyaml (requis par JavaFaker)...
+curl -L -o snakeyaml-1.23.jar https://repo1.maven.org/maven2/org/yaml/snakeyaml/1.23/snakeyaml-1.23.jar
+
+echo [10/10] Téléchargement de Commons-Lang3 (requis par JavaFaker)...
+curl -L -o commons-lang3-3.5.jar https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.5/commons-lang3-3.5.jar
+
+echo Téléchargement terminé!
+cd ..
+pause
