@@ -15,6 +15,7 @@ use App\Http\Controllers\AdminActivityController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractPaymentController;
 use App\Http\Controllers\QuoteController;
+use App\Http\Controllers\AdminQuoteController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ClientEmployeeController;
 use App\Http\Controllers\PaymentController;
@@ -28,6 +29,9 @@ use App\Http\Controllers\ProviderAssignmentController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminInvoiceController;
 use App\Http\Controllers\AdminContract2Controller;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\ServiceEvaluationController;
+use App\Http\Controllers\ProviderEvaluationController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -194,10 +198,23 @@ Route::middleware(['check.auth'])->group(function () {
 
 // Routes pour les devis
 Route::middleware(['check.auth'])->group(function () {
+    // Routes existantes des devis
     Route::resource('quotes', QuoteController::class);
-    Route::post('/quotes/calculate', [QuoteController::class, 'calculate'])->name('quotes.calculate');
+    
+    // Routes supplémentaires pour les devis
+    Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])->name('quotes.download');
+    Route::get('/quotes/{quote}/preview', [QuoteController::class, 'preview'])->name('quotes.preview');
     Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
     Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
+    Route::post('/quotes/{quote}/convert-to-contract', [QuoteController::class, 'convertToContract'])
+        ->name('quotes.convert-to-contract');
+    
+    // Routes pour la gestion des devis côté admin
+    Route::prefix('admin')->group(function () {
+        Route::get('/quotes', [AdminQuoteController::class, 'index'])->name('admin.quotes.index');
+        Route::get('/quotes/{quote}', [AdminQuoteController::class, 'show'])->name('admin.quotes.show');
+        Route::post('/quotes/{quote}/validate', [AdminQuoteController::class, 'validate'])->name('admin.quotes.validate');
+    });
 });
 
 // Gestion Employee en tant que client
@@ -228,9 +245,23 @@ Route::middleware(['check.auth'])->group(function () {
 });
 
 Route::middleware(['check.auth'])->group(function () {
-    Route::get('/dashboard/employee/events', [EmployeeController::class, 'index'])->name('employee.events.index');
-    Route::post('/dashboard/employee/events/{id}/register', [EmployeeController::class, 'register'])->name('employee.events.register');
-    Route::post('/dashboard/employee/events/{id}/cancel', [EmployeeController::class, 'cancelRegistration'])->name('employee.events.cancel');
+    Route::prefix('dashboard/employee/events')->group(function () {
+        Route::get('/', [EventController::class, 'index'])->name('employee.events.index');
+        Route::get('/history', [EventController::class, 'history'])->name('employee.events.history');
+        Route::post('/{id}/register', [EventController::class, 'register'])->name('employee.events.register');
+        Route::post('/{id}/cancel', [EventController::class, 'cancel'])->name('employee.events.cancel');
+        Route::get('/evaluate/{id}', [ServiceEvaluationController::class, 'create'])->name('employee.events.evaluate');
+        Route::post('/evaluate/{id}', [ServiceEvaluationController::class, 'store'])->name('employee.events.evaluate.store');
+    });
+});
+
+// Routes pour les événements employés
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/employee/events')->group(function () {
+        Route::get('/', [EventController::class, 'index'])->name('employee.events.index');
+        Route::post('/{id}/register', [EventController::class, 'register'])->name('employee.events.register');
+        Route::post('/{id}/cancel', [EventController::class, 'cancel'])->name('employee.events.cancel');
+    });
 });
 
 // Routes pour les conseils des salariés
@@ -303,7 +334,7 @@ Route::get('/contracts/{contract}/download', [App\Http\Controllers\ContractPdfCo
 Route::get('/contracts/{contract}/view-pdf', [App\Http\Controllers\ContractPdfController::class, 'show'])
     ->name('contracts.view-pdf');
 
-    // Routes pour l'administration des factures
+// Routes pour l'administration des factures
 Route::middleware(['check.auth'])->group(function () {
     Route::prefix('dashboard/gestion_admin/invoices')->group(function () {
         Route::get('/', [AdminInvoiceController::class, 'index'])->name('admin.invoices.index');
@@ -321,6 +352,16 @@ Route::middleware(['check.auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::get('/profile/password', [ProfileController::class, 'editPassword'])->name('profile.password');
+    Route::get('/profile/password', function (Request $request) {
+        $userType = session('user_type');
+        $userId = session('user_id');
+        return view('dashboards.provider.profile-password', compact('userType', 'userId'));
+    })->name('profile.password');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.update-password');
+});
+
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/provider')->group(function () {
+        Route::get('/evaluations', [ProviderEvaluationController::class, 'index'])->name('provider.evaluations.index');
+    });
 });

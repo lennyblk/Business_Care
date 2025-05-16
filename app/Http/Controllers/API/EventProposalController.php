@@ -11,77 +11,78 @@ use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class EventProposalController extends Controller
 {
-    /**
-     * Récupère les types d'activités disponibles et les emplacements
-     */
+    public function index()
+    {
+        try {
+            $companyId = session('user_id');
+            $eventProposals = EventProposal::with(['eventType', 'location'])
+                ->where('company_id', $companyId)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $eventProposals
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API Error in EventProposalController@index: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Une erreur est survenue'
+            ], 500);
+        }
+    }
+
     public function getFormData()
     {
-        // Récupérer les types d'activités
-        $activityTypes = [
-            'rencontre sportive' => 'Rencontre sportive',
-            'conférence' => 'Conférence',
-            'webinar' => 'Webinar',
-            'yoga' => 'Yoga',
-            'pot' => 'Pot',
-            'séance d\'art plastiques' => 'Séance d\'art plastiques',
-            'session jeu vidéo' => 'Session jeu vidéo',
-            'autre' => 'Autre'
-        ];
+        try {
+            $activityTypes = [
+                'rencontre sportive' => 'Rencontre sportive',
+                'conférence' => 'Conférence',
+                'webinar' => 'Webinar',
+                'yoga' => 'Yoga',
+                'pot' => 'Pot',
+                'séance d\'art plastiques' => 'Séance d\'art plastiques',
+                'session jeu vidéo' => 'Session jeu vidéo',
+                'autre' => 'Autre'
+            ];
 
-        // Récupérer les emplacements des villes Business Care
-        $locations = Location::whereIn('city', ['Paris', 'Troyes', 'Biarritz', 'Nice'])->get();
+            $defaultDurations = [
+                30 => '30 minutes',
+                45 => '45 minutes',
+                60 => '1 heure',
+                90 => '1 heure 30',
+                120 => '2 heures',
+                180 => '3 heures',
+                240 => '4 heures',
+                360 => '6 heures',
+                480 => '8 heures'
+            ];
 
-        // S'il n'y a pas d'emplacements, les créer
-        if ($locations->isEmpty()) {
-            $this->createDefaultLocations();
             $locations = Location::whereIn('city', ['Paris', 'Troyes', 'Biarritz', 'Nice'])->get();
-        }
 
-        $defaultDurations = [
-            30 => '30 minutes',
-            45 => '45 minutes',
-            60 => '1 heure',
-            90 => '1 heure 30',
-            120 => '2 heures',
-            180 => '3 heures',
-            240 => '4 heures',
-            360 => '6 heures',
-            480 => '8 heures'
-        ];
-
-        return response()->json([
-            'success' => true,
-            'data' => [
+            return response()->json([
+                'status' => 'success',
                 'activityTypes' => $activityTypes,
                 'locations' => $locations,
                 'defaultDurations' => $defaultDurations
-            ]
-        ]);
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API Error in EventProposalController@getFormData: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Une erreur est survenue'
+            ], 500);
+        }
     }
-
-    /**
-     * Liste toutes les propositions d'événements
-     */
-    public function index()
-    {
-        $eventProposals = EventProposal::with(['eventType', 'location', 'company'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json([
-            'success' => true,
-            'data' => $eventProposals
-        ]);
-    }
-
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'company_id' => 'required|exists:company,id',
             'activity_type' => 'required|string',
             'proposed_date' => 'required|date|after:today',
             'location_id' => 'required|exists:location,id',
@@ -91,18 +92,17 @@ class EventProposalController extends Controller
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false,
+                'status' => 'error',
+                'message' => 'Erreur de validation',
                 'errors' => $validator->errors()
             ], 422);
         }
 
-        // Trouver ou créer le ServiceType correspondant au type d'activité
-        $serviceType = $this->findOrCreateServiceType($request->activity_type);
-
         try {
-            // Créer la proposition d'activité
+            $serviceType = $this->findOrCreateServiceType($request->activity_type);
+            
             $eventProposal = EventProposal::create([
-                'company_id' => $request->company_id,
+                'company_id' => session('user_id'),
                 'event_type_id' => $serviceType->id,
                 'proposed_date' => $request->proposed_date,
                 'location_id' => $request->location_id,
@@ -112,92 +112,98 @@ class EventProposalController extends Controller
             ]);
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Demande d\'activité créée avec succès',
                 'data' => $eventProposal
             ], 201);
         } catch (\Exception $e) {
+            Log::error('API Error in EventProposalController@store: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la création de la demande',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Récupère les détails d'une proposition d'activité
-     */
     public function show($id)
     {
-        $eventProposal = EventProposal::with(['eventType', 'location', 'company', 'event'])
-            ->findOrFail($id);
+        try {
+            $eventProposal = EventProposal::with(['eventType', 'location', 'company', 'event'])
+                ->findOrFail($id);
 
-        return response()->json([
-            'success' => true,
-            'data' => $eventProposal
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'eventProposal' => $eventProposal
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API Error in EventProposalController@show: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Une erreur est survenue lors de la récupération des détails'
+            ], 500);
+        }
     }
 
-    /**
-     * Récupère la liste des propositions d'activités pour une société
-     */
     public function getByCompany($companyId)
     {
-        $eventProposals = EventProposal::where('company_id', $companyId)
-            ->orderBy('created_at', 'desc')
-            ->with(['eventType', 'location'])
-            ->get();
+        try {
+            $eventProposals = EventProposal::where('company_id', $companyId)
+                ->orderBy('created_at', 'desc')
+                ->with(['eventType', 'location'])
+                ->get();
 
-        return response()->json([
-            'success' => true,
-            'data' => $eventProposals
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'data' => $eventProposals
+            ]);
+        } catch (\Exception $e) {
+            Log::error('API Error in EventProposalController@getByCompany: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Une erreur est survenue lors de la récupération des propositions'
+            ], 500);
+        }
     }
 
-    /**
-     * Met à jour une proposition d'activité
-     */
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
             'proposed_date' => 'sometimes|required|date|after:today',
             'location_id' => 'sometimes|required|exists:location,id',
-            'duration' => 'sometimes|required|integer|min:30|max:480', // Ajout de la validation de durée
+            'duration' => 'sometimes|required|integer|min:30|max:480',
             'notes' => 'nullable|string|max:1000',
             'status' => 'sometimes|required|in:Pending,Assigned,Accepted,Rejected'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'errors' => $validator->errors()
             ], 422);
         }
 
         try {
             $eventProposal = EventProposal::findOrFail($id);
-
-            // Ajouter 'duration' à la liste des champs modifiables
             $eventProposal->update($request->only(['proposed_date', 'location_id', 'duration', 'notes', 'status']));
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Demande d\'activité mise à jour avec succès',
                 'data' => $eventProposal
             ]);
         } catch (\Exception $e) {
+            Log::error('API Error in EventProposalController@update: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la mise à jour de la demande',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Supprime une proposition d'activité
-     */
     public function destroy($id)
     {
         try {
@@ -205,32 +211,27 @@ class EventProposalController extends Controller
             $eventProposal->delete();
 
             return response()->json([
-                'success' => true,
+                'status' => 'success',
                 'message' => 'Demande d\'activité supprimée avec succès'
             ]);
         } catch (\Exception $e) {
+            Log::error('API Error in EventProposalController@destroy: ' . $e->getMessage());
             return response()->json([
-                'success' => false,
+                'status' => 'error',
                 'message' => 'Une erreur est survenue lors de la suppression de la demande',
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
-    /**
-     * Trouve ou crée un ServiceType à partir du type d'activité
-     */
     private function findOrCreateServiceType($activityType)
     {
-        // Chercher un prestataire par défaut
         $provider = Provider::where('statut_prestataire', 'Validé')->first();
 
-        // Si aucun prestataire n'est disponible, prendre le premier
         if (!$provider) {
             $provider = Provider::first();
         }
 
-        // Si toujours pas de prestataire, en créer un par défaut
         if (!$provider) {
             $provider = Provider::create([
                 'first_name' => 'System',
@@ -245,10 +246,8 @@ class EventProposalController extends Controller
             ]);
         }
 
-        // Chercher un ServiceType existant pour cette activité
         $serviceType = ServiceType::where('title', 'LIKE', "%$activityType%")->first();
 
-        // Si aucun service type n'existe, en créer un
         if (!$serviceType) {
             $title = ucfirst($activityType);
 
@@ -256,17 +255,14 @@ class EventProposalController extends Controller
                 'provider_id' => $provider->id,
                 'title' => $title,
                 'description' => "Prestation : $title",
-                'price' => 100.00, // Prix par défaut
-                'duration' => 60   // Durée par défaut en minutes
+                'price' => 100.00,
+                'duration' => 60
             ]);
         }
 
         return $serviceType;
     }
 
-    /**
-     * Crée les emplacements par défaut
-     */
     private function createDefaultLocations()
     {
         $defaultLocations = [

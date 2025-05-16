@@ -56,15 +56,15 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <p><strong>Nom de l'entreprise:</strong> {{ $profile['name'] }}</p>
-                                    <p><strong>Email:</strong> {{ $profile['email'] }}</p>
-                                    <p><strong>Téléphone:</strong> {{ $profile['telephone'] }}</p>
-                                    <p><strong>SIRET:</strong> {{ $profile['siret'] ?? 'Non renseigné' }}</p>
+                                    <p><strong>Nom de l'entreprise:</strong> {{ $profile->name }}</p>
+                                    <p><strong>Email:</strong> {{ $profile->email }}</p>
+                                    <p><strong>Téléphone:</strong> {{ $profile->telephone }}</p>
+                                    <p><strong>SIRET:</strong> {{ $profile->siret ?? 'Non renseigné' }}</p>
                                 </div>
                                 <div class="col-md-6">
-                                    <p><strong>Effectif:</strong> {{ $profile['effectif'] ?? 'Non renseigné' }}</p>
-                                    <p><strong>Secteur d'activité:</strong> {{ $profile['secteur_activite'] ?? 'Non renseigné' }}</p>
-                                    <p><strong>Date d'inscription:</strong> {{ isset($profile['created_at']) ? \Carbon\Carbon::parse($profile['created_at'])->format('d/m/Y') : 'Non disponible' }}</p>
+                                    <p><strong>Date de création:</strong> {{ isset($profile->date_debut_contrat) ? \Carbon\Carbon::parse($profile->date_debut_contrat)->format('d/m/Y') : 'Non disponible' }}</p>
+                                    <p><strong>Formule d'abonnement:</strong> {{ $profile->formule_abonnement ?? 'Non défini' }}</p>
+                                    <p><strong>Statut du compte:</strong> {{ $profile->statut_compte ?? 'Non défini' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -76,35 +76,28 @@
                             Adresse
                         </div>
                         <div class="card-body">
-                            <p><strong>Adresse:</strong> {{ $profile['address'] }}</p>
-                            <p><strong>Code postal:</strong> {{ $profile['code_postal'] }}</p>
-                            <p><strong>Ville:</strong> {{ $profile['ville'] }}</p>
-                            <p><strong>Pays:</strong> {{ $profile['pays'] }}</p>
+                            <p><strong>Adresse:</strong> {{ $profile->address }}</p>
+                            <p><strong>Code postal:</strong> {{ $profile->code_postal }}</p>
+                            <p><strong>Ville:</strong> {{ $profile->ville }}</p>
+                            <p><strong>Pays:</strong> {{ $profile->pays }}</p>
                         </div>
                     </div>
 
-                    <!-- Informations d'abonnement -->
+                    <!-- Informations d'abonnement (non modifiables) -->
                     <div class="card mb-4">
                         <div class="card-header">
                             Informations d'abonnement
                         </div>
                         <div class="card-body">
-                            <p><strong>Formule:</strong> {{ $profile['formule_abonnement'] ?? 'Aucun abonnement actif' }}</p>
-                            @if(isset($profile['date_fin_contrat']))
-                                <p><strong>Date de fin:</strong> {{ \Carbon\Carbon::parse($profile['date_fin_contrat'])->format('d/m/Y') }}</p>
-                                <p><strong>Statut:</strong>
-                                    @if($profile['statut_compte'] === 'Actif')
-                                        <span class="badge bg-success">Actif</span>
-                                    @elseif($profile['statut_compte'] === 'En attente')
-                                        <span class="badge bg-warning">En attente</span>
-                                    @elseif($profile['statut_compte'] === 'Inactif')
-                                        <span class="badge bg-danger">Inactif</span>
-                                    @else
-                                        <span class="badge bg-secondary">{{ $profile['statut_compte'] }}</span>
-                                    @endif
-                                </p>
-                            @else
-                                <p>Aucun abonnement actif. <a href="{{ route('quotes.create') }}">Créer un devis</a> pour commencer.</p>
+                            <p><strong>Formule:</strong> {{ $profile->formule_abonnement }}</p>
+                            <p><strong>Statut du compte:</strong> 
+                                <span class="badge bg-{{ $profile->statut_compte === 'Actif' ? 'success' : 'danger' }}">
+                                    {{ $profile->statut_compte }}
+                                </span>
+                            </p>
+                            <p><strong>Date de début du contrat:</strong> {{ \Carbon\Carbon::parse($profile->date_debut_contrat)->format('d/m/Y') }}</p>
+                            @if($profile->date_fin_contrat)
+                                <p><strong>Date de fin du contrat:</strong> {{ \Carbon\Carbon::parse($profile->date_fin_contrat)->format('d/m/Y') }}</p>
                             @endif
                         </div>
                     </div>

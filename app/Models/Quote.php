@@ -9,38 +9,43 @@ class Quote extends Model
 {
     use HasFactory;
 
-    protected $table = 'quote';
+    // Désactiver les timestamps
+    public $timestamps = false;
 
+    protected $table = 'quote';
 
     protected $fillable = [
         'company_id',
-        'company_name',
+        'creation_date',
+        'expiration_date',
         'company_size',
-        'contract_duration',
         'formule_abonnement',
-        'price_per_employee',
         'activities_count',
         'medical_appointments',
         'extra_appointment_fee',
         'chatbot_questions',
         'weekly_advice',
         'personalized_advice',
-        'annual_amount',
+        'price_per_employee',
         'total_amount',
-        'total_amount_ttc',
-        'reference_number',
-        'creation_date',
-        'expiration_date',
         'status',
-        'services_details',
+        'services_details'
     ];
 
+    protected $casts = [
+        'creation_date' => 'date',
+        'expiration_date' => 'date',
+        'weekly_advice' => 'boolean',
+        'personalized_advice' => 'boolean',
+        'extra_appointment_fee' => 'decimal:2',
+        'price_per_employee' => 'decimal:2',
+        'total_amount' => 'decimal:2'
+    ];
 
     public function company()
     {
         return $this->belongsTo(Company::class);
     }
-
 
     public function invoices()
     {

@@ -13,6 +13,7 @@
                 <div class="list-group list-group-flush">
                     <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
                     <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action">Profil prestataire</a>
+                    <a href="{{ route('provider.evaluations.index') }}" class="list-group-item list-group-item-action">Suivi des évaluations</a>
                     <a href="#" class="list-group-item list-group-item-action">Clients</a>
                     <a href="#" class="list-group-item list-group-item-action">Calendrier</a>
                     <a href="#" class="list-group-item list-group-item-action">Facturation</a>

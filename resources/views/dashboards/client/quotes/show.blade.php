@@ -6,16 +6,16 @@
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Détails du devis</h1>
-        <div>
-            <a href="{{ route('quotes.index') }}" class="btn btn-sm btn-secondary shadow-sm">
-                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Retour à la liste
-            </a>
-            @if($quote->status == 'Pending')
-                <a href="{{ route('quotes.edit', $quote->id) }}" class="btn btn-sm btn-primary shadow-sm">
-                    <i class="fas fa-edit fa-sm text-white-50"></i> Modifier
-                </a>
+        <span class="badge badge-lg px-3 py-2
+            @if($quote->status === 'Pending') badge-warning
+            @elseif($quote->status === 'Accepted') badge-success
+            @elseif($quote->status === 'Rejected') badge-danger
+            @endif">
+            @if($quote->status === 'Pending') En attente
+            @elseif($quote->status === 'Accepted') Accepté
+            @elseif($quote->status === 'Rejected') Rejeté
             @endif
-        </div>
+        </span>
     </div>
 
     @if(session('success'))
@@ -37,7 +37,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">
                         Devis #{{ $quote->reference_number ?? 'DEVIS-' . $quote->id }}
                     </h6>
-                    <span class="badge badge-lg 
+                    <span class="badge badge-lg text-dark
                         @if($quote->status == 'Pending') badge-warning
                         @elseif($quote->status == 'Accepted') badge-success
                         @elseif($quote->status == 'Rejected') badge-danger
@@ -56,27 +56,24 @@
                             <p><strong>Date d'expiration:</strong> {{ \Carbon\Carbon::parse($quote->expiration_date)->format('d/m/Y') }}</p>
                             <p>
                                 <strong>Statut:</strong> 
-                                @if($quote->status == 'Pending')
-                                    <span class="badge badge-warning">En attente</span>
-                                @elseif($quote->status == 'Accepted')
-                                    <span class="badge badge-success">Accepté</span>
-                                @elseif($quote->status == 'Rejected')
-                                    <span class="badge badge-danger">Rejeté</span>
-                                @endif
+                                <span class="text-dark">
+                                    @if($quote->status == 'Pending')
+                                        En attente
+                                    @elseif($quote->status == 'Accepted')
+                                        Accepté
+                                    @elseif($quote->status == 'Rejected')
+                                        Rejeté
+                                    @endif
+                                </span>
                             </p>
                         </div>
                         <div class="col-md-6">
                             <h5 class="font-weight-bold">Votre société</h5>
                             <p><strong>Nom:</strong> {{ $quote->company->name ?? 'Votre société' }}</p>
                             <p><strong>Effectif:</strong> {{ $quote->company_size }} salariés</p>
-                            <p><strong>Formule:</strong> 
-                                <span class="badge badge-pill 
-                                    @if($quote->formule_abonnement == 'Starter') badge-secondary
-                                    @elseif($quote->formule_abonnement == 'Basic') badge-primary
-                                    @elseif($quote->formule_abonnement == 'Premium') badge-warning
-                                    @endif">
-                                    {{ $quote->formule_abonnement }}
-                                </span>
+                            <p>
+                                <strong>Formule:</strong> 
+                                <span class="text-dark">{{ $quote->formule_abonnement }}</span>
                             </p>
                         </div>
                     </div>
@@ -223,66 +220,48 @@
         </div>
         
         <div class="col-lg-4">
-            @if($quote->status == 'Pending')
+            @if($quote->status === 'Pending')
                 <div class="card shadow mb-4 border-left-warning">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-warning">Actions</h6>
                     </div>
                     <div class="card-body">
-                        <p>Ce devis est en attente de votre décision. Vous pouvez l'accepter pour générer une facture, ou le rejeter.</p>
-                        
+                        <p>Ce devis est en attente de votre décision.</p>
                         <div class="d-flex justify-content-between mt-4">
                             <form action="{{ route('quotes.reject', $quote->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir rejeter ce devis ?')">
+                                <button type="submit" class="btn btn-danger">
                                     <i class="fas fa-times mr-1"></i> Rejeter
                                 </button>
                             </form>
-                            
                             <form action="{{ route('quotes.accept', $quote->id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn btn-success" onclick="return confirm('Êtes-vous sûr de vouloir accepter ce devis et générer une facture ?')">
+                                <button type="submit" class="btn btn-success">
                                     <i class="fas fa-check mr-1"></i> Accepter
                                 </button>
                             </form>
+                            <a href="{{ route('quotes.download', $quote) }}" class="btn btn-info">
+                                <i class="fas fa-download"></i> Télécharger le PDF
+                            </a>
                         </div>
                     </div>
                 </div>
-            @elseif($quote->status == 'Accepted')
+            @elseif($quote->status === 'Accepted')
                 <div class="card shadow mb-4 border-left-success">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-success">Devis accepté</h6>
                     </div>
                     <div class="card-body">
-                        <p>Ce devis a été accepté le {{ \Carbon\Carbon::parse($quote->updated_at)->format('d/m/Y') }}.</p>
-                        
-                        <!-- Vérifier si une facture est liée au devis -->
-                        @if(isset($invoice))
-                            <div class="alert alert-info mt-3">
-                                <p class="mb-0">Une facture a été générée à partir de ce devis.</p>
-                            </div>
-                            
-                            <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-primary btn-block mt-3">
-                                <i class="fas fa-file-invoice-dollar mr-1"></i> Voir la facture
-                            </a>
-                        @else
-                            <div class="alert alert-warning mt-3">
-                                <p class="mb-0">Aucune facture n'a encore été générée pour ce devis.</p>
-                            </div>
-                        @endif
+                        <p>Ce devis a été accepté le {{ $quote->updated_at ? \Carbon\Carbon::parse($quote->updated_at)->format('d/m/Y') : \Carbon\Carbon::parse($quote->creation_date)->format('d/m/Y') }}</p>
                     </div>
                 </div>
-            @elseif($quote->status == 'Rejected')
+            @elseif($quote->status === 'Rejected')
                 <div class="card shadow mb-4 border-left-danger">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-danger">Devis rejeté</h6>
                     </div>
                     <div class="card-body">
-                        <p>Ce devis a été rejeté le {{ \Carbon\Carbon::parse($quote->updated_at)->format('d/m/Y') }}.</p>
-                        
-                        <a href="{{ route('quotes.create') }}" class="btn btn-primary btn-block mt-3">
-                            <i class="fas fa-plus mr-1"></i> Créer un nouveau devis
-                        </a>
+                        <p>Ce devis a été rejeté le {{ $quote->updated_at ? \Carbon\Carbon::parse($quote->updated_at)->format('d/m/Y') : \Carbon\Carbon::parse($quote->creation_date)->format('d/m/Y') }}</p>
                     </div>
                 </div>
             @endif

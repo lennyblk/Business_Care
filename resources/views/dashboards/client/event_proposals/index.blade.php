@@ -37,7 +37,7 @@
                         </div>
                     @endif
 
-                    @if($eventProposals->count() > 0)
+                    @if(!empty($eventProposals))
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -54,30 +54,30 @@
                                 <tbody>
                                     @foreach($eventProposals as $proposal)
                                         <tr>
-                                            <td>{{ $proposal->id }}</td>
-                                            <td>{{ $proposal->eventType->title }}</td>
-                                            <td>{{ $proposal->proposed_date->format('d/m/Y') }}</td>
-                                            <td>{{ $proposal->location->name }}</td>
+                                            <td>{{ $proposal['id'] }}</td>
+                                            <td>{{ $proposal['event_type']['title'] }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($proposal['proposed_date'])->format('d/m/Y') }}</td>
+                                            <td>{{ $proposal['location']['name'] }}</td>
                                             <td>
-                                                @if($proposal->status == 'Pending')
+                                                @if($proposal['status'] == 'Pending')
                                                     <span class="badge bg-warning text-dark">En attente</span>
-                                                @elseif($proposal->status == 'Assigned')
+                                                @elseif($proposal['status'] == 'Assigned')
                                                     <span class="badge bg-info">Assigné</span>
-                                                @elseif($proposal->status == 'Accepted')
+                                                @elseif($proposal['status'] == 'Accepted')
                                                     <span class="badge bg-success">Accepté</span>
-                                                @elseif($proposal->status == 'Rejected')
+                                                @elseif($proposal['status'] == 'Rejected')
                                                     <span class="badge bg-danger">Rejeté</span>
                                                 @else
-                                                    <span class="badge bg-secondary">{{ $proposal->status }}</span>
+                                                    <span class="badge bg-secondary">{{ $proposal['status'] }}</span>
                                                 @endif
                                             </td>
-                                            <td>{{ $proposal->created_at->format('d/m/Y H:i') }}</td>
+                                            <td>{{ \Carbon\Carbon::parse($proposal['created_at'])->format('d/m/Y H:i') }}</td>
                                             <td>
-                                                <a href="{{ route('client.event_proposals.show', $proposal->id) }}" class="btn btn-sm btn-info">
+                                                <a href="{{ route('client.event_proposals.show', $proposal['id']) }}" class="btn btn-sm btn-info">
                                                     <i class="fas fa-eye"></i> Voir
                                                 </a>
-                                                @if($proposal->status == 'Pending')
-                                                    <form method="POST" action="{{ route('client.event_proposals.destroy', $proposal->id) }}" class="d-inline">
+                                                @if($proposal['status'] == 'Pending')
+                                                    <form method="POST" action="{{ route('client.event_proposals.destroy', $proposal['id']) }}" class="d-inline">
                                                         @csrf
                                                         @method('DELETE')
                                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir annuler cette demande?')">

@@ -15,6 +15,7 @@ use App\Http\Controllers\API\AdviceCategoryController;
 use App\Http\Controllers\API\AdviceTagController;
 use App\Http\Controllers\API\AdviceFeedbackController;
 use App\Http\Controllers\AdminContract2Controller;
+use App\Http\Controllers\API\ProviderEvaluationController;
 
 Route::get('/test', function() {
     return response()->json(['message' => 'API fonctionne correctement']);
@@ -58,12 +59,26 @@ Route::prefix('providers')->group(function () {
     Route::get('{id}/invoices', [ProviderController::class, 'getInvoices']);
 });
 
+Route::prefix('provider')->group(function () {
+    Route::get('/{id}/evaluations', [ProviderEvaluationController::class, 'getProviderEvaluations']);
+});
+
 // Routes pour les événements
 Route::apiResource('events', EventController::class);
 Route::prefix('events')->group(function () {
     Route::get('{id}/employees', [EventController::class, 'getRegisteredEmployees']);
     Route::post('{id}/register', [EventController::class, 'registerEmployee']);
     Route::post('{id}/unregister', [EventController::class, 'unregisterEmployee']);
+});
+
+// Routes pour les événements
+Route::prefix('events')->group(function () {
+    Route::get('/', [EventController::class, 'index']);
+    Route::get('/company/{companyId}', [EventController::class, 'getByCompany']);
+    Route::get('/registered/{employeeId}', [EventController::class, 'getRegisteredEmployees']);
+    Route::post('/register', [EventController::class, 'store']);
+    Route::delete('/{id}', [EventController::class, 'destroy']);
+    Route::get('/history/{employeeId}', [EventController::class, 'getHistory']);
 });
 
 // Routes d'administration
@@ -292,3 +307,6 @@ Route::prefix('advice-feedback')->group(function () {
     Route::get('/advice/{id}', [AdviceFeedbackController::class, 'getByAdvice']);
     Route::post('/', [AdviceFeedbackController::class, 'store']);
 });
+
+// Routes pour les évaluations de service
+Route::post('/service-evaluations/{event_id}', [App\Http\Controllers\API\ServiceEvaluationController::class, 'store']);

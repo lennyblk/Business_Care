@@ -73,8 +73,8 @@ class AdminPendingRegistrationController extends Controller
                     break;
 
                 case 'prestataire':
-                    // Déterminer le type d'activité à partir des données additionnelles
-                    $activityType = $pendingRegistration->activity_type ?? 'yoga';
+                    // Déterminer le type d'activité à partir des données
+                    $activityType = $pendingRegistration->activity_type;
 
                     $provider = new Provider();
                     $provider->first_name = $pendingRegistration->first_name;
@@ -89,7 +89,13 @@ class AdminPendingRegistrationController extends Controller
                     $provider->ville = $pendingRegistration->ville;
                     $provider->siret = $pendingRegistration->siret;
                     $provider->tarif_horaire = $pendingRegistration->tarif_horaire;
-                    $provider->activity_type = $activityType;
+                    $provider->activity_type = $pendingRegistration->activity_type; // S'assurer que cette valeur est bien définie
+
+                    // Ajout de logs pour déboguer
+                    \Log::info('Données du prestataire avant sauvegarde', [
+                        'activity_type' => $pendingRegistration->activity_type,
+                        'pending_data' => $pendingRegistration->toArray()
+                    ]);
 
                     // Si l'activité est "autre", enregistrer l'activité personnalisée
                     if ($activityType === 'autre' && isset($additionalData['custom_activity'])) {

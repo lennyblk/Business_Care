@@ -70,8 +70,8 @@
                             <select name="location_id" id="location_id" class="form-select @error('location_id') is-invalid @enderror" required>
                                 <option value="">-- Sélectionnez un lieu --</option>
                                 @foreach($locations as $location)
-                                    <option value="{{ $location->id }}" {{ old('location_id') == $location->id ? 'selected' : '' }}>
-                                        {{ $location->name }} ({{ $location->city }})
+                                    <option value="{{ $location['id'] }}" {{ old('location_id') == $location['id'] ? 'selected' : '' }}>
+                                        {{ $location['name'] }} ({{ $location['city'] }})
                                     </option>
                                 @endforeach
                             </select>
