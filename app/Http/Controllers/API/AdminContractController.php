@@ -34,7 +34,6 @@ class AdminContractController extends Controller
             $contract->payment_status = 'unpaid';
             $contract->save();
 
-            // Envoyer l'email de notification
             $this->sendApprovalEmail($contract);
 
             // Nous créons également une facture en statut "pending" qui sera marquée comme payée plus tard
@@ -48,7 +47,7 @@ class AdminContractController extends Controller
                 $invoice->period_start = \Carbon\Carbon::parse($contract->start_date);
                 $invoice->period_end = \Carbon\Carbon::parse($contract->end_date);
                 $invoice->amount = $contract->amount;
-                $invoice->status = 'pending'; // En attente de paiement
+                $invoice->status = 'pending';
                 $invoice->save();
 
                 Log::info('Facture générée pour le contrat approuvé', [
@@ -74,7 +73,6 @@ class AdminContractController extends Controller
         try {
             $contract = Contract::with('company')->findOrFail($id);
 
-            // Envoyer l'email avant de supprimer
             $this->sendRejectionEmail($contract);
 
             $contract->delete();

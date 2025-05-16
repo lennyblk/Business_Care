@@ -51,21 +51,19 @@ class AdminPendingRegistrationController extends Controller
             // Récupérer les données supplémentaires stockées en JSON
             $additionalData = json_decode($pendingRegistration->additional_data, true) ?? [];
 
-            // Traitement selon le type d'utilisateur
             switch ($pendingRegistration->user_type) {
                 case 'societe':
-                    // Créer la société
                     $company = new Company();
                     $company->name = $pendingRegistration->company_name;
                     $company->email = $pendingRegistration->email;
-                    $company->password = $pendingRegistration->password; // Déjà hashé
+                    $company->password = $pendingRegistration->password; // deja hashé
                     $company->address = $pendingRegistration->address;
                     $company->code_postal = $pendingRegistration->code_postal;
                     $company->ville = $pendingRegistration->ville;
                     $company->telephone = $pendingRegistration->telephone;
                     $company->creation_date = now();
                     $company->siret = $pendingRegistration->siret;
-                    $company->formule_abonnement = 'Starter'; // Valeur par défaut
+                    $company->formule_abonnement = 'Starter';
                     $company->statut_compte = 'Actif';
                     $company->date_debut_contrat = now();
                     $company->date_fin_contrat = now()->addYear();
@@ -76,9 +74,8 @@ class AdminPendingRegistrationController extends Controller
 
                 case 'prestataire':
                     // Déterminer le type d'activité à partir des données additionnelles
-                    $activityType = $pendingRegistration->activity_type ?? 'yoga'; // Valeur par défaut
+                    $activityType = $pendingRegistration->activity_type ?? 'yoga';
 
-                    // Créer le prestataire
                     $provider = new Provider();
                     $provider->first_name = $pendingRegistration->first_name;
                     $provider->last_name = $pendingRegistration->last_name;
@@ -114,7 +111,6 @@ class AdminPendingRegistrationController extends Controller
                     break;
             }
 
-            // Mettre à jour le statut de l'inscription
             $pendingRegistration->status = 'approved';
             $pendingRegistration->save();
 
@@ -123,7 +119,6 @@ class AdminPendingRegistrationController extends Controller
                 'nouveau_status' => 'approved'
             ]);
 
-            // Envoyer une notification à l'utilisateur
             $this->sendUserNotification($pendingRegistration, true);
 
             return redirect()->route('admin.inscriptions.index')
@@ -144,11 +139,9 @@ class AdminPendingRegistrationController extends Controller
     {
         $registration = PendingRegistration::findOrFail($id);
 
-        // Mettre à jour le statut de la demande
         $registration->status = 'rejected';
         $registration->save();
 
-        // Envoyer un email à l'utilisateur pour l'informer du rejet
         $this->sendUserNotification($registration, false);
 
         return redirect()->route('admin.inscriptions.index')
@@ -198,7 +191,6 @@ class AdminPendingRegistrationController extends Controller
             $mail->send();
             return true;
         } catch (Exception $e) {
-            // Log l'erreur
             \Log::error("Erreur d'envoi d'email: {$mail->ErrorInfo}");
             return false;
         }
