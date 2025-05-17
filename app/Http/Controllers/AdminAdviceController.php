@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\API\AdviceController as AdviceApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\Advice;
+use Validator;
 
 class AdminAdviceController extends Controller
 {
@@ -64,7 +66,17 @@ class AdminAdviceController extends Controller
                 return back()->withErrors($data['errors'] ?? ['Une erreur est survenue'])->withInput();
             }
 
-            return redirect()->route('admin.advice.index')->with('success', 'Conseil créé avec succès.');
+            // Créer automatiquement une programmation pour le conseil
+            $advice = Advice::findOrFail($data['data']['id']);
+            $schedule = new \App\Models\AdviceSchedule([
+                'advice_id' => $advice->id,
+                'scheduled_date' => $advice->publish_date,
+                'target_audience' => 'All', // Par défaut tous les employés
+                'target_criteria' => null
+            ]);
+            $schedule->save();
+
+            return redirect()->route('admin.advice.index')->with('success', 'Conseil créé et programmé avec succès.');
         } catch (\Exception $e) {
             Log::error('Exception lors de la création d\'un conseil: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue lors de la création du conseil')->withInput();
@@ -136,6 +148,63 @@ class AdminAdviceController extends Controller
         } catch (\Exception $e) {
             Log::error('Exception lors de la suppression d\'un conseil: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue lors de la suppression du conseil');
+        }
+    }
+
+    public function schedule($id)
+    {
+        try {
+            $advice = Advice::findOrFail($id);
+            return view('dashboards.gestion_admin.advice.schedule', compact('advice'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la planification du conseil: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
+    public function saveSchedule(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'scheduled_date' => 'required|date|after:today',
+                'target_audience' => 'required|in:All,Specific',
+                'target_criteria' => 'nullable|required_if:target_audience,Specific',
+            ]);
+
+            if ($validator->fails()) {
+                return back()->withErrors($validator)->withInput();
+            }
+
+            $advice = Advice::findOrFail($id);
+            
+            $schedule = new \App\Models\AdviceSchedule([
+                'advice_id' => $advice->id,
+                'scheduled_date' => $request->scheduled_date,
+                'target_audience' => $request->target_audience,
+                'target_criteria' => $request->target_criteria
+            ]);
+
+            $schedule->save();
+
+            return redirect()->route('admin.advice.index')
+                ->with('success', 'Conseil programmé avec succès pour le ' . $request->scheduled_date);
+        } catch (\Exception $e) {
+            Log::error('Exception lors de l\'enregistrement de la planification: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue')->withInput();
+        }
+    }
+
+    public function scheduledAdvices()
+    {
+        try {
+            $scheduledAdvices = \App\Models\AdviceSchedule::with('advice')
+                ->orderBy('scheduled_date', 'asc')
+                ->get();
+                
+            return view('dashboards.gestion_admin.advice.scheduled', compact('scheduledAdvices'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la récupération des conseils programmés: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue');
         }
     }
 }

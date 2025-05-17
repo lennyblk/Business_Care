@@ -14,6 +14,9 @@
             <a href="{{ route('admin.advice-tags.index') }}" class="btn btn-info">
                 Gérer les Tags
             </a>
+            <a href="{{ route('admin.advice.scheduled') }}" class="btn btn-success">
+                Voir les Conseils Programmés
+            </a>
         </div>
     </div>
 
@@ -36,6 +39,7 @@
                 <td>{{ $advice['publish_date'] }}</td>
                 <td>
                     <a href="{{ route('admin.advice.edit', $advice['id']) }}" class="btn btn-warning btn-sm">Modifier</a>
+                    <a href="{{ route('admin.advice.schedule', $advice['id']) }}" class="btn btn-info btn-sm">Programmer</a>
                     <form action="{{ route('admin.advice.destroy', $advice['id']) }}" method="POST" style="display:inline;">
                         @csrf
                         @method('DELETE')

@@ -143,6 +143,11 @@ Route::middleware(['check.auth'])->group(function () {
         Route::put('/{id}', [App\Http\Controllers\AdminAdviceController::class, 'update'])->name('admin.advice.update');
         Route::delete('/{id}', [App\Http\Controllers\AdminAdviceController::class, 'destroy'])->name('admin.advice.destroy');
 
+        // Nouvelles routes pour la programmation des conseils
+        Route::get('/{id}/schedule', [App\Http\Controllers\AdminAdviceController::class, 'schedule'])->name('admin.advice.schedule');
+        Route::post('/{id}/schedule', [App\Http\Controllers\AdminAdviceController::class, 'saveSchedule'])->name('admin.advice.save-schedule');
+        Route::get('/scheduled', [App\Http\Controllers\AdminAdviceController::class, 'scheduledAdvices'])->name('admin.advice.scheduled');
+
         // Nouvelles routes pour les catégories
         Route::get('/categories', [App\Http\Controllers\AdminAdviceCategoryController::class, 'index'])
             ->name('admin.advice-categories.index');

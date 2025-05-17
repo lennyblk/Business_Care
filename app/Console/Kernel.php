@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
         $schedule->command('contracts:check-expired')->daily(); // pour vérifier les contrats expirés ou non tous les jours
+        $schedule->command('advices:send-scheduled')->dailyAt('09:00');
     }
 
     /**
