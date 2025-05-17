@@ -18,6 +18,7 @@
                     <li>Le fichier doit contenir une ligne d'en-tête avec les noms des colonnes.</li>
                     <li>Les colonnes obligatoires sont : first_name, last_name, email, position.</li>
                     <li>Si aucun mot de passe n'est spécifié, un mot de passe aléatoire sera généré.</li>
+                    <li>Le fichier ne doit <strong>pas contenir</strong> de lettre à accent (comme "é" par exemple).</li>
                 </ul>
                 <p>
                     <a href="{{ route('employees.download-template') }}" class="btn btn-sm btn-info">
@@ -39,7 +40,7 @@
 
             <form action="{{ route('employees.import') }}" method="POST" enctype="multipart/form-data">
                 @csrf
-                <div class="form-group">
+                <div class="form-group mb-4">
                     <label for="csv_file">Fichier CSV</label>
                     <input type="file" name="csv_file" id="csv_file" class="form-control-file" accept=".csv" required>
                     <small class="form-text text-muted">Taille maximale: 2 Mo</small>

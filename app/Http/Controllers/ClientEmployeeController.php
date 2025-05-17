@@ -227,12 +227,15 @@ class ClientEmployeeController extends Controller
             ]);
 
             $path = $file->getRealPath();
-            $csvData = array_map('str_getcsv', file($path));
+            $csvData = array_map(function($line) {
+                return str_getcsv($line, ';');
+            }, file($path));
 
             Log::info('Fichier CSV analysé', [
                 'line_count' => count($csvData),
                 'sample' => array_slice($csvData, 0, 3)
             ]);
+
 
             // Vérifier que le fichier n'est pas vide
             if (count($csvData) <= 1) { // On considère que la première ligne est l'en-tête
@@ -382,9 +385,7 @@ class ClientEmployeeController extends Controller
         return $password;
     }
 
-    /**
-     * Télécharge un modèle CSV pour l'import d'employés
-     */
+
     public function downloadCsvTemplate()
     {
         $headers = [
