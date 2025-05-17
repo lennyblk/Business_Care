@@ -7,6 +7,7 @@ use App\Http\Controllers\API\EventController;
 use App\Http\Controllers\API\CompanyController;
 use Illuminate\Support\Facades\Log;
 use stdClass;
+use App\Models\EventProposal;
 
 class AdminActivityController extends Controller
 {
@@ -53,27 +54,12 @@ class AdminActivityController extends Controller
 
     public function index()
     {
-        try {
-            // Appel au contrôleur API pour récupérer les événements
-            $response = $this->apiEventController->index();
-            $data = json_decode($response->getContent(), true);
+        $eventProposals = EventProposal::whereIn('status', ['Assigned', 'Accepted'])
+            ->with(['company', 'eventType', 'location', 'providerAssignments.provider'])
+            ->orderBy('proposed_date', 'asc')
+            ->get();
 
-            if ($response->getStatusCode() !== 200) {
-                Log::error('Erreur lors de la récupération des activités', [
-                    'status' => $response->getStatusCode(),
-                    'response' => $data
-                ]);
-                return back()->with('error', 'Erreur lors de la récupération des activités');
-            }
-
-            // Convertir le tableau associatif en tableau d'objets
-            $events = $this->arrayToObjects($data['data'] ?? []);
-
-            return view('dashboards.gestion_admin.activites.index', compact('events'));
-        } catch (\Exception $e) {
-            Log::error('Exception lors de la récupération des activités: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la récupération des activités');
-        }
+        return view('dashboards.gestion_admin.activites.index', compact('eventProposals'));
     }
 
     public function create()

@@ -1,11 +1,9 @@
-version: '3.8'
-
+version: "3.8"
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    # AJOUT: 'always' au lieu de 'unless-stopped' pour garantir que le service redémarre toujours
     restart: always
     volumes:
       - ./:/var/www/html
@@ -26,15 +24,13 @@ services:
             php artisan config:cache &&
             /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"
     depends_on:
-      - db # lancera le service db avant de lancer le service app
+      - db
     ports:
       - "8000:80"
     networks:
       - businesscare-network
-
   db:
     image: mariadb:11.7
-    # AJOUT: 'always' pour assurer la haute disponibilité en production
     restart: always
     environment:
       - MYSQL_DATABASE=businesscare2
@@ -44,14 +40,10 @@ services:
       - ./database/repInit:/docker-entrypoint-initdb.d
     ports:
       - "3308:3306"
-
     networks:
       - businesscare-network
-
-
   portainer:
     image: portainer/portainer-ce:latest
-    # AJOUT: 'always' au lieu de 'unless-stopped'
     restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -60,11 +52,9 @@ services:
       - "9000:9000"
     networks:
       - businesscare-network
-
 volumes:
   mariadb-data:
   portainer-data:
-
 networks:
   businesscare-network:
     driver: bridge

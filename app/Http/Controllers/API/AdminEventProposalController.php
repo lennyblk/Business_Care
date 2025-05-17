@@ -1,82 +1,21 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Models\EventProposal;
 use App\Models\Provider;
-use App\Models\ProviderAssignment;
-use App\Models\Event;
-use App\Models\Notification;
 use App\Models\Company;
 use App\Models\Location;
 use App\Models\ServiceType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-use App\Http\Controllers\API\AdminEventProposalController as ApiController;
-use Illuminate\Support\Facades\Log;
 
 class AdminEventProposalController extends Controller
 {
-    protected $apiController;
-
-    public function __construct()
-    {
-        $this->apiController = new ApiController();
-    }
-
-    /**
-     * Affiche la liste des propositions d'activités
-     */
-    public function index()
-    {
-        $pendingProposals = EventProposal::where('status', 'Pending')
-            ->with(['company', 'eventType', 'location'])
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        $assignedProposals = EventProposal::whereIn('status', ['Assigned', 'Accepted'])
-            ->with(['company', 'eventType', 'location'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        $rejectedProposals = EventProposal::where('status', 'Rejected')
-            ->with(['company', 'eventType', 'location'])
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        return view('dashboards.gestion_admin.event_proposals.index', [
-            'pendingProposals' => $pendingProposals,
-            'assignedProposals' => $assignedProposals,
-            'rejectedProposals' => $rejectedProposals
-        ]);
-    }
-
-    /**
-     * Affiche les détails d'une proposition d'activité
-     */
-    public function show($id)
-    {
-        $eventProposal = EventProposal::with(['company', 'eventType', 'location', 'providerAssignments.provider'])
-            ->findOrFail($id);
-
-        // Trouver des prestataires correspondant aux critères (même ville et même type d'activité)
-        $recommendations = Provider::where('statut_prestataire', 'Validé')
-            ->where('ville', $eventProposal->location->city)
-            ->where('activity_type', $eventProposal->eventType->title)
-            ->orderBy('rating', 'desc')
-            ->get();
-
-        return view('dashboards.gestion_admin.event_proposals.show', [
-            'eventProposal' => $eventProposal,
-            'recommendations' => $recommendations
-        ]);
-    }
-
-    /**
-     * Crée une nouvelle proposition d'activité
-     */
-    public function create()
+    public function getFormData()
     {
         try {
             $activityTypes = [
@@ -93,50 +32,74 @@ class AdminEventProposalController extends Controller
             $companies = Company::all();
             $locations = Location::all();
 
-            return view('dashboards.gestion_admin.activites.create', compact('activityTypes', 'companies', 'locations'));
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'activityTypes' => $activityTypes,
+                    'companies' => $companies,
+                    'locations' => $locations
+                ]
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error in AdminEventProposalController@create: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Une erreur est survenue');
+            Log::error('API Error in AdminEventProposalController@getFormData: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Une erreur est survenue'
+            ], 500);
         }
     }
 
-    /**
-     * Enregistre une nouvelle proposition d'activité
-     */
     public function store(Request $request)
     {
         try {
-            $request->validate([
-                'activity_type' => 'required|string',
-                'company_id' => 'required|exists:company,id',  // Changé de companies à company
-                'proposed_date' => 'required|date|after:today',
-                'location_id' => 'required|exists:location,id',
-                'duration' => 'required|integer|min:30|max:480',
-                'notes' => 'nullable|string'
+            $eventProposal = EventProposal::create([
+                'company_id' => $request->company_id,
+                'event_type_id' => $this->findOrCreateServiceType($request->activity_type)->id,
+                'proposed_date' => $request->proposed_date,
+                'location_id' => $request->location_id,
+                'duration' => $request->duration,
+                'notes' => $request->notes,
+                'status' => 'Pending',
+                'created_by_admin' => true
             ]);
 
-            $response = $this->apiController->store($request);
-            $data = json_decode($response->getContent(), true);
-
-            if ($response->getStatusCode() !== 200) {
-                return redirect()->back()
-                    ->with('error', $data['message'])
-                    ->withInput();
-            }
-
-            return redirect()->route('admin.event_proposals.index')
-                ->with('success', 'La proposition d\'activité a été créée avec succès.');
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Proposition d\'activité créée avec succès',
+                'data' => $eventProposal
+            ]);
         } catch (\Exception $e) {
-            Log::error('Error in AdminEventProposalController@store: ' . $e->getMessage());
-            return redirect()->back()
-                ->with('error', 'Une erreur est survenue')
-                ->withInput();
+            Log::error('API Error in AdminEventProposalController@store: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Une erreur est survenue'
+            ], 500);
         }
     }
 
-    /**
-     * Assigne un prestataire à une proposition d'activité
-     */
+    private function findOrCreateServiceType($activityType)
+    {
+        $serviceType = ServiceType::where('title', 'LIKE', "%$activityType%")->first();
+
+        if (!$serviceType) {
+            $provider = Provider::where('statut_prestataire', 'Validé')->first();
+            if (!$provider) {
+                $provider = Provider::first();
+            }
+
+            $title = ucfirst($activityType);
+            $serviceType = ServiceType::create([
+                'provider_id' => $provider ? $provider->id : 1,
+                'title' => $title,
+                'description' => "Prestation : $title",
+                'price' => 100.00,
+                'duration' => 60
+            ]);
+        }
+
+        return $serviceType;
+    }
+
     public function assignProvider(Request $request, $id)
     {
         $request->validate([
@@ -147,7 +110,6 @@ class AdminEventProposalController extends Controller
         $eventProposal = EventProposal::findOrFail($id);
         $provider = Provider::findOrFail($request->provider_id);
 
-        // Créer l'assignation du prestataire
         $assignment = ProviderAssignment::create([
             'event_proposal_id' => $eventProposal->id,
             'provider_id' => $request->provider_id,
@@ -156,39 +118,32 @@ class AdminEventProposalController extends Controller
             'proposed_at' => now()
         ]);
 
-        // Mettre à jour le statut de la proposition
         $eventProposal->status = 'Assigned';
         $eventProposal->save();
 
-        // Envoyer une notification au prestataire
         $this->notifyProvider($assignment);
-
-        // Envoyer une notification à l'entreprise
         $this->notifyCompany($eventProposal, $provider);
 
-        return redirect()->route('admin.event_proposals.index')
-            ->with('success', 'Le prestataire a été assigné avec succès à cette activité.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Le prestataire a été assigné avec succès à cette activité.'
+        ]);
     }
 
-    /**
-     * Refuse une proposition d'activité
-     */
     public function rejectProposal($id)
     {
         $eventProposal = EventProposal::findOrFail($id);
         $eventProposal->status = 'Rejected';
         $eventProposal->save();
 
-        // Envoyer une notification à l'entreprise
         $this->notifyCompanyRejection($eventProposal);
 
-        return redirect()->route('admin.event_proposals.index')
-            ->with('success', 'La demande d\'activité a été refusée.');
+        return response()->json([
+            'status' => 'success',
+            'message' => 'La demande d\'activité a été refusée.'
+        ]);
     }
 
-    /**
-     * Notifie un prestataire d'une nouvelle assignation
-     */
     private function notifyProvider(ProviderAssignment $assignment)
     {
         $provider = $assignment->provider;
@@ -197,7 +152,6 @@ class AdminEventProposalController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -207,11 +161,9 @@ class AdminEventProposalController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (prestataire)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($provider->email);
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Nouvelle proposition d\'activité';
 
@@ -239,9 +191,6 @@ class AdminEventProposalController extends Controller
         }
     }
 
-    /**
-     * Notifie l'entreprise qu'un prestataire a été assigné
-     */
     private function notifyCompany(EventProposal $eventProposal, Provider $provider)
     {
         $company = $eventProposal->company;
@@ -249,7 +198,6 @@ class AdminEventProposalController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -259,11 +207,9 @@ class AdminEventProposalController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (company)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($company->email);
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Demande d\'activité en cours de traitement';
 
@@ -283,7 +229,6 @@ class AdminEventProposalController extends Controller
 
             $mail->send();
 
-
             return true;
         } catch (Exception $e) {
             \Log::error("Erreur d'envoi d'email à l'entreprise: {$mail->ErrorInfo}");
@@ -291,9 +236,6 @@ class AdminEventProposalController extends Controller
         }
     }
 
-    /**
-     * Notifie l'entreprise que sa demande a été refusée
-     */
     private function notifyCompanyRejection(EventProposal $eventProposal)
     {
         $company = $eventProposal->company;
@@ -301,7 +243,6 @@ class AdminEventProposalController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -311,11 +252,9 @@ class AdminEventProposalController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (company)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($company->email);
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Demande d\'activité refusée';
 

@@ -27,13 +27,12 @@ class ServiceEvaluationController extends Controller
 
             return view('dashboards.employee.events.evaluate', [
                 'event' => $data['event'],
-                'employee' => $data['employee'],
-                'event_id' => $id
+                'employee' => $data['employee']
             ]);
         } catch (\Exception $e) {
             Log::error('Exception dans ServiceEvaluationController@create: ' . $e->getMessage());
             return redirect()->route('employee.events.history')
-                           ->with('error', 'Une erreur est survenue lors du chargement du formulaire d\'évaluation');
+                           ->with('error', 'Une erreur est survenue lors du chargement');
         }
     }
 
@@ -52,7 +51,7 @@ class ServiceEvaluationController extends Controller
         } catch (\Exception $e) {
             Log::error('Exception dans ServiceEvaluationController@store: ' . $e->getMessage());
             return redirect()->back()
-                           ->with('error', 'Une erreur est survenue lors de l\'enregistrement de l\'évaluation');
+                           ->with('error', 'Une erreur est survenue lors de l\'enregistrement');
         }
     }
 }

@@ -24,7 +24,10 @@ class ProfileController extends Controller
             switch ($userType) {
                 case 'employe':
                 case 'employee':
-                    $profile = Employee::findOrFail($id);
+                    // Charger l'employé avec sa relation company
+                    $profile = Employee::with('company')->findOrFail($id);
+                    $company = $profile->company;
+                    
                     $data = (object)[
                         'id' => $profile->id,
                         'first_name' => $profile->first_name,
@@ -33,7 +36,15 @@ class ProfileController extends Controller
                         'email' => $profile->email,
                         'telephone' => $profile->telephone,
                         'position' => $profile->position ?? '',
-                        'departement' => $profile->departement ?? ''
+                        'departement' => $profile->departement ?? '',
+                        'date_creation_compte' => $profile->date_creation_compte,
+                        'company' => $company ? [
+                            'name' => $company->name,
+                            'address' => $company->address,
+                            'ville' => $company->ville,
+                            'pays' => $company->pays,
+                            'code_postal' => $company->code_postal
+                        ] : null
                     ];
                     break;
                     

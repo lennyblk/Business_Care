@@ -12,6 +12,17 @@ use Illuminate\Support\Facades\Log;
 
 class ProviderAssignmentController extends Controller
 {
+    // Ajouter cette propriété pour le mapping
+    private $activityTypeToEventType = [
+        'rencontre sportive' => 'Sport Event',
+        'conférence' => 'Conference',
+        'webinar' => 'Webinar',
+        'yoga' => 'Yoga',
+        'séance d\'art plastiques' => 'Art Class',
+        'session jeu vidéo' => 'Video Game Session',
+        'autre' => 'Workshop'
+    ];
+
     /**
      * Récupère toutes les assignations
      */
@@ -263,11 +274,16 @@ class ProviderAssignmentController extends Controller
     public function acceptAssignment($id, $providerId)
     {
         try {
-            $assignment = ProviderAssignment::with(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location'])
-                ->where('id', $id)
-                ->where('provider_id', $providerId)
-                ->where('status', 'Proposed')
-                ->firstOrFail();
+            $assignment = ProviderAssignment::with([
+                'provider', 
+                'eventProposal.company', 
+                'eventProposal.eventType', 
+                'eventProposal.location'
+            ])
+            ->where('id', $id)
+            ->where('provider_id', $providerId)
+            ->where('status', 'Proposed')
+            ->firstOrFail();
 
             // Accepter l'assignation
             $assignment->status = 'Accepted';
@@ -279,19 +295,24 @@ class ProviderAssignmentController extends Controller
             $eventProposal->status = 'Accepted';
             $eventProposal->save();
 
-            // Créer un événement basé sur la proposition
-            $serviceType = $eventProposal->eventType;
+            // Récupérer le type d'activité du prestataire
+            $provider = $assignment->provider;
+            $providerActivityType = $provider->activity_type;
 
+            // Déterminer le type d'événement correspondant
+            $eventType = $this->activityTypeToEventType[$providerActivityType] ?? 'Workshop';
+
+            // Créer l'événement avec le bon type
             $event = new Event([
-                'name' => $serviceType->title,
-                'description' => $serviceType->description,
+                'name' => $eventProposal->eventType->title,
+                'description' => $eventProposal->eventType->description,
                 'date' => $eventProposal->proposed_date,
-                'event_type' => 'Workshop', // Type par défaut
-                'capacity' => 30, // Capacité par défaut
+                'event_type' => $eventType,
+                'capacity' => 30,
                 'location' => $eventProposal->location->name,
                 'company_id' => $eventProposal->company_id,
                 'event_proposal_id' => $eventProposal->id,
-                'duration' => $eventProposal->duration ?? 60 // Utiliser la durée avec fallback à 60 minutes
+                'duration' => $eventProposal->duration ?? 60
             ]);
 
             $event->save();

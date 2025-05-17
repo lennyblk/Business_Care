@@ -21,6 +21,7 @@ class EventProposalController extends Controller
             $companyId = session('user_id');
             $eventProposals = EventProposal::with(['eventType', 'location'])
                 ->where('company_id', $companyId)
+                ->where('created_by_admin', 0)
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -108,7 +109,8 @@ class EventProposalController extends Controller
                 'location_id' => $request->location_id,
                 'duration' => $request->duration,
                 'notes' => $request->notes,
-                'status' => 'Pending'
+                'status' => 'Pending',
+                'created_by_admin' => session('user_type') === 'admin' ? 1 : 0
             ]);
 
             return response()->json([
