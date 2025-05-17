@@ -11,7 +11,7 @@ class Event extends Model
 
     protected $table = 'event';
     protected $fillable = [
-        'name', 'description', 'date', 'event_type', 'provider_id', 'capacity', 'location', 'registrations','company_id','duration'
+        'name', 'description', 'date', 'event_type', 'provider_id', 'capacity', 'location', 'registrations','company_id','duration','event_proposal_id'
     ];
     public $timestamps = false;
 

@@ -38,6 +38,18 @@ class ServiceEvaluationController extends Controller
             $employeeId = session('user_id');
             $employee = Employee::where('id', $employeeId)->firstOrFail();
 
+            // Vérifier si une évaluation existe déjà
+            $existingEvaluation = ServiceEvaluation::where('event_id', $id)
+                ->where('employee_id', $employee->id)
+                ->first();
+
+            if ($existingEvaluation) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Vous avez déjà évalué cet événement'
+                ], 400);
+            }
+
             $evaluation = ServiceEvaluation::create([
                 'event_id' => $id,
                 'employee_id' => $employee->id,
