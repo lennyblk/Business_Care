@@ -274,6 +274,8 @@ class ProviderAssignmentController extends Controller
     public function acceptAssignment($id, $providerId)
     {
         try {
+            Log::info("Début de acceptAssignment avec id=$id et providerId=$providerId");
+
             $assignment = ProviderAssignment::with([
                 'provider', 
                 'eventProposal.company', 
@@ -285,6 +287,11 @@ class ProviderAssignmentController extends Controller
             ->where('status', 'Proposed')
             ->firstOrFail();
 
+            Log::info("Assignment trouvé:", [
+                'assignment_id' => $assignment->id,
+                'event_proposal_id' => $assignment->event_proposal_id
+            ]);
+
             // Accepter l'assignation
             $assignment->status = 'Accepted';
             $assignment->response_at = now();
@@ -292,30 +299,35 @@ class ProviderAssignmentController extends Controller
 
             // Mettre à jour le statut de la proposition
             $eventProposal = EventProposal::findOrFail($assignment->event_proposal_id);
+            Log::info("Event Proposal trouvé:", [
+                'proposal_id' => $eventProposal->id,
+                'status' => $eventProposal->status
+            ]);
+
             $eventProposal->status = 'Accepted';
             $eventProposal->save();
 
-            // Récupérer le type d'activité du prestataire
-            $provider = $assignment->provider;
-            $providerActivityType = $provider->activity_type;
-
-            // Déterminer le type d'événement correspondant
-            $eventType = $this->activityTypeToEventType[$providerActivityType] ?? 'Workshop';
-
-            // Créer l'événement avec le bon type
-            $event = new Event([
+            // Ajoutons event_proposal_id aux fillable dans le modèle Event
+            $eventData = [
                 'name' => $eventProposal->eventType->title,
                 'description' => $eventProposal->eventType->description,
                 'date' => $eventProposal->proposed_date,
-                'event_type' => $eventType,
+                'event_type' => $this->activityTypeToEventType[$assignment->provider->activity_type] ?? 'Workshop',
                 'capacity' => 30,
                 'location' => $eventProposal->location->name,
                 'company_id' => $eventProposal->company_id,
                 'event_proposal_id' => $eventProposal->id,
                 'duration' => $eventProposal->duration ?? 60
-            ]);
+            ];
 
-            $event->save();
+            Log::info("Données de l'événement avant création:", $eventData);
+
+            $event = Event::create($eventData);
+
+            Log::info("Événement créé:", [
+                'event_id' => $event->id,
+                'event_proposal_id' => $event->event_proposal_id
+            ]);
 
             // Recharger les relations pour la réponse
             $assignment->load(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location']);
@@ -327,7 +339,7 @@ class ProviderAssignmentController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('API ProviderAssignmentController@acceptAssignment error: ' . $e->getMessage());
-
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'success' => false,
                 'message' => 'Erreur lors de l\'acceptation de l\'assignation',
