@@ -16,6 +16,7 @@ use App\Http\Controllers\API\AdviceTagController;
 use App\Http\Controllers\API\AdviceFeedbackController;
 use App\Http\Controllers\AdminContract2Controller;
 use App\Http\Controllers\API\ProviderEvaluationController;
+use App\Http\Controllers\AssociationApiController;
 
 Route::get('/test', function() {
     return response()->json(['message' => 'API fonctionne correctement']);
@@ -154,6 +155,13 @@ Route::prefix('admin/contracts2')->group(function () {
 });
 Route::post('/admin/contracts2/{id}/mark-as-paid', [App\Http\Controllers\API\AdminContract2Controller::class, 'markAsPaid']);
 
+// Association cote entreprises
+Route::prefix('associations')->group(function () {
+    Route::get('/', [App\Http\Controllers\API\AssociationApiController::class, 'index']);
+    Route::get('/{id}', [App\Http\Controllers\API\AssociationApiController::class, 'show']);
+    Route::post('/{id}/donate', [App\Http\Controllers\API\AssociationApiController::class, 'processDonation']);
+});
+
 // ROUTES POUR APP MOBILE ==========================================================================================================================
 
 Route::get('/events', [EventController::class, 'index']);
@@ -247,7 +255,7 @@ Route::delete('/events/{id}/unregister', function (Request $request, $id) {
 Route::get('/company/events', function (Request $request) {
     // Récupérer l'employé connecté via le token
     $employee = $request->user();
-    
+
     if (!$employee) {
         return response()->json([]);
     }

@@ -32,6 +32,7 @@ use App\Http\Controllers\AdminContract2Controller;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ServiceEvaluationController;
 use App\Http\Controllers\ProviderEvaluationController;
+use App\Http\Controllers\AssociationController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -200,7 +201,7 @@ Route::middleware(['check.auth'])->group(function () {
 Route::middleware(['check.auth'])->group(function () {
     // Routes existantes des devis
     Route::resource('quotes', QuoteController::class);
-    
+
     // Routes supplémentaires pour les devis
     Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])->name('quotes.download');
     Route::get('/quotes/{quote}/preview', [QuoteController::class, 'preview'])->name('quotes.preview');
@@ -208,7 +209,7 @@ Route::middleware(['check.auth'])->group(function () {
     Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
     Route::post('/quotes/{quote}/convert-to-contract', [QuoteController::class, 'convertToContract'])
         ->name('quotes.convert-to-contract');
-    
+
     // Routes pour la gestion des devis côté admin
     Route::prefix('admin')->group(function () {
         Route::get('/quotes', [AdminQuoteController::class, 'index'])->name('admin.quotes.index');
@@ -235,6 +236,16 @@ Route::middleware(['check.auth'])->group(function () {
     Route::get('/payments/process/{invoice}', [PaymentController::class, 'process'])->name('payments.process');
     Route::get('/payments/success', [PaymentController::class, 'success'])->name('payments.success');
     Route::get('/payments/cancel', [PaymentController::class, 'cancel'])->name('payments.cancel');
+});
+
+// Routes pour les associations
+Route::middleware(['check.auth'])->group(function () {
+    Route::prefix('dashboard/client/associations')->group(function () {
+        Route::get('/', [App\Http\Controllers\AssociationController::class, 'index'])->name('client.associations.index');
+        Route::get('/{id}', [App\Http\Controllers\AssociationController::class, 'show'])->name('client.associations.show');
+        Route::post('/{id}/donate', [App\Http\Controllers\AssociationController::class, 'donate'])->name('client.associations.donate');
+        Route::get('/{id}/donation/success', [App\Http\Controllers\AssociationController::class, 'donationSuccess'])->name('client.associations.donation.success');
+    });
 });
 
 // Routes pour les factures

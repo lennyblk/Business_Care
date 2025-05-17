@@ -16,7 +16,9 @@
                     <a href="{{ route('contracts.index') }}" class="list-group-item list-group-item-action">Contrats</a>
                     <a href="{{ route('quotes.index') }}" class="list-group-item list-group-item-action">Devis</a>
                     <a href="{{ route('employees.index') }}" class="list-group-item list-group-item-action">Collaborateurs</a>
-                    <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action active">Facturation</a>
+                    <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action">Facturation</a>
+                    <a href="{{ route('client.event_proposals.index') }}" class="list-group-item list-group-item-action">Demande d'activités</a>
+                    <a href="{{ route('client.associations.index') }}" class="list-group-item list-group-item-action">Associations</a>
                 </div>
             </div>
         </div>

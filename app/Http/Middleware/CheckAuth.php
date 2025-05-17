@@ -29,13 +29,13 @@ class CheckAuth
                 'profile.',
                 'provider.assignments.'
             ];
-            
+
             foreach ($allowedPrefixes as $prefix) {
                 if (str_starts_with($route, $prefix)) {
                     return $next($request);
                 }
             }
-            
+
             return redirect()->route('dashboard.provider')
                 ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
         }
@@ -47,13 +47,13 @@ class CheckAuth
                 'events.',
                 'profile.'
             ];
-            
+
             foreach ($allowedPrefixes as $prefix) {
                 if (str_starts_with($route, $prefix)) {
                     return $next($request);
                 }
             }
-            
+
             return redirect()->route('dashboard.employee')
                 ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
         }
@@ -67,13 +67,14 @@ class CheckAuth
                     !str_starts_with($route, 'payments.') &&
                     !str_starts_with($route, 'invoices.') &&
                     !str_starts_with($route, 'stripe.') &&
+                    !str_starts_with($route, 'client.associations.') &&
                     !str_starts_with($route, 'client.event_proposals.') &&
                     !str_starts_with($route, 'profile.')) {
                     return redirect()->route('dashboard.client')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);
                 }
                 break;
- 
+
             case 'employee':
                 if (!str_starts_with($route, 'dashboard.employee') &&
                     !str_starts_with($route, 'events.') &&
