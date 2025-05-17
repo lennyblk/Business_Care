@@ -16,7 +16,9 @@
                     <a href="{{ route('contracts.index') }}" class="list-group-item list-group-item-action">Contrats</a>
                     <a href="{{ route('quotes.index') }}" class="list-group-item list-group-item-action">Devis</a>
                     <a href="{{ route('employees.index') }}" class="list-group-item list-group-item-action">Collaborateurs</a>
-                    <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action active">Facturation</a>
+                    <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action">Facturation</a>
+                    <a href="{{ route('client.event_proposals.index') }}" class="list-group-item list-group-item-action">Demande d'activités</a>
+                    <a href="{{ route('client.associations.index') }}" class="list-group-item list-group-item-action">Associations</a>
                 </div>
             </div>
         </div>
@@ -47,7 +49,7 @@
                                 <tr>
                                     <th>N° Facture</th>
                                     <th>Date</th>
-                                    <th>Contrat</th>
+                                    <th>Type</th>
                                     <th>Montant TTC</th>
                                     <th>Statut</th>
                                     <th>Actions</th>
@@ -60,29 +62,44 @@
                                         <td>{{ $invoice->invoice_number ?? 'F-'.$invoice->id }}</td>
                                         <td>{{ \Carbon\Carbon::parse($invoice->issue_date)->format('d/m/Y') }}</td>
                                         <td>
-                                            <a href="{{ route('contracts.show', $invoice->contract_id) }}">
-                                                #{{ $invoice->contract_id }}
-                                            </a>
+                                            @if($invoice->contract_id)
+                                                <a href="{{ route('contracts.show', $invoice->contract_id) }}">
+                                                    Contrat #{{ $invoice->contract_id }}
+                                                </a>
+                                            @else
+                                                @php
+                                                    $donType = "Don";
+                                                    if(!empty($invoice->details)) {
+                                                        $details = json_decode($invoice->details, true);
+                                                        if($details && isset($details['association_name'])) {
+                                                            $donType = "Don à " . $details['association_name'];
+                                                        }
+                                                    }
+                                                @endphp
+                                                <span class="badge bg-info">{{ $donType }}</span>
+                                            @endif
                                         </td>
                                         <td>{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
                                         <td>
-                                            @if($invoice->payment_status === 'Paid')
+                                            @if($invoice->payment_status === 'Paid' || $invoice->payment_status === 'paid')
                                                 <span class="badge bg-success">Payée</span>
-                                            @elseif($invoice->payment_status === 'Pending')
+                                            @elseif($invoice->payment_status === 'Pending' || $invoice->payment_status === 'pending')
                                                 <span class="badge bg-warning">En attente</span>
-                                            @elseif($invoice->payment_status === 'Overdue')
+                                            @elseif($invoice->payment_status === 'Overdue' || $invoice->payment_status === 'overdue')
                                                 <span class="badge bg-danger">En retard</span>
+                                            @else
+                                                <span class="badge bg-secondary">{{ $invoice->payment_status }}</span>
                                             @endif
                                         </td>
                                         <td>
                                             <div class="d-flex">
-                                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-sm btn-primary me-1">
-                                                    <i class="fas fa-eye">Détails</i>
+                                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-sm btn-primary me-1">Détails
+                                                    <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('invoices.download', $invoice->id) }}" class="btn btn-sm btn-secondary me-1">
-                                                    <i class="fas fa-download">Télécharger</i>
+                                                <a href="{{ route('invoices.download', $invoice->id) }}" class="btn btn-sm btn-secondary me-1">Télécharger
+                                                    <i class="fas fa-download"></i>
                                                 </a>
-                                                @if($invoice->payment_status !== 'Paid')
+                                                @if($invoice->payment_status !== 'Paid' && $invoice->payment_status !== 'paid')
                                                 <form action="{{ route('invoices.pay', $invoice->id) }}" method="POST">
                                                     @csrf
                                                     <button type="submit" class="btn btn-sm btn-success">
@@ -155,6 +172,10 @@
 
     .bg-danger {
         background-color: #dc3545 !important;
+    }
+
+    .bg-info {
+        background-color: #0dcaf0 !important;
     }
 </style>
 @endsection

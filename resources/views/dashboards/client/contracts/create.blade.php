@@ -123,14 +123,9 @@
                         @endif
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="employee_count" class="form-label">Nombre de collaborateurs</label>
-                                <input type="number" class="form-control" id="employee_count" name="employee_count"
-                                    value="{{ $employeeCount ?? 0 }}" min="1" required onchange="calculateContractAmount()">
-                            </div>
-                            <div class="col-md-6">
                                 <label for="formule_abonnement" class="form-label">Formule d'abonnement</label>
                                 <select class="form-select @error('formule_abonnement') is-invalid @enderror"
-                                        id="formule_abonnement" name="formule_abonnement" required onchange="calculateContractAmount()">
+                                        id="formule_abonnement" name="formule_abonnement" required onchange="updateEmployeeCountLimit()">
                                     <option value="Starter" {{ $defaultFormula == 'Starter' ? 'selected' : '' }}>Starter (jusqu'à 30 employés)</option>
                                     <option value="Basic" {{ $defaultFormula == 'Basic' ? 'selected' : '' }}>Basic (jusqu'à 250 employés)</option>
                                     <option value="Premium" {{ $defaultFormula == 'Premium' ? 'selected' : '' }}>Premium (à partir de 251 employés)</option>
@@ -138,6 +133,12 @@
                                 @error('formule_abonnement')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label for="employee_count" class="form-label">Nombre de collaborateurs</label>
+                                <input type="number" class="form-control" id="employee_count" name="employee_count"
+                                    value="{{ $employeeCount ?? 0 }}" min="1" required onchange="calculateContractAmount()">
+                                <div class="form-text" id="employee_limit_text"></div>
                             </div>
                         </div>
 
@@ -232,16 +233,60 @@
         const endDateInput = document.getElementById('end_date');
         const amountInput = document.getElementById('amount');
         const paymentMethodSelect = document.getElementById('payment_method');
-        const servicesTextarea = document.getElementById('services');
+        const servicesSelect = document.getElementById('services');
         const employeeCountInput = document.getElementById('employee_count');
         const formulaSelect = document.getElementById('formule_abonnement');
+        const employeeLimitText = document.getElementById('employee_limit_text');
 
         // Éléments du récapitulatif
         const contractDuration = document.getElementById('contract-duration');
         const monthlyAmount = document.getElementById('monthly-amount');
         const totalAmount = document.getElementById('total-amount');
         const paymentMethodText = document.getElementById('payment-method-text');
-        const formulaText = document.getElementById('formula-text');
+
+        // Limites d'employés par formule
+        const employeeLimits = {
+            'Starter': 30,
+            'Basic': 250,
+            'Premium': 10000 // Valeur très élevée pour "à partir de 251"
+        };
+
+        // Minimum d'employés par formule
+        const employeeMinimums = {
+            'Starter': 1,
+            'Basic': 31,
+            'Premium': 251
+        };
+
+        // Fonction pour mettre à jour la limite du nombre d'employés
+        function updateEmployeeCountLimit() {
+            const formula = formulaSelect.value;
+            const maxEmployees = employeeLimits[formula] || 30;
+            const minEmployees = employeeMinimums[formula] || 1;
+
+            // Définir les attributs min et max
+            employeeCountInput.setAttribute('max', maxEmployees);
+            employeeCountInput.setAttribute('min', minEmployees);
+
+            // Ajuster la valeur si elle dépasse les limites
+            if (parseInt(employeeCountInput.value) > maxEmployees) {
+                employeeCountInput.value = maxEmployees;
+            }
+
+            if (parseInt(employeeCountInput.value) < minEmployees) {
+                employeeCountInput.value = minEmployees;
+            }
+
+            // Mettre à jour le texte d'information
+            if (formula === 'Premium') {
+                employeeLimitText.textContent = `Minimum: ${minEmployees} employés`;
+            } else {
+                employeeLimitText.textContent = `Limite: ${minEmployees} à ${maxEmployees} employés`;
+            }
+
+            // Recalculer le montant du contrat
+            calculateContractAmount();
+        }
 
         // Calculs du montant en fonction du nombre d'employés et de la formule
         function calculateContractAmount() {
@@ -296,9 +341,6 @@
             // Mise à jour de la méthode de paiement
             const paymentMethod = paymentMethodSelect.options[paymentMethodSelect.selectedIndex]?.text || '-';
             paymentMethodText.textContent = paymentMethod;
-
-            // Mise à jour de la formule d'abonnement
-            formulaText.textContent = formulaSelect.options[formulaSelect.selectedIndex]?.text || '-';
         }
 
         // Écouteurs d'événements
@@ -307,11 +349,10 @@
         amountInput.addEventListener('input', updateSummary);
         paymentMethodSelect.addEventListener('change', updateSummary);
         employeeCountInput.addEventListener('input', calculateContractAmount);
-        formulaSelect.addEventListener('change', calculateContractAmount);
+        formulaSelect.addEventListener('change', updateEmployeeCountLimit);
 
         // Initialisation du calcul et du récapitulatif
-        calculateContractAmount();
+        updateEmployeeCountLimit();
     });
-
 </script>
 @endpush

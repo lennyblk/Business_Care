@@ -39,9 +39,8 @@ class AdminEmployeeController extends Controller
         return $object;
     }
 
-    /**
-     * Convertit un tableau de tableaux associatifs en tableau d'objets
-     */
+
+    // Convertit un tableau de tableaux associatifs en tableau d'objets
     private function arrayToObjects($arrayOfArrays)
     {
         $objects = [];
@@ -54,7 +53,6 @@ class AdminEmployeeController extends Controller
     public function index()
     {
         try {
-            // Appel au contrôleur API pour récupérer les employés
             $response = $this->apiEmployeeController->index();
             $data = json_decode($response->getContent(), true);
 
@@ -79,7 +77,6 @@ class AdminEmployeeController extends Controller
     public function create()
     {
         try {
-            // Appel au contrôleur API pour récupérer les entreprises
             $response = $this->apiCompanyController->index();
             $data = json_decode($response->getContent(), true);
 
@@ -91,7 +88,6 @@ class AdminEmployeeController extends Controller
                 return back()->with('error', 'Erreur lors de la récupération des entreprises');
             }
 
-            // Convertir le tableau associatif en tableau d'objets
             $companies = $this->arrayToObjects($data['data'] ?? []);
 
             return view('dashboards.gestion_admin.salaries.create', compact('companies'));
@@ -104,7 +100,6 @@ class AdminEmployeeController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validation côté web pour une meilleure expérience utilisateur
             $request->validate([
                 'company_id' => 'nullable|exists:company,id',
                 'last_name' => 'required|string|max:50',

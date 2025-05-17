@@ -12,11 +12,13 @@
                 </div>
                 <div class="list-group list-group-flush">
                     <a href="{{ route('dashboard.client') }}" class="list-group-item list-group-item-action">Tableau de bord</a>
-                    <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action active">Profil</a>
+                    <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action">Profil</a>
                     <a href="{{ route('contracts.index') }}" class="list-group-item list-group-item-action">Contrats</a>
                     <a href="{{ route('quotes.index') }}" class="list-group-item list-group-item-action">Devis</a>
                     <a href="{{ route('employees.index') }}" class="list-group-item list-group-item-action">Collaborateurs</a>
                     <a href="{{ route('invoices.index') }}" class="list-group-item list-group-item-action">Facturation</a>
+                    <a href="{{ route('client.event_proposals.index') }}" class="list-group-item list-group-item-action">Demande d'activités</a>
+                    <a href="{{ route('client.associations.index') }}" class="list-group-item list-group-item-action">Associations</a>
                 </div>
             </div>
         </div>
@@ -62,9 +64,9 @@
                                     <div class="col-md-6">
                                         <div class="mb-3">
                                             <label for="siret" class="form-label">SIRET</label>
-                                            <input type="text" class="form-control" id="siret" name="siret" 
-                                                   value="{{ old('siret', $profile->siret) }}" 
-                                                   pattern="[0-9]{14}" 
+                                            <input type="text" class="form-control" id="siret" name="siret"
+                                                   value="{{ old('siret', $profile->siret) }}"
+                                                   pattern="[0-9]{14}"
                                                    maxlength="14">
                                         </div>
                                     </div>
