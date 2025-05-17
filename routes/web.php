@@ -306,10 +306,17 @@ Route::middleware(['check.auth'])->group(function () {
 
 // Routes pour la gestion des propositions (côté admin)
 Route::middleware(['check.auth'])->group(function () {
-    Route::get('/dashboard/gestion_admin/event_proposals', [AdminEventProposalController::class, 'index'])->name('admin.event_proposals.index');
-    Route::get('/dashboard/gestion_admin/event_proposals/{id}', [AdminEventProposalController::class, 'show'])->name('admin.event_proposals.show');
-    Route::post('/dashboard/gestion_admin/event_proposals/{id}/assign', [AdminEventProposalController::class, 'assignProvider'])->name('admin.event_proposals.assign');
-    Route::post('/dashboard/gestion_admin/event_proposals/{id}/reject', [AdminEventProposalController::class, 'rejectProposal'])->name('admin.event_proposals.reject');
+    Route::prefix('dashboard/gestion_admin')->group(function () {
+        // Routes existantes des propositions
+        Route::get('/event_proposals', [AdminEventProposalController::class, 'index'])->name('admin.event_proposals.index');
+        Route::get('/event_proposals/{id}', [AdminEventProposalController::class, 'show'])->name('admin.event_proposals.show');
+        Route::post('/event_proposals/{id}/assign', [AdminEventProposalController::class, 'assignProvider'])->name('admin.event_proposals.assign');
+        Route::post('/event_proposals/{id}/reject', [AdminEventProposalController::class, 'rejectProposal'])->name('admin.event_proposals.reject');
+        
+        // Nouvelles routes pour la création d'activités
+        Route::get('/activites/create', [AdminEventProposalController::class, 'create'])->name('admin.activities.create');
+        Route::post('/activites/store', [AdminEventProposalController::class, 'store'])->name('admin.activities.store');
+    });
 });
 
 // Routes pour les assignations des prestataires

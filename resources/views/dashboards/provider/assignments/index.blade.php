@@ -12,12 +12,6 @@
         </div>
     @endif
 
-    @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <div class="card mb-4">
         <div class="card-header bg-warning">
             <h2 class="h5 mb-0">Assignations en attente</h2>
@@ -39,18 +33,18 @@
                         <tbody>
                             @foreach($pendingAssignments as $assignment)
                                 <tr>
-                                    <td>{{ $assignment->eventProposal->company->name }}</td>
-                                    <td>{{ $assignment->eventProposal->eventType->title }}</td>
-                                    <td>{{ date('d/m/Y', strtotime($assignment->eventProposal->proposed_date)) }}</td>
-                                    <td>{{ $assignment->eventProposal->location->name }}</td>
-                                    <td>{{ number_format($assignment->payment_amount, 2, ',', ' ') }} €</td>
+                                    <td>{{ $assignment['event_proposal']['company']['name'] }}</td>
+                                    <td>{{ $assignment['event_proposal']['event_type']['title'] }}</td>
+                                    <td>{{ date('d/m/Y', strtotime($assignment['event_proposal']['proposed_date'])) }}</td>
+                                    <td>{{ $assignment['event_proposal']['location']['name'] }}</td>
+                                    <td>{{ number_format($assignment['payment_amount'], 2, ',', ' ') }} €</td>
                                     <td>
-                                        <a href="{{ route('provider.assignments.show', $assignment->id) }}" class="btn btn-sm btn-info">Détails</a>
-                                        <form method="POST" action="{{ route('provider.assignments.accept', $assignment->id) }}" class="d-inline">
+                                        <a href="{{ route('provider.assignments.show', $assignment['id']) }}" class="btn btn-sm btn-info">Détails</a>
+                                        <form method="POST" action="{{ route('provider.assignments.accept', $assignment['id']) }}" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Êtes-vous sûr de vouloir accepter cette activité?')">Accepter</button>
                                         </form>
-                                        <form method="POST" action="{{ route('provider.assignments.reject', $assignment->id) }}" class="d-inline">
+                                        <form method="POST" action="{{ route('provider.assignments.reject', $assignment['id']) }}" class="d-inline">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir refuser cette activité?')">Refuser</button>
                                         </form>
@@ -87,13 +81,13 @@
                         <tbody>
                             @foreach($acceptedAssignments as $assignment)
                                 <tr>
-                                    <td>{{ $assignment->eventProposal->company->name }}</td>
-                                    <td>{{ $assignment->eventProposal->eventType->title }}</td>
-                                    <td>{{ date('d/m/Y', strtotime($assignment->eventProposal->proposed_date)) }}</td>
-                                    <td>{{ $assignment->eventProposal->location->name }}</td>
-                                    <td>{{ number_format($assignment->payment_amount, 2, ',', ' ') }} €</td>
+                                    <td>{{ $assignment['event_proposal']['company']['name'] }}</td>
+                                    <td>{{ $assignment['event_proposal']['event_type']['title'] }}</td>
+                                    <td>{{ date('d/m/Y', strtotime($assignment['event_proposal']['proposed_date'])) }}</td>
+                                    <td>{{ $assignment['event_proposal']['location']['name'] }}</td>
+                                    <td>{{ number_format($assignment['payment_amount'], 2, ',', ' ') }} €</td>
                                     <td>
-                                        <a href="{{ route('provider.assignments.show', $assignment->id) }}" class="btn btn-sm btn-info">Détails</a>
+                                        <a href="{{ route('provider.assignments.show', $assignment['id']) }}" class="btn btn-sm btn-info">Détails</a>
                                     </td>
                                 </tr>
                             @endforeach

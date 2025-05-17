@@ -18,7 +18,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('employee.events.evaluate.store', $event->id) }}">
+                    <form method="POST" action="{{ route('employee.events.evaluate.store', $event['id']) }}">
                         @csrf
                         <div class="form-group">
                             <label>Note</label>

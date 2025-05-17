@@ -74,11 +74,11 @@
                             Entreprise
                         </div>
                         <div class="card-body">
-                            <p><strong>Entreprise:</strong> {{ $profile->company->name ?? 'Non disponible' }}</p>
+                            <p><strong>Entreprise:</strong> {{ $profile->company['name'] ?? 'Non disponible' }}</p>
                             @if(isset($profile->company))
-                                <p><strong>Adresse:</strong> {{ $profile->company->address ?? 'Non disponible' }}</p>
-                                <p><strong>Ville:</strong> {{ $profile->company->ville ?? 'Non disponible' }}</p>
-                                <p><strong>Pays:</strong> {{ $profile->company->pays ?? 'Non disponible' }}</p>
+                                <p><strong>Adresse:</strong> {{ $profile->company['address'] ?? 'Non disponible' }}</p>
+                                <p><strong>Ville:</strong> {{ $profile->company['ville'] ?? 'Non disponible' }}</p>
+                                <p><strong>Pays:</strong> {{ $profile->company['pays'] ?? 'Non disponible' }}</p>
                             @endif
                         </div>
                     </div>

@@ -181,9 +181,11 @@ class EventController extends Controller
             $events = Event::whereHas('registrations', function($query) use ($employeeId) {
                 $query->where('employee_id', $employeeId);
             })
+            ->where('date', '<', now())
             ->with(['serviceEvaluations' => function($query) use ($employeeId) {
                 $query->where('employee_id', $employeeId);
             }])
+            ->orderBy('date', 'desc')
             ->get()
             ->map(function($event) use ($employeeId) {
                 return [

@@ -2,16 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProviderAssignment;
-use App\Models\EventProposal;
-use App\Models\Event;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\API\ProviderAssignmentController as ApiController;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
+use Illuminate\Support\Facades\Log;
 
 class ProviderAssignmentController extends Controller
 {
+    protected $apiController;
+
+    public function __construct()
+    {
+        $this->apiController = new ApiController();
+    }
+
     /**
      * Affiche la liste des propositions d'activités pour le prestataire
      */
@@ -19,45 +24,25 @@ class ProviderAssignmentController extends Controller
     {
         try {
             // Récupérer l'ID du prestataire depuis la session
-            $providerId = $request->session()->get('user_id');
+            $providerId = $request->session()->get('user_id', 1);
 
-            // Si aucun ID n'est trouvé, utiliser la valeur par défaut
-            if (!$providerId) {
-                $providerId = 1; // Valeur par défaut pour les tests
-                Log::warning('Aucun ID de prestataire trouvé en session, utilisation de l\'ID par défaut: ' . $providerId);
+            $pendingResponse = $this->apiController->getByProviderAndStatus($providerId, 'Proposed');
+            $acceptedResponse = $this->apiController->getByProviderAndStatus($providerId, 'Accepted');
+            
+            $pendingData = json_decode($pendingResponse->getContent(), true);
+            $acceptedData = json_decode($acceptedResponse->getContent(), true);
+
+            if (!$pendingData['success'] || !$acceptedData['success']) {
+                throw new \Exception('Erreur lors de la récupération des données');
             }
 
-            Log::info('Provider ID récupéré: ' . $providerId);
-            Log::info('Données de session: ' . json_encode($request->session()->all()));
-
-            // Requêtes directes sur les modèles
-            $pendingAssignments = ProviderAssignment::with(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location'])
-                ->where('provider_id', $providerId)
-                ->where('status', 'Proposed')
-                ->orderBy('proposed_at', 'desc')
-                ->get();
-
-            $acceptedAssignments = ProviderAssignment::with(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location'])
-                ->where('provider_id', $providerId)
-                ->where('status', 'Accepted')
-                ->orderBy('proposed_at', 'desc')
-                ->get();
-
-            Log::info('Nombre d\'assignations en attente: ' . count($pendingAssignments));
-            Log::info('Nombre d\'assignations acceptées: ' . count($acceptedAssignments));
-
-            // Ajout pour le débogage - Récupère toutes les assignations qui existent
-            $allAssignments = ProviderAssignment::count();
-            Log::info('Nombre total d\'assignations en base: ' . $allAssignments);
-
             return view('dashboards.provider.assignments.index', [
-                'pendingAssignments' => $pendingAssignments,
-                'acceptedAssignments' => $acceptedAssignments
+                'pendingAssignments' => $pendingData['data'],
+                'acceptedAssignments' => $acceptedData['data']
             ]);
         } catch (\Exception $e) {
             Log::error('ProviderAssignmentController@index error: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            return back()->with('error', 'Erreur lors de la récupération des assignations: ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors de la récupération des assignations');
         }
     }
 
@@ -68,32 +53,21 @@ class ProviderAssignmentController extends Controller
     {
         try {
             // Récupérer l'ID du prestataire depuis la session de la même façon que dans index()
-            $providerId = $request->session()->get('user_id');
+            $providerId = $request->session()->get('user_id', 1);
 
-            // Si aucun ID n'est trouvé, utiliser la valeur par défaut
-            if (!$providerId) {
-                $providerId = 1; // Valeur par défaut pour les tests
-                Log::warning('Aucun ID de prestataire trouvé en session, utilisation de l\'ID par défaut: ' . $providerId);
-            }
+            $response = $this->apiController->getByIdAndProvider($id, $providerId);
+            $data = json_decode($response->getContent(), true);
 
-            Log::info('Provider ID récupéré pour show: ' . $providerId);
-
-            // Récupérer directement l'assignation
-            $assignment = ProviderAssignment::with(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location'])
-                ->where('id', $id)
-                ->first(); // Enlever la condition provider_id temporairement pour déboguer
-
-            if (!$assignment) {
-                Log::error('Assignation non trouvée', ['id' => $id]);
-                return back()->with('error', 'Assignation non trouvée');
+            if (!$data['success']) {
+                throw new \Exception($data['message']);
             }
 
             return view('dashboards.provider.assignments.show', [
-                'assignment' => $assignment
+                'assignment' => $data['data']
             ]);
         } catch (\Exception $e) {
             Log::error('ProviderAssignmentController@show error: ' . $e->getMessage());
-            return back()->with('error', 'Assignation non trouvée: ' . $e->getMessage());
+            return back()->with('error', 'Assignation non trouvée');
         }
     }
 
@@ -103,69 +77,20 @@ class ProviderAssignmentController extends Controller
     public function accept(Request $request, $id)
     {
         try {
-            $providerId = $request->session()->get('user_id');
+            $providerId = $request->session()->get('user_id', 1);
+            $response = $this->apiController->acceptAssignment($id, $providerId);
+            $data = json_decode($response->getContent(), true);
 
-            if (!$providerId) {
-                $providerId = 1; // Valeur par défaut pour les tests
-                Log::warning('Aucun ID de prestataire trouvé en session, utilisation de l\'ID par défaut: ' . $providerId);
+            if ($data['success']) {
+                $this->notifyCompany($data['data']['provider'], $data['data']['eventProposal']);
+                return redirect()->route('provider.assignments.index')
+                    ->with('success', 'Vous avez accepté cette activité avec succès.');
             }
 
-            Log::info('Provider ID récupéré pour accept: ' . $providerId);
-            Log::info('Assignment ID: ' . $id);
-
-            // Récupérer l'assignation sans conditions strictes pour déboguer
-            $assignment = ProviderAssignment::find($id);
-
-            if (!$assignment) {
-                Log::error('Assignation non trouvée', ['id' => $id]);
-                return back()->with('error', 'Assignation non trouvée');
-            }
-
-            Log::info('Assignation trouvée', [
-                'id' => $assignment->id,
-                'provider_id' => $assignment->provider_id,
-                'status' => $assignment->status
-            ]);
-
-            // Accepter l'assignation
-            $assignment->status = 'Accepted';
-            $assignment->response_at = now();
-            $assignment->save();
-
-            // Mettre à jour le statut de la proposition
-            $eventProposal = $assignment->eventProposal;
-            if ($eventProposal) {
-                $eventProposal->status = 'Accepted';
-                $eventProposal->save();
-
-                // Créer un événement basé sur la proposition
-                $serviceType = $eventProposal->eventType;
-
-                if ($serviceType) {
-                    $event = new Event([
-                        'name' => $serviceType->title,
-                        'description' => $serviceType->description,
-                        'date' => $eventProposal->proposed_date,
-                        'event_type' => 'Workshop',
-                        'capacity' => 30,
-                        'location' => $eventProposal->location->name,
-                        'company_id' => $eventProposal->company_id,
-                        'event_proposal_id' => $eventProposal->id,
-                        'duration' => $eventProposal->duration ?? 60 // Utiliser la durée avec fallback à 60 minutes
-                    ]);
-
-                    $event->save();
-
-                    $this->notifyCompany($assignment, $event);
-                }
-            }
-
-            return redirect()->route('provider.assignments.index')
-                ->with('success', 'Vous avez accepté cette activité avec succès.');
+            throw new \Exception($data['message']);
         } catch (\Exception $e) {
             Log::error('ProviderAssignmentController@accept error: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            return back()->with('error', 'Erreur lors de l\'acceptation de l\'assignation: ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors de l\'acceptation');
         }
     }
 
@@ -175,57 +100,30 @@ class ProviderAssignmentController extends Controller
     public function reject(Request $request, $id)
     {
         try {
-            // Récupérer l'ID du prestataire depuis la session de la même façon que dans index()
-            $providerId = $request->session()->get('user_id');
+            $providerId = $request->session()->get('user_id', 1);
+            $response = $this->apiController->rejectAssignment($id, $providerId);
+            $data = json_decode($response->getContent(), true);
 
-            // Si aucun ID n'est trouvé, utiliser la valeur par défaut
-            if (!$providerId) {
-                $providerId = 1; // Valeur par défaut pour les tests
-                Log::warning('Aucun ID de prestataire trouvé en session, utilisation de l\'ID par défaut: ' . $providerId);
+            if ($data['success']) {
+                $this->notifyAdmin($data['data']);
+                return redirect()->route('provider.assignments.index')
+                    ->with('success', 'Vous avez refusé cette activité.');
             }
 
-            Log::info('Provider ID récupéré pour reject: ' . $providerId);
-            Log::info('Assignment ID: ' . $id);
-
-            // Récupérer l'assignation sans conditions strictes pour déboguer
-            $assignment = ProviderAssignment::find($id);
-
-            if (!$assignment) {
-                Log::error('Assignation non trouvée', ['id' => $id]);
-                return back()->with('error', 'Assignation non trouvée');
-            }
-
-            Log::info('Assignation trouvée', [
-                'id' => $assignment->id,
-                'provider_id' => $assignment->provider_id,
-                'status' => $assignment->status
-            ]);
-
-            // Rejeter l'assignation
-            $assignment->status = 'Rejected';
-            $assignment->response_at = now();
-            $assignment->save();
-
-            // Notifier l'admin
-            $this->notifyAdmin($assignment);
-
-            return redirect()->route('provider.assignments.index')
-                ->with('success', 'Vous avez refusé cette activité.');
+            throw new \Exception($data['message']);
         } catch (\Exception $e) {
             Log::error('ProviderAssignmentController@reject error: ' . $e->getMessage());
-            return back()->with('error', 'Erreur lors du refus de l\'assignation: ' . $e->getMessage());
+            return back()->with('error', 'Erreur lors du refus');
         }
     }
 
     /**
      * Notifie l'entreprise que l'activité a été acceptée via PHPMailer
      */
-    private function notifyCompany($assignment, $event)
+    private function notifyCompany($provider, $eventProposal)
     {
         try {
-            $company = $assignment->eventProposal->company;
-            $provider = $assignment->provider;
-
+            $company = $eventProposal->company;
             $mail = new PHPMailer(true);
 
             // Configuration du serveur
@@ -244,38 +142,38 @@ class ProviderAssignmentController extends Controller
 
             // Contenu
             $mail->isHTML(true);
-            $mail->Subject = 'Activité confirmée - ' . $event->name;
+            $mail->Subject = 'Activité confirmée - ' . $eventProposal->name;
 
-            $eventDate = date('d/m/Y', strtotime($event->date));
+            $eventDate = date('d/m/Y', strtotime($eventProposal->proposed_date));
 
             // Formater la durée pour l'affichage
             $durationText = '';
-            if ($event->duration >= 60) {
-                $hours = floor($event->duration / 60);
-                $minutes = $event->duration % 60;
+            if ($eventProposal->duration >= 60) {
+                $hours = floor($eventProposal->duration / 60);
+                $minutes = $eventProposal->duration % 60;
                 $durationText = $hours . ' heure' . ($hours > 1 ? 's' : '');
                 if ($minutes > 0) {
                     $durationText .= ' ' . $minutes . ' minute' . ($minutes > 1 ? 's' : '');
                 }
             } else {
-                $durationText = $event->duration . ' minutes';
+                $durationText = $eventProposal->duration . ' minutes';
             }
 
             $mail->Body = "
                 <meta charset='UTF-8'>
                 <h2>Confirmation d'activité</h2>
                 <p>Cher client {$company->name},</p>
-                <p>Nous avons le plaisir de vous confirmer que votre activité <strong>{$event->name}</strong> a été acceptée par notre prestataire.</p>
+                <p>Nous avons le plaisir de vous confirmer que votre activité <strong>{$eventProposal->name}</strong> a été acceptée par notre prestataire.</p>
                 <p><strong>Date:</strong> {$eventDate}</p>
                 <p><strong>Durée:</strong> {$durationText}</p>
-                <p><strong>Lieu:</strong> {$event->location}</p>
+                <p><strong>Lieu:</strong> {$eventProposal->location->name}</p>
                 <p><strong>Prestataire:</strong> {$provider->first_name} {$provider->last_name}</p>
                 <p>Vos employés peuvent maintenant s'inscrire à cette activité via leur espace personnel.</p>
                 <p><a href='" . url('/dashboard/client') . "'>Accéder à votre espace</a></p>
                 <p>Cordialement,<br>L'équipe Business-Care</p>
             ";
 
-            $mail->AltBody = "Confirmation d'activité - Votre activité {$event->name} prévue le {$eventDate} pour une durée de {$durationText} a été confirmée. Vos employés peuvent maintenant s'y inscrire.";
+            $mail->AltBody = "Confirmation d'activité - Votre activité {$eventProposal->name} prévue le {$eventDate} pour une durée de {$durationText} a été confirmée. Vos employés peuvent maintenant s'y inscrire.";
 
             $mail->send();
             return true;

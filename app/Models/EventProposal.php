@@ -18,6 +18,7 @@ class EventProposal extends Model
         'location_id',
         'duration',
         'status',
+        'created_by_admin',
         'notes'
     ];
 
