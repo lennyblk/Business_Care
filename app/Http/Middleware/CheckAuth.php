@@ -64,6 +64,9 @@ class CheckAuth
                     !str_starts_with($route, 'contracts.') &&
                     !str_starts_with($route, 'quotes.') &&
                     !str_starts_with($route, 'employees.') &&
+                    !str_starts_with($route, 'employees.import-form') &&
+                    !str_starts_with($route, 'employees.import') &&
+                    !str_starts_with($route, 'employees.download-template') &&
                     !str_starts_with($route, 'payments.') &&
                     !str_starts_with($route, 'invoices.') &&
                     !str_starts_with($route, 'stripe.') &&
@@ -109,6 +112,9 @@ class CheckAuth
                     !str_starts_with($route, 'admin.invoices') &&
                     !str_starts_with($route, 'admin.event_proposals.') &&
                     !str_starts_with($route, 'admin.advice') &&
+                    !str_starts_with($route, 'employees.import-form') &&
+                    !str_starts_with($route, 'employees.import') &&
+                    !str_starts_with($route, 'employees.download-template') &&
                     !str_starts_with($route, 'profile.')) {
                     return redirect()->route('dashboard.admin')
                         ->withErrors(['error' => 'Vous n\'avez pas accès à cette page.']);

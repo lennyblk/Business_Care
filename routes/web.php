@@ -220,6 +220,11 @@ Route::middleware(['check.auth'])->group(function () {
 
 // Gestion Employee en tant que client
 Route::middleware(['check.auth'])->group(function () {
+    // Routes spécifiques d'abord (avant les routes avec paramètres)
+    Route::get('/employees/import-form', [ClientEmployeeController::class, 'showImportForm'])->name('employees.import-form');
+    Route::post('/employees/import', [ClientEmployeeController::class, 'importCsv'])->name('employees.import');
+    Route::get('/employees/download-template', [ClientEmployeeController::class, 'downloadCsvTemplate'])->name('employees.download-template');
+
     Route::get('/employees', [ClientEmployeeController::class, 'index'])->name('employees.index');
     Route::get('/employees/create', [ClientEmployeeController::class, 'create'])->name('employees.create');
     Route::post('/employees', [ClientEmployeeController::class, 'store'])->name('employees.store');
