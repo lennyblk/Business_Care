@@ -93,10 +93,10 @@
                                         </td>
                                         <td>
                                             <div class="d-flex">
-                                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-sm btn-primary me-1">
+                                                <a href="{{ route('invoices.show', $invoice->id) }}" class="btn btn-sm btn-primary me-1">Détails
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="{{ route('invoices.download', $invoice->id) }}" class="btn btn-sm btn-secondary me-1">
+                                                <a href="{{ route('invoices.download', $invoice->id) }}" class="btn btn-sm btn-secondary me-1">Télécharger
                                                     <i class="fas fa-download"></i>
                                                 </a>
                                                 @if($invoice->payment_status !== 'Paid' && $invoice->payment_status !== 'paid')

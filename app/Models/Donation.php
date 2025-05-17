@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Donation extends Model
 {
     use HasFactory;
-
+    public $timestamps = false;
     protected $table = 'donation';
     protected $fillable = [
         'association_id', 'employee_id', 'donation_type', 'amount_or_description', 'donation_date', 'status'
