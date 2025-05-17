@@ -137,14 +137,13 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Adaptation pour la validation avec les champs du formulaire web
         $userType = $request->input('user_type');
 
         // Validation commune pour tous les types d'utilisateurs
         $commonRules = [
             'email' => 'required|email',
             'password' => 'required|min:6',
-            'user_type' => 'required|in:societe,employe,prestataire',
+            'user_type' => 'required|in:societe,prestataire',
         ];
 
         // Règles par type d'utilisateur
@@ -154,20 +153,12 @@ class AuthController extends Controller
                 'address' => 'required|string|max:255',
                 'code_postal' => 'required|string|max:10',
                 'ville' => 'required|string|max:100',
-                'telephone' => 'required|string|max:20', // Adaptation pour le formulaire web
+                'telephone' => 'required|string|max:20',
                 'siret' => 'nullable|string|max:14',
             ],
-            'employe' => [
-                'first_name' => 'required|string|max:50',
-                'last_name' => 'required|string|max:50',
-                'company_name' => 'required|string|exists:company,name',
-                'position' => 'required|string|max:100',
-                'departement' => 'nullable|string|max:100',
-                'telephone' => 'nullable|string|max:20',
-            ],
             'prestataire' => [
-                'name' => 'required|string|max:100', // Pour le nom de famille
-                'prenom' => 'required|string|max:100', // Pour le prénom
+                'name' => 'required|string|max:100',
+                'prenom' => 'required|string|max:100',
                 'specialite' => 'required|string',
                 'telephone' => 'required|string|max:20',
                 'bio' => 'nullable|string',
@@ -196,7 +187,7 @@ class AuthController extends Controller
                         'code_postal' => $request->code_postal,
                         'ville' => $request->ville,
                         'pays' => 'France',
-                        'phone' => $request->telephone, // Adaptation pour le formulaire web
+                        'phone' => $request->telephone,
                         'email' => $request->email,
                         'siret' => $request->siret,
                         'password' => $hashedPassword,
@@ -211,38 +202,6 @@ class AuthController extends Controller
                         'email' => $company->email,
                         'name' => $company->name,
                         'type' => 'societe'
-                    ];
-                    break;
-
-                case 'employe':
-                    $company = Company::where('name', $request->company_name)->first();
-
-                    if (!$company) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Entreprise non trouvée'
-                        ], 404);
-                    }
-
-                    $employee = Employee::create([
-                        'company_id' => $company->id,
-                        'first_name' => $request->first_name,
-                        'last_name' => $request->last_name,
-                        'email' => $request->email,
-                        'telephone' => $request->telephone,
-                        'position' => $request->position,
-                        'departement' => $request->departement,
-                        'date_creation_compte' => now(),
-                        'password' => $hashedPassword,
-                        'preferences_langue' => 'fr'
-                    ]);
-
-                    $userData = [
-                        'id' => $employee->id,
-                        'email' => $employee->email,
-                        'name' => $employee->first_name . ' ' . $employee->last_name,
-                        'type' => 'employe',
-                        'company_id' => $employee->company_id
                     ];
                     break;
 

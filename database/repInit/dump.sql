@@ -24,16 +24,16 @@ create table advice
 (
     id              int auto_increment
         primary key,
-    title           varchar(255)                                          not null,
-    content         text                                                  not null,
-    category_id     int                                                   not null,
-    publish_date    date                                                  not null,
-    expiration_date date                                                  null,
-    is_personalized tinyint(1)                default 0                   null,
-    min_formule     enum ('Basic', 'Premium') default 'Basic'             null,
-    is_published    tinyint(1)                default 0                   null,
-    created_at      datetime                  default current_timestamp() null,
-    updated_at      datetime                  default current_timestamp() null on update current_timestamp(),
+    title           varchar(255)                                                     not null,
+    content         text                                                             not null,
+    category_id     int                                                              not null,
+    publish_date    date                                                             not null,
+    expiration_date date                                                             null,
+    is_personalized tinyint(1)                           default 0                   null,
+    min_formule     enum ('Starter', 'Basic', 'Premium') default 'Basic'             null,
+    is_published    tinyint(1)                           default 0                   null,
+    created_at      datetime                             default current_timestamp() null,
+    updated_at      datetime                             default current_timestamp() null on update current_timestamp(),
     constraint advice_ibfk_1
         foreign key (category_id) references advice_category (id)
 );
@@ -361,13 +361,13 @@ create table pending_registrations
     siret           varchar(14)                                                                                                                   null,
     description     text                                                                                                                          null,
     domains         varchar(255)                                                                                                                  null,
-    activity_type   enum ('rencontre sportive', 'conférence', 'webinar', 'yoga', 'pot', 'séance d''art plastiques', 'session jeu vidéo', 'autre') null,
     tarif_horaire   decimal(10, 2)                                                                                                                null,
     additional_data longtext collate utf8mb4_bin                                                                                                  null
         check (json_valid(`additional_data`)),
     status          varchar(20) default 'pending'                                                                                                 not null comment 'pending, approved, rejected',
     created_at      timestamp                                                                                                                     null,
-    updated_at      timestamp                                                                                                                     null
+    updated_at      timestamp                                                                                                                     null,
+    activity_type   enum ('rencontre sportive', 'conférence', 'webinar', 'yoga', 'pot', 'séance d''art plastiques', 'session jeu vidéo', 'autre') null
 )
     collate = utf8mb4_unicode_ci;
 
@@ -530,7 +530,7 @@ create table event_proposal
 
 create table event
 (
-    id                int                                                       not null
+    id                int auto_increment
         primary key,
     name              varchar(255)                                              not null,
     description       text                                                      null,
@@ -639,20 +639,16 @@ create table service_evaluation
 (
     id              int auto_increment
         primary key,
-    event_id        int                                  not null,
+    intervention_id int                                  not null,
     employee_id     int                                  not null,
     rating          decimal(3, 2)                        not null,
     comment         text                                 null,
     evaluation_date datetime default current_timestamp() null,
-    constraint fk_service_evaluation_event
-        foreign key (event_id) references event (id)
-            on update cascade on delete cascade,
+    constraint service_evaluation_ibfk_1
+        foreign key (intervention_id) references intervention (id),
     constraint service_evaluation_ibfk_2
         foreign key (employee_id) references employee (id)
 );
-
-create index service_evaluation_event_id_index
-    on service_evaluation (event_id);
 
 create index provider_id
     on service_type (provider_id);
