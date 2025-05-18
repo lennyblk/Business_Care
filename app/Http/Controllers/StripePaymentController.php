@@ -23,7 +23,7 @@ class StripePaymentController extends Controller
             }
 
             // Utiliser directement la clé Stripe pour tester
-            Stripe::setApiKey('sk_test_51RJaodCBigEWbFDKy1ZUFlMNoljc5GuwMW8vtcAf6CqTqB11Iskm8LJ5IyrLisMpQbifdyl7CG2pv5KSRY4AsB0N00YBpKyVV7');
+            Stripe::setApiKey(ENV('STRIPE_SECRET'));
 
             // Log pour le débogage
             Log::info('Création de session Stripe pour le contrat #' . $contractId, [
@@ -91,7 +91,7 @@ class StripePaymentController extends Controller
             $contract = Contract::with('company')->findOrFail($contractId);
 
             // Utiliser directement la clé Stripe pour tester
-            Stripe::setApiKey('sk_test_51RJaodCBigEWbFDKy1ZUFlMNoljc5GuwMW8vtcAf6CqTqB11Iskm8LJ5IyrLisMpQbifdyl7CG2pv5KSRY4AsB0N00YBpKyVV7');
+            Stripe::setApiKey(ENV('STRIPE_SECRET'));
 
             // Vérifier la session de paiement
             $sessionId = $request->get('session_id');
