@@ -203,55 +203,78 @@ class AdminCompanyController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        try {
-            // Validation côté web
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'address' => 'required|string|max:255',
-                'code_postal' => 'nullable|string|max:10',
-                'ville' => 'nullable|string|max:100',
-                'pays' => 'nullable|string|max:100',
-                'telephone' => 'required|string|max:20',
-                'creation_date' => 'required|date',
-                'email' => 'required|email|unique:company,email,' . $id,
-                'password' => 'nullable|string|max:255',
-                'siret' => 'nullable|string|max:14',
-                'formule_abonnement' => 'required|in:Starter,Basic,Premium',
-                'statut_compte' => 'required|in:Actif,Inactif',
-                'date_debut_contrat' => 'nullable|date',
-                'date_fin_contrat' => 'nullable|date',
-                'mode_paiement_prefere' => 'nullable|string|max:50',
-                'employee_count' => 'nullable|integer',
+{
+    try {
+        // Validation adaptée uniquement pour les champs modifiables par l'administrateur
+        $request->validate([
+            'statut_compte' => 'required|in:Actif,Inactif',
+            'formule_abonnement' => 'required|in:Starter,Basic,Premium',
+            'date_debut_contrat' => 'nullable|date',
+            'date_fin_contrat' => 'nullable|date',
+        ]);
+
+        // Récupérer l'entreprise existante pour conserver les autres champs
+        $companyResponse = $this->apiCompanyController->show($id);
+        $companyData = json_decode($companyResponse->getContent(), true);
+
+        if ($companyResponse->getStatusCode() !== 200) {
+            Log::error('Erreur lors de la récupération de l\'entreprise', [
+                'status' => $companyResponse->getStatusCode(),
+                'response' => $companyData,
+                'id' => $id
+            ]);
+            return back()->with('error', 'Entreprise non trouvée');
+        }
+
+        $existingCompany = $companyData['data'];
+
+        // Préparer les données à mettre à jour en ne modifiant que les champs autorisés
+        $updateData = [
+            // Conserver tous les champs existants
+            'name' => $existingCompany['name'],
+            'address' => $existingCompany['address'],
+            'code_postal' => $existingCompany['code_postal'],
+            'ville' => $existingCompany['ville'],
+            'pays' => $existingCompany['pays'],
+            'telephone' => $existingCompany['telephone'],
+            'creation_date' => $existingCompany['creation_date'],
+            'email' => $existingCompany['email'],
+            'siret' => $existingCompany['siret'],
+            'mode_paiement_prefere' => $existingCompany['mode_paiement_prefere'],
+            'employee_count' => $existingCompany['employee_count'],
+
+            // Mettre à jour uniquement les champs modifiables
+            'statut_compte' => $request->statut_compte,
+            'formule_abonnement' => $request->formule_abonnement,
+            'date_debut_contrat' => $request->date_debut_contrat,
+            'date_fin_contrat' => $request->date_fin_contrat,
+        ];
+
+        // Créer une nouvelle requête avec les données complètes
+        $fullRequest = new Request($updateData);
+
+        // Appel au contrôleur API pour mettre à jour l'entreprise
+        $response = $this->apiCompanyController->update($fullRequest, $id);
+        $data = json_decode($response->getContent(), true);
+
+        if ($response->getStatusCode() !== 200) {
+            Log::error('Erreur lors de la mise à jour de l\'entreprise', [
+                'status' => $response->getStatusCode(),
+                'response' => $data,
+                'id' => $id,
+                'request' => $fullRequest->all()
             ]);
 
-            // Remapper telephone -> phone si nécessaire (si l'API utilise 'telephone')
-            if (!$request->has('telephone') && $request->has('phone')) {
-                $request->merge(['telephone' => $request->phone]);
-            }
-
-            // Appel au contrôleur API pour mettre à jour l'entreprise
-            $response = $this->apiCompanyController->update($request, $id);
-            $data = json_decode($response->getContent(), true);
-
-            if ($response->getStatusCode() !== 200) {
-                Log::error('Erreur lors de la mise à jour de l\'entreprise', [
-                    'status' => $response->getStatusCode(),
-                    'response' => $data,
-                    'id' => $id,
-                    'request' => $request->all()
-                ]);
-
-                $errors = $data['errors'] ?? ['Une erreur est survenue lors de la mise à jour de l\'entreprise'];
-                return back()->withErrors($errors)->withInput();
-            }
-
-            return redirect()->route('admin.company')->with('success', 'Entreprise mise à jour avec succès.');
-        } catch (\Exception $e) {
-            Log::error('Exception lors de la mise à jour d\'une entreprise: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'entreprise')->withInput();
+            $errors = $data['errors'] ?? ['Une erreur est survenue lors de la mise à jour de l\'entreprise'];
+            return back()->withErrors($errors)->withInput();
         }
+
+        return redirect()->route('admin.company')->with('success', 'Entreprise mise à jour avec succès.');
+    } catch (\Exception $e) {
+        Log::error('Exception lors de la mise à jour d\'une entreprise: ' . $e->getMessage());
+        return back()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'entreprise')->withInput();
     }
+}
 
     public function destroy($id)
     {

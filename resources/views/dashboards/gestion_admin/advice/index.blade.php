@@ -7,7 +7,7 @@
             <h1>Liste des Conseils</h1>
             <a href="{{ route('admin.advice.create') }}" class="btn btn-primary">Créer un Conseil</a>
         </div>
-        <div class="col-md-6 text-end d-flex justify-content-end gap-2">
+        <div class=" text-end d-flex justify-content-end gap-2">
             <a href="{{ route('admin.advice-categories.index') }}" class="btn btn-secondary">
                 Gérer les Catégories
             </a>

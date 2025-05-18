@@ -30,8 +30,11 @@ class AdminInvoiceController extends Controller
     public function show($id)
     {
         try {
-
             $invoice = Invoice::with(['company', 'contract'])->findOrFail($id);
+
+            if (!$invoice->contract) {
+                Log::warning('Facture #' . $invoice->id . ' n\'a pas de contrat associé');
+            }
 
             return view('dashboards.gestion_admin.invoices.show', compact('invoice'));
         } catch (\Exception $e) {
@@ -46,8 +49,13 @@ class AdminInvoiceController extends Controller
         try {
             // Récupérer la facture
             $invoice = Invoice::with(['company', 'contract'])->findOrFail($id);
-            $contract = $invoice->contract;
             $company = $invoice->company;
+
+            // Vérifier si le contrat existe
+            $contract = $invoice->contract;
+            $contractId = $contract ? $contract->id : 'N/A';
+            $contractAmount = $contract ? $contract->amount : $invoice->total_amount;
+            $contractFormule = $contract ? $contract->formule_abonnement : 'Standard';
 
             // Créer un PDF avec support UTF-8
             $pdf = new \FPDF('P', 'mm', 'A4');
@@ -72,7 +80,7 @@ class AdminInvoiceController extends Controller
             $pdf->SetFont('Arial', '', 10);
             $pdf->Cell(0, 7, utf8_to_latin('Date d\'émission : ' . date('d/m/Y')), 0, 1, 'R');
             $pdf->Cell(0, 7, utf8_to_latin('Date d\'échéance : ' . date('d/m/Y', strtotime('+30 days'))), 0, 1, 'R');
-            $pdf->Cell(0, 7, utf8_to_latin('Référence : CONT-' . $contract->id), 0, 1, 'R');
+            $pdf->Cell(0, 7, utf8_to_latin('Référence : CONT-' . $contractId), 0, 1, 'R');
             $pdf->Ln(5);
 
             // Bloc Business Care (émetteur)
@@ -127,14 +135,14 @@ class AdminInvoiceController extends Controller
             $pdf->SetFont('Arial', '', 9);
 
             // Abonnement de base (80% du montant)
-            $baseAmount = $contract->amount * 0.8;
-            $pdf->Cell(90, 8, utf8_to_latin('Abonnement ' . $contract->formule_abonnement), 1, 0);
+            $baseAmount = $invoice->total_amount * 0.8;
+            $pdf->Cell(90, 8, utf8_to_latin('Abonnement ' . $contractFormule), 1, 0);
             $pdf->Cell(25, 8, '1', 1, 0, 'C');
             $pdf->Cell(35, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
             $pdf->Cell(40, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 1, 'R');
 
             // Services inclus (20% du montant)
-            $servicesAmount = $contract->amount * 0.2;
+            $servicesAmount = $invoice->total_amount * 0.2;
             $pdf->Cell(90, 8, utf8_to_latin('Services inclus'), 1, 0);
             $pdf->Cell(25, 8, '1', 1, 0, 'C');
             $pdf->Cell(35, 8, utf8_to_latin(number_format($servicesAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
@@ -145,16 +153,16 @@ class AdminInvoiceController extends Controller
             $pdf->Cell(115, 8, '', 0, 0);
             $pdf->SetFont('Arial', 'B', 9);
             $pdf->Cell(35, 8, utf8_to_latin('Total HT'), 1, 0, 'L', true);
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($invoice->total_amount, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
 
             $pdf->Cell(115, 8, '', 0, 0);
             $pdf->Cell(35, 8, utf8_to_latin('TVA (20%)'), 1, 0, 'L', true);
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 0.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($invoice->total_amount * 0.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
 
             $pdf->Cell(115, 8, '', 0, 0);
             $pdf->SetFont('Arial', 'B', 11);
             $pdf->Cell(35, 8, utf8_to_latin('Total TTC'), 1, 0, 'L', true);
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 1.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+            $pdf->Cell(40, 8, utf8_to_latin(number_format($invoice->total_amount * 1.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
 
             $pdf->Ln(10);
 

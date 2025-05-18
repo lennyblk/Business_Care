@@ -55,9 +55,13 @@
                                 </a>
                             </td>
                             <td>
-                                <a href="{{ route('admin.contracts.show', $invoice->contract_id) }}">
-                                    #{{ $invoice->contract_id }}
-                                </a>
+                                @if($invoice->contract_id)
+                                    <a href="{{ route('admin.contracts2.show', ['id' => $invoice->contract_id]) }}">
+                                        #{{ $invoice->contract_id }}
+                                    </a>
+                                @else
+                                    N/A
+                                @endif
                             </td>
                             <td>{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
                             <td>
@@ -86,7 +90,7 @@
                                 <form action="{{ route('admin.invoices.mark-as-paid', $invoice->id) }}" method="POST">
                                     @csrf
                                     <button type="submit" class="btn btn-success btn-sm" onclick="return confirm('Marquer cette facture comme payée?')">
-                                        <i class="fas fa-check"></i>
+                                        <i class="fas fa-check">Marquer comme payée</i>
                                     </button>
                                 </form>
                                 @endif

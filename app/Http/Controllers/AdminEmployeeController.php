@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\API\EmployeeController as APIEmployeeController;
 use App\Http\Controllers\API\CompanyController as APICompanyController;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use stdClass;
 
 class AdminEmployeeController extends Controller
@@ -205,6 +206,14 @@ class AdminEmployeeController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            // Vérifier si une confirmation de mot de passe est nécessaire
+            if ($request->has('password') && !empty($request->password)) {
+                // Ajouter une confirmation de mot de passe si elle n'est pas présente
+                if (!$request->has('password_confirmation')) {
+                    $request->merge(['password_confirmation' => $request->password]);
+                }
+            }
+
             // Validation côté web
             $request->validate([
                 'last_name' => 'required|string|max:50',
@@ -218,8 +227,17 @@ class AdminEmployeeController extends Controller
                 'id_carte_nfc' => 'nullable|string|max:50',
             ]);
 
+            // Préparer une nouvelle requête avec les données validées
+            $data = $request->all();
+            if (isset($data['password']) && empty($data['password'])) {
+                unset($data['password']);
+                unset($data['password_confirmation']);
+            }
+
+            $updatedRequest = new Request($data);
+
             // Appel au contrôleur API pour mettre à jour l'employé
-            $response = $this->apiEmployeeController->update($request, $id);
+            $response = $this->apiEmployeeController->update($updatedRequest, $id);
             $data = json_decode($response->getContent(), true);
 
             if ($response->getStatusCode() !== 200) {
@@ -240,10 +258,19 @@ class AdminEmployeeController extends Controller
             return back()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'employé')->withInput();
         }
     }
-
     public function destroy($id)
     {
         try {
+            // Obtenir le CSRF token du formulaire
+            $token = request()->get('_token');
+
+            // Vérifier si le token est valide
+            if (!$token || !request()->hasValidSignature()) {
+                Log::error('CSRF token invalid lors de la suppression d\'un employé', [
+                    'id' => $id
+                ]);
+            }
+
             // Appel au contrôleur API pour supprimer l'employé
             $response = $this->apiEmployeeController->destroy($id);
             $data = json_decode($response->getContent(), true);
@@ -259,7 +286,7 @@ class AdminEmployeeController extends Controller
 
             return redirect()->route('admin.salaries.index')->with('success', 'Employé supprimé avec succès.');
         } catch (\Exception $e) {
-            Log::error('Exception lors de la suppression d\'un employé: ' . $e->getMessage());
+            Log::error('Exception lors de la suppression d\'un employé: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
             return back()->with('error', 'Une erreur est survenue lors de la suppression de l\'employé');
         }
     }

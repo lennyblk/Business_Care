@@ -21,7 +21,6 @@ use App\Http\Controllers\ClientEmployeeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\MailController;
-use App\Http\Controllers\API\AdminPendingRegistrationController;
 use App\Http\Controllers\StripePaymentController;
 use App\Http\Controllers\EventProposalController;
 use App\Http\Controllers\AdminEventProposalController;
@@ -33,6 +32,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\ServiceEvaluationController;
 use App\Http\Controllers\ProviderEvaluationController;
 use App\Http\Controllers\AssociationController;
+use App\Http\Controllers\AdminPendingRegistrationController;
 
 // Pages principales
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -118,10 +118,10 @@ Route::middleware(['check.auth'])->group(function () {
 // Inscription
 Route::middleware(['check.auth'])->group(function () {
     Route::prefix('dashboard/gestion_admin/inscriptions')->group(function () {
-        Route::get('/', [AdminPendingRegistrationController::class, 'index'])->name('admin.inscriptions.index');
-        Route::get('/{id}', [AdminPendingRegistrationController::class, 'show'])->name('admin.inscriptions.show');
-        Route::post('/{id}/approve', [AdminPendingRegistrationController::class, 'approve'])->name('admin.inscriptions.approve');
-        Route::post('/{id}/reject', [AdminPendingRegistrationController::class, 'reject'])->name('admin.inscriptions.reject');
+        Route::get('/', [App\Http\Controllers\AdminPendingRegistrationController::class, 'index'])->name('admin.inscriptions.index');
+        Route::get('/{id}', [App\Http\Controllers\AdminPendingRegistrationController::class, 'show'])->name('admin.inscriptions.show');
+        Route::post('/{id}/approve', [App\Http\Controllers\AdminPendingRegistrationController::class, 'approve'])->name('admin.inscriptions.approve');
+        Route::post('/{id}/reject', [App\Http\Controllers\AdminPendingRegistrationController::class, 'reject'])->name('admin.inscriptions.reject');
     });
 });
 
@@ -333,7 +333,7 @@ Route::middleware(['check.auth'])->group(function () {
         Route::get('/event_proposals/{id}', [AdminEventProposalController::class, 'show'])->name('admin.event_proposals.show');
         Route::post('/event_proposals/{id}/assign', [AdminEventProposalController::class, 'assignProvider'])->name('admin.event_proposals.assign');
         Route::post('/event_proposals/{id}/reject', [AdminEventProposalController::class, 'rejectProposal'])->name('admin.event_proposals.reject');
-        
+
         // Nouvelles routes pour la création d'activités
         Route::get('/activites/create', [AdminEventProposalController::class, 'create'])->name('admin.activities.create');
         Route::post('/activites/store', [AdminEventProposalController::class, 'store'])->name('admin.activities.store');

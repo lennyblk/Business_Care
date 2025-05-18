@@ -23,9 +23,6 @@
                         <li class="list-group-item">Conseils hebdomadaires: <b>Non</b></li>
                         <li class="list-group-item">Événements/Communautés: <b>Accès illimité</b></li>
                     </ul>
-                    <div class="text-center">
-                        <a href="#" class="btn btn-outline-primary">Sélectionner ce forfait</a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -47,9 +44,6 @@
                         <li class="list-group-item">Conseils hebdomadaires: <b>Oui (non personnalisés)</b></li>
                         <li class="list-group-item">Événements/Communautés: <b>Accès illimité</b></li>
                     </ul>
-                    <div class="text-center">
-                        <a href="#" class="btn btn-primary">Sélectionner ce forfait</a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -71,9 +65,6 @@
                         <li class="list-group-item">Conseils hebdomadaires: <b>Oui personnalisés</b></li>
                         <li class="list-group-item">Événements/Communautés: <b>Accès illimité</b></li>
                     </ul>
-                    <div class="text-center">
-                        <a href="#" class="btn btn-outline-dark">Sélectionner ce forfait</a>
-                    </div>
                 </div>
             </div>
         </div>

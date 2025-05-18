@@ -45,14 +45,6 @@
             <input type="text" name="ville" id="ville" class="form-control" value="{{ old('ville') }}">
         </div>
         <div class="form-group">
-            <label for="siret">SIRET</label>
-            <input type="text" name="siret" id="siret" class="form-control" value="{{ old('siret') }}">
-        </div>
-        <div class="form-group">
-            <label for="iban">IBAN</label>
-            <input type="text" name="iban" id="iban" class="form-control" value="{{ old('iban') }}">
-        </div>
-        <div class="form-group">
             <label for="statut_prestataire">Statut</label>
             <select name="statut_prestataire" id="statut_prestataire" class="form-control" required>
                 <option value="Candidat" {{ old('statut_prestataire') == 'Candidat' ? 'selected' : '' }}>Candidat</option>

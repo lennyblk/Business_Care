@@ -157,7 +157,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Abonnement {{ $invoice->contract->formule_abonnement }}</td>
+                            <td>Abonnement {{ $invoice->contract->formule_abonnement ?? 'Standard' }}</td>
                             <td>1</td>
                             <td class="text-right">{{ number_format($invoice->total_amount * 0.8, 2, ',', ' ') }} €</td>
                             <td class="text-right">{{ number_format($invoice->total_amount * 0.8, 2, ',', ' ') }} €</td>
@@ -189,30 +189,33 @@
     </div>
 
     <div class="card shadow mb-4">
-        <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-            <h6 class="m-0 font-weight-bold text-primary">Contrat associé</h6>
+    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+        <h6 class="m-0 font-weight-bold text-primary">Contrat associé</h6>
+        @if($invoice->contract_id)
             <a href="{{ route('admin.contracts.show', $invoice->contract_id) }}" class="btn btn-primary btn-sm">
                 <i class="fas fa-eye"></i> Voir le contrat
             </a>
-        </div>
-        <div class="card-body">
+        @endif
+    </div>
+    <div class="card-body">
+        @if($invoice->contract)
             <div class="table-responsive">
                 <table class="table table-bordered">
                     <tr>
                         <th style="width: 25%">ID du contrat</th>
                         <td>#{{ $invoice->contract_id }}</td>
                         <th style="width: 25%">Formule</th>
-                        <td>{{ $invoice->contract->formule_abonnement }}</td>
+                        <td>{{ $invoice->contract->formule_abonnement ?? 'Non spécifiée' }}</td>
                     </tr>
                     <tr>
                         <th>Date de début</th>
-                        <td>{{ \Carbon\Carbon::parse($invoice->contract->start_date)->format('d/m/Y') }}</td>
+                        <td>{{ $invoice->contract->start_date ? \Carbon\Carbon::parse($invoice->contract->start_date)->format('d/m/Y') : 'N/A' }}</td>
                         <th>Date de fin</th>
-                        <td>{{ \Carbon\Carbon::parse($invoice->contract->end_date)->format('d/m/Y') }}</td>
+                        <td>{{ $invoice->contract->end_date ? \Carbon\Carbon::parse($invoice->contract->end_date)->format('d/m/Y') : 'N/A' }}</td>
                     </tr>
                     <tr>
                         <th>Montant mensuel</th>
-                        <td>{{ number_format($invoice->contract->amount, 2, ',', ' ') }} €</td>
+                        <td>{{ $invoice->contract->amount ? number_format($invoice->contract->amount, 2, ',', ' ') . ' €' : 'N/A' }}</td>
                         <th>Statut</th>
                         <td>
                             @if($invoice->contract->payment_status === 'active')
@@ -222,13 +225,17 @@
                             @elseif($invoice->contract->payment_status === 'unpaid')
                                 <span class="badge bg-danger">Non payé</span>
                             @else
-                                <span class="badge bg-secondary">{{ $invoice->contract->payment_status }}</span>
+                                <span class="badge bg-secondary">{{ $invoice->contract->payment_status ?? 'Inconnu' }}</span>
                             @endif
                         </td>
                     </tr>
                 </table>
             </div>
-        </div>
+        @else
+            <div class="alert alert-info">
+                Aucun contrat associé à cette facture.
+            </div>
+        @endif
     </div>
 </div>
 

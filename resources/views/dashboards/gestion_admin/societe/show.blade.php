@@ -59,7 +59,6 @@
             </div>
             <div class="text-right">
                 <button onclick="window.history.back()" class="btn btn-secondary">Retour</button>
-                <button onclick="window.location='{{ route('admin.company.contracts', $company->id) }}'" class="btn btn-primary">Voir les contrats</button>
             </div>
         </div>
     </div>

@@ -90,14 +90,30 @@ class AdminProviderController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $response = $this->apiProvider->update($request, $id);
-            $this->convertResponse($response);
+            $currentProviderResponse = $this->apiProvider->show($id);
+            $currentProvider = json_decode($currentProviderResponse->getContent(), true)['data'];
+
+            // Fusionner les données existantes avec les nouvelles données
+            $mergedData = array_merge($currentProvider, $request->all());
+
+            // Créer une nouvelle requête avec les données fusionnées
+            $fullRequest = new Request($mergedData);
+
+            // Appeler l'API pour mettre à jour
+            $response = $this->apiProvider->update($fullRequest, $id);
+            $responseData = json_decode($response->getContent(), true);
+
+            // Vérifier s'il y a des erreurs dans la réponse
+            if (isset($responseData['errors'])) {
+                Log::error('AdminProviderController@update validation errors: ', $responseData['errors']);
+                return back()->withErrors($responseData['errors'])->withInput();
+            }
 
             return redirect()->route('admin.prestataires.index')
                 ->with('success', 'Prestataire mis à jour avec succès.');
         } catch (\Exception $e) {
             Log::error('AdminProviderController@update error: '.$e->getMessage());
-            return back()->withInput()->with('error', 'Erreur lors de la mise à jour du prestataire');
+            return back()->withInput()->with('error', 'Erreur lors de la mise à jour du prestataire: ' . $e->getMessage());
         }
     }
 

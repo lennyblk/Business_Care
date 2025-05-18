@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\PendingRegistration;
 use App\Models\Company;
-use App\Models\Employee;
 use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,23 +15,30 @@ class AdminPendingRegistrationController extends Controller
 {
     public function index()
     {
+        try {
+            $pendingRegistrations = PendingRegistration::where('status', 'pending')
+                                                      ->orderBy('created_at', 'desc')
+                                                      ->get();
 
-        $pendingRegistrations = PendingRegistration::where('status', 'pending')
-                                                  ->orderBy('created_at', 'desc')
-                                                  ->get();
-
-        return view('dashboards.gestion_admin.inscriptions.index', compact('pendingRegistrations'));
+            return response()->json(['data' => $pendingRegistrations]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Erreur lors de la récupération des inscriptions: ' . $e->getMessage()], 500);
+        }
     }
 
     public function show($id)
     {
-        $registration = PendingRegistration::findOrFail($id);
-        return view('dashboards.gestion_admin.inscriptions.show', compact('registration'));
+        try {
+            $registration = PendingRegistration::findOrFail($id);
+            return response()->json(['data' => $registration]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Inscription non trouvée'], 404);
+        }
     }
 
     public function approve($id)
     {
-        \Log::info('Début de la méthode approve', ['id' => $id]);
+        \Log::info('API: Début de la méthode approve', ['id' => $id]);
 
         try {
             $pendingRegistration = PendingRegistration::findOrFail($id);
@@ -45,7 +51,7 @@ class AdminPendingRegistrationController extends Controller
 
             // Vérifier que la demande est toujours en attente
             if ($pendingRegistration->status !== 'pending') {
-                return redirect()->back()->withErrors(['error' => 'Cette demande a déjà été traitée.']);
+                return response()->json(['error' => 'Cette demande a déjà été traitée.'], 400);
             }
 
             // Récupérer les données supplémentaires stockées en JSON
@@ -91,12 +97,6 @@ class AdminPendingRegistrationController extends Controller
                     $provider->tarif_horaire = $pendingRegistration->tarif_horaire;
                     $provider->activity_type = $pendingRegistration->activity_type; // S'assurer que cette valeur est bien définie
 
-                    // Ajout de logs pour déboguer
-                    \Log::info('Données du prestataire avant sauvegarde', [
-                        'activity_type' => $pendingRegistration->activity_type,
-                        'pending_data' => $pendingRegistration->toArray()
-                    ]);
-
                     // Si l'activité est "autre", enregistrer l'activité personnalisée
                     if ($activityType === 'autre' && isset($additionalData['custom_activity'])) {
                         $provider->other_activity = $additionalData['custom_activity'];
@@ -127,8 +127,10 @@ class AdminPendingRegistrationController extends Controller
 
             $this->sendUserNotification($pendingRegistration, true);
 
-            return redirect()->route('admin.inscriptions.index')
-                ->with('success', 'Demande d\'inscription approuvée avec succès.');
+            return response()->json([
+                'success' => true,
+                'message' => 'Demande d\'inscription approuvée avec succès.'
+            ]);
 
         } catch (\Exception $e) {
             \Log::error('Erreur lors de l\'approbation de l\'inscription', [
@@ -137,21 +139,37 @@ class AdminPendingRegistrationController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return redirect()->back()->withErrors(['error' => 'Une erreur est survenue: ' . $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'error' => 'Une erreur est survenue: ' . $e->getMessage()
+            ], 500);
         }
     }
 
     public function reject($id)
     {
-        $registration = PendingRegistration::findOrFail($id);
+        try {
+            $registration = PendingRegistration::findOrFail($id);
 
-        $registration->status = 'rejected';
-        $registration->save();
+            if ($registration->status !== 'pending') {
+                return response()->json(['error' => 'Cette demande a déjà été traitée.'], 400);
+            }
 
-        $this->sendUserNotification($registration, false);
+            $registration->status = 'rejected';
+            $registration->save();
 
-        return redirect()->route('admin.inscriptions.index')
-                       ->with('success', 'Inscription rejetée');
+            $this->sendUserNotification($registration, false);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Inscription rejetée avec succès'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Une erreur est survenue: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     private function sendUserNotification($registration, $approved)

@@ -128,7 +128,6 @@
 
     <div class="text-right">
         <button onclick="window.history.back()" class="btn btn-secondary">Retour</button>
-        <button onclick="window.location='{{ route('admin.prestataires.index') }}'" class="btn btn-primary">Retour à la liste des prestataires</button>
     </div>
 </div>
 @endsection

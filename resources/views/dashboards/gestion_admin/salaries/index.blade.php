@@ -25,8 +25,7 @@
                 <td>{{ $employee->company->name ?? 'Non attribué' }}</td>
                 <td>
                     <button onclick="window.location='{{ route('admin.salaries.show', $employee->id) }}'" class="btn btn-info">Détails</button>
-                    <button onclick="window.location='{{ route('admin.salaries.edit', $employee->id) }}'" class="btn btn-warning">Modifier</button>
-                    <form action="{{ route('admin.salaries.destroy', $employee->id) }}" method="POST" style="display:inline;">
+                    <form action="{{ route('admin.salaries.destroy', $employee->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet employé?');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger">Supprimer</button>
