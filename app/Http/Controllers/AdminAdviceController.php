@@ -98,11 +98,10 @@ class AdminAdviceController extends Controller
             }
 
             $advice = $data['data'] ?? [];
-
-            // Récupérer les catégories actives
             $categories = \App\Models\AdviceCategory::where('is_active', 1)->get();
+            $tags = \App\Models\AdviceTag::all();
 
-            return view('dashboards.gestion_admin.advice.edit', compact('advice', 'categories'));
+            return view('dashboards.gestion_admin.advice.edit', compact('advice', 'categories', 'tags'));
         } catch (\Exception $e) {
             Log::error('Exception lors de l\'édition d\'un conseil: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue lors de l\'édition du conseil');
@@ -112,6 +111,12 @@ class AdminAdviceController extends Controller
     public function update(Request $request, $id)
     {
         try {
+            // Si publish_date n'est pas fourni, récupérer la valeur existante
+            if (!$request->has('publish_date')) {
+                $advice = Advice::findOrFail($id);
+                $request->merge(['publish_date' => $advice->publish_date]);
+            }
+
             $response = $this->apiAdviceController->update($request, $id);
             $data = json_decode($response->getContent(), true);
 
@@ -144,6 +149,10 @@ class AdminAdviceController extends Controller
                 return back()->with('error', $data['message'] ?? 'Erreur lors de la suppression du conseil');
             }
 
+            // Modifier la valeur de is_disabled à 1 (tinyint) au lieu de true
+            \App\Models\AdviceSchedule::where('advice_id', $id)
+                ->update(['is_disabled' => 1]);
+
             return redirect()->route('admin.advice.index')->with('success', 'Conseil supprimé avec succès.');
         } catch (\Exception $e) {
             Log::error('Exception lors de la suppression d\'un conseil: ' . $e->getMessage());
@@ -162,48 +171,68 @@ class AdminAdviceController extends Controller
         }
     }
 
+    public function scheduledAdvices()
+    {
+        try {
+            $response = $this->apiAdviceController->scheduled();
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors de la récupération des conseils programmés', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->with('error', 'Erreur lors de la récupération des conseils programmés');
+            }
+
+            $scheduledAdvices = $data['data'];
+            return view('dashboards.gestion_admin.advice.scheduled', compact('scheduledAdvices'));
+        } catch (\Exception $e) {
+            Log::error('Exception lors de la récupération des conseils programmés: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
     public function saveSchedule(Request $request, $id)
     {
         try {
-            $validator = Validator::make($request->all(), [
-                'scheduled_date' => 'required|date|after:today',
-                'target_audience' => 'required|in:All,Specific',
-                'target_criteria' => 'nullable|required_if:target_audience,Specific',
-            ]);
+            $response = $this->apiAdviceController->saveSchedule($request, $id);
+            $data = json_decode($response->getContent(), true);
 
-            if ($validator->fails()) {
-                return back()->withErrors($validator)->withInput();
+            if ($response->getStatusCode() !== 201) {
+                Log::error('Erreur lors de la programmation du conseil', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->withErrors($data['errors'] ?? ['Une erreur est survenue'])->withInput();
             }
-
-            $advice = Advice::findOrFail($id);
-            
-            $schedule = new \App\Models\AdviceSchedule([
-                'advice_id' => $advice->id,
-                'scheduled_date' => $request->scheduled_date,
-                'target_audience' => $request->target_audience,
-                'target_criteria' => $request->target_criteria
-            ]);
-
-            $schedule->save();
 
             return redirect()->route('admin.advice.index')
                 ->with('success', 'Conseil programmé avec succès pour le ' . $request->scheduled_date);
         } catch (\Exception $e) {
-            Log::error('Exception lors de l\'enregistrement de la planification: ' . $e->getMessage());
+            Log::error('Exception lors de la programmation du conseil: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue')->withInput();
         }
     }
 
-    public function scheduledAdvices()
+    public function toggleSchedule($id)
     {
         try {
-            $scheduledAdvices = \App\Models\AdviceSchedule::with('advice')
-                ->orderBy('scheduled_date', 'asc')
-                ->get();
-                
-            return view('dashboards.gestion_admin.advice.scheduled', compact('scheduledAdvices'));
+            $response = $this->apiAdviceController->toggleSchedule($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                Log::error('Erreur lors du changement de statut', [
+                    'status' => $response->getStatusCode(),
+                    'response' => $data
+                ]);
+                return back()->with('error', $data['message'] ?? 'Une erreur est survenue');
+            }
+
+            $status = $data['data']['is_disabled'] ? 'désactivée' : 'activée';
+            return back()->with('success', "La programmation a été $status avec succès.");
         } catch (\Exception $e) {
-            Log::error('Exception lors de la récupération des conseils programmés: ' . $e->getMessage());
+            Log::error('Exception lors du changement de statut: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue');
         }
     }

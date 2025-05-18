@@ -34,34 +34,9 @@
                 <div class="col-md-8">{{ $employee->date_creation_compte }}</div>
             </div>
             <div class="row mb-3">
-                <div class="col-md-4 font-weight-bold">Dernière connexion:</div>
-                <div class="col-md-8">{{ $employee->derniere_connexion ?: 'Jamais connecté' }}</div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-4 font-weight-bold">Préférences de langue:</div>
-                <div class="col-md-8">
-                    @switch($employee->preferences_langue)
-                        @case('fr')
-                            Français
-                            @break
-                        @case('en')
-                            Anglais
-                            @break
-                        @case('es')
-                            Espagnol
-                            @break
-                        @case('de')
-                            Allemand
-                            @break
-                        @default
-                            {{ $employee->preferences_langue }}
-                    @endswitch
-                </div>
-            </div>
-            <div class="row mb-3">
                 <div class="col-md-4 font-weight-bold">ID Carte NFC:</div>
                 <div class="col-md-8">{{ $employee->id_carte_nfc ?: 'Non attribuée' }}</div>
-            </div>
+            </div>  
             <div class="text-right mt-4">
                 <a href="{{ route('employees.edit', $employee->id) }}" class="btn btn-warning">Modifier</a>
                 <button onclick="window.history.back()" class="btn btn-secondary">Retour</button>

@@ -416,6 +416,8 @@ class ClientEmployeeController extends Controller
     public function show($id)
     {
         try {
+            $companyId = session('user_id'); // Utiliser l'ID de l'entreprise depuis la session
+            
             $response = $this->apiEmployeeController->show($id);
             $data = json_decode($response->getContent(), true);
 
@@ -428,12 +430,10 @@ class ClientEmployeeController extends Controller
                 return back()->with('error', 'Employé non trouvé');
             }
 
-            // Convertir le tableau associatif en objet
             $employee = $this->arrayToObject($data['data'] ?? []);
 
-            // Vérification que l'employé appartient bien à l'entreprise de l'utilisateur
-            $user = Auth::user();
-            if ($employee->company_id !== $user->company_id) {
+            // Vérifier que l'employé appartient à l'entreprise
+            if ($employee->company_id != $companyId) {
                 abort(403, 'Vous n\'êtes pas autorisé à accéder à cet employé.');
             }
 
@@ -447,7 +447,8 @@ class ClientEmployeeController extends Controller
     public function edit($id)
     {
         try {
-            // Appel au contrôleur API pour récupérer l'employé
+            $companyId = session('user_id');
+            
             $response = $this->apiEmployeeController->show($id);
             $data = json_decode($response->getContent(), true);
 
@@ -460,12 +461,9 @@ class ClientEmployeeController extends Controller
                 return back()->with('error', 'Employé non trouvé');
             }
 
-            // Convertir le tableau associatif en objet
             $employee = $this->arrayToObject($data['data'] ?? []);
 
-            // Vérification que l'employé appartient bien à l'entreprise de l'utilisateur
-            $user = Auth::user();
-            if ($employee->company_id !== $user->company_id) {
+            if ($employee->company_id != $companyId) {
                 abort(403, 'Vous n\'êtes pas autorisé à modifier cet employé.');
             }
 
@@ -482,7 +480,7 @@ class ClientEmployeeController extends Controller
             // Validation côté web
             $request->validate([
                 'first_name' => 'required|string|max:50',
-                'last_name' => 'required|string|max:50',
+                'last_name' => 'required|string|max:50', 
                 'email' => 'required|email|unique:employee,email,' . $id,
                 'telephone' => 'nullable|string|max:20',
                 'position' => 'required|string|max:100',
@@ -491,6 +489,10 @@ class ClientEmployeeController extends Controller
                 'preferences_langue' => 'nullable|string|max:10',
                 'id_carte_nfc' => 'nullable|string|max:50',
             ]);
+
+            // Ajouter company_id à la requête
+            $companyId = session('user_id');
+            $request->merge(['company_id' => $companyId]);
 
             // Appel au contrôleur API pour mettre à jour l'employé
             $response = $this->apiEmployeeController->update($request, $id);
@@ -508,8 +510,8 @@ class ClientEmployeeController extends Controller
                 return back()->withErrors($errors)->withInput();
             }
 
-            return redirect()->route('client.employees.show', $id)
-                ->with('success', 'Employé mis à jour avec succès.');
+            return redirect()->route('employees.index')
+                ->with('success', 'Collaborateur mis à jour avec succès.');
         } catch (\Exception $e) {
             Log::error('Exception lors de la mise à jour d\'un employé: ' . $e->getMessage());
             return back()->with('error', 'Une erreur est survenue lors de la mise à jour de l\'employé')->withInput();
@@ -519,8 +521,9 @@ class ClientEmployeeController extends Controller
     public function destroy($id)
     {
         try {
-            // Vérification préalable que l'employé appartient à l'entreprise
-            $user = Auth::user();
+            $companyId = session('user_id');
+            
+            // Vérification que l'employé appartient à l'entreprise
             $response = $this->apiEmployeeController->show($id);
             $data = json_decode($response->getContent(), true);
 
@@ -529,7 +532,7 @@ class ClientEmployeeController extends Controller
             }
 
             $employee = $this->arrayToObject($data['data']);
-            if ($employee->company_id !== $user->company_id) {
+            if ($employee->company_id != $companyId) {
                 abort(403, 'Vous n\'êtes pas autorisé à supprimer cet employé.');
             }
 
@@ -546,7 +549,7 @@ class ClientEmployeeController extends Controller
                 return back()->with('error', $data['message'] ?? 'Erreur lors de la suppression de l\'employé');
             }
 
-            return redirect()->route('client.employees.index')
+            return redirect()->route('employees.index')
                 ->with('success', 'Employé supprimé avec succès.');
         } catch (\Exception $e) {
             Log::error('Exception lors de la suppression d\'un employé: ' . $e->getMessage());

@@ -110,6 +110,37 @@ class StripePaymentController extends Controller
                 $contract->payment_status = 'active';
                 $contract->save();
 
+                try {
+                    // Créer et enregistrer la facture avec les colonnes existantes
+                    $invoice = new \App\Models\Invoice();
+                    $invoice->contract_id = $contract->id;
+                    $invoice->company_id = $contract->company_id;
+                    $invoice->issue_date = now();
+                    $invoice->due_date = now()->addDays(15);
+                    $invoice->total_amount = $contract->amount;
+                    $invoice->payment_status = 'Paid';
+                    $invoice->details = "Paiement Stripe - Session ID: " . $sessionId . "\n" .
+                                      "Date de paiement: " . now()->format('d/m/Y H:i:s') . "\n" .
+                                      "Méthode: Carte bancaire via Stripe";
+
+                    if (!$invoice->save()) {
+                        throw new \Exception('Échec de la sauvegarde de la facture');
+                    }
+
+                    Log::info('Facture créée avec succès', [
+                        'invoice_id' => $invoice->id,
+                        'contract_id' => $contract->id,
+                        'company_id' => $contract->company_id
+                    ]);
+
+                } catch (\Exception $invoiceError) {
+                    Log::error('Erreur critique lors de la création de la facture', [
+                        'error' => $invoiceError->getMessage(),
+                        'contract_id' => $contract->id,
+                        'company_id' => $contract->company_id
+                    ]);
+                }
+
                 // Log des informations du contrat pour débogage
                 Log::info('Informations du contrat avant mise à jour de l\'entreprise', [
                     'contract_id' => $contract->id,
@@ -163,33 +194,6 @@ class StripePaymentController extends Controller
                 } catch (\Exception $companyError) {
                     Log::error('Erreur lors de la mise à jour de l\'entreprise: ' . $companyError->getMessage(), [
                         'trace' => $companyError->getTraceAsString()
-                    ]);
-                }
-
-                // Générer une facture pour ce paiement
-                try {
-                    $invoice = new \App\Models\Invoice();
-                    $invoice->contract_id = $contract->id;
-                    $invoice->company_id = $contract->company_id;
-                    $invoice->invoice_number = 'F' . date('Ymd') . '-' . $contract->id;
-                    $invoice->issue_date = now();
-                    $invoice->due_date = now()->addDays(15);
-                    $invoice->period_start = now();
-                    $invoice->period_end = \Carbon\Carbon::parse($contract->end_date);
-                    $invoice->amount = $contract->amount;
-                    $invoice->payment_status = 'paid';
-                    $invoice->payment_date = now();
-                    $invoice->payment_method = 'Carte bancaire via Stripe';
-                    $invoice->payment_reference = $sessionId;
-                    $invoice->save();
-
-                    Log::info('Facture générée avec succès', [
-                        'invoice_id' => $invoice->id,
-                        'invoice_number' => $invoice->invoice_number
-                    ]);
-                } catch (\Exception $invoiceError) {
-                    Log::error('Erreur lors de la génération de la facture: ' . $invoiceError->getMessage(), [
-                        'trace' => $invoiceError->getTraceAsString()
                     ]);
                 }
 

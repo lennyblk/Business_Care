@@ -268,21 +268,14 @@ class AdminInvoiceController extends Controller
                         $invoice->company_id = $contract->company_id;
                         $invoice->issue_date = now();
                         $invoice->due_date = now()->addDays(15);
-                        $invoice->total_amount = $contract->amount; // Assurez-vous d'utiliser total_amount partout
+                        $invoice->total_amount = $contract->amount;
                         $invoice->payment_status = 'Pending';
-
-                        // Générer les détails de la facture
-                        $details = "Abonnement " . $contract->formule_abonnement . " pour la période du "
+                        $invoice->details = "Abonnement " . $contract->formule_abonnement . " pour la période du "
                                 . now()->startOfMonth()->format('d/m/Y') . " au "
                                 . now()->endOfMonth()->format('d/m/Y') . ".\n\n"
-                                . "- Abonnement de base : " . number_format($contract->amount * 0.8, 2, ',', ' ') . " €\n"
-                                . "- Services inclus : " . number_format($contract->amount * 0.2, 2, ',', ' ') . " €\n"
-                                . "\nTotal HT : " . number_format($contract->amount, 2, ',', ' ') . " €\n"
+                                . "Total HT : " . number_format($contract->amount, 2, ',', ' ') . " €\n"
                                 . "TVA (20%) : " . number_format($contract->amount * 0.2, 2, ',', ' ') . " €\n"
                                 . "Total TTC : " . number_format($contract->amount * 1.2, 2, ',', ' ') . " €";
-
-                        $invoice->details = $details;
-                        $invoice->pdf_path = null;
 
                         $invoice->save();
 

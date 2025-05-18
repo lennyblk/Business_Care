@@ -18,16 +18,20 @@ class AdviceSchedule extends Model
         'is_sent',
         'sent_at',
         'target_audience',
-        'target_criteria'
+        'target_criteria',
+        'is_disabled'
     ];
 
     protected $casts = [
-        'scheduled_date' => 'date',
+        'scheduled_date' => 'datetime',
         'sent_at' => 'datetime',
-        'is_sent' => 'boolean',
-        'target_criteria' => 'array'
+        'is_sent' => 'integer',
+        'is_disabled' => 'integer'  // Changé de 'boolean' à 'integer' pour correspondre au tinyint
     ];
 
+    /**
+     * Get the advice that owns this schedule
+     */
     public function advice()
     {
         return $this->belongsTo(Advice::class, 'advice_id');

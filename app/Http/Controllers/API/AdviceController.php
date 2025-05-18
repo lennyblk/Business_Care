@@ -17,7 +17,9 @@ class AdviceController extends Controller
     public function index()
     {
         try {
-            $advices = Advice::with('category', 'tags', 'media')->get();
+            $advices = Advice::where('is_active', true)
+                ->with('category', 'tags', 'media')
+                ->get();
             return response()->json(['data' => $advices], 200);
         } catch (\Exception $e) {
             Log::error('API: Erreur lors de la récupération des conseils: ' . $e->getMessage());
@@ -140,12 +142,13 @@ class AdviceController extends Controller
     {
         try {
             $advice = Advice::findOrFail($id);
-            $advice->delete();
+            $advice->is_active = false;
+            $advice->save();
 
-            return response()->json(['message' => 'Conseil supprimé avec succès'], 200);
+            return response()->json(['message' => 'Conseil désactivé avec succès'], 200);
         } catch (\Exception $e) {
-            Log::error('API: Erreur lors de la suppression du conseil: ' . $e->getMessage());
-            return response()->json(['message' => 'Une erreur est survenue lors de la suppression du conseil'], 500);
+            Log::error('API: Erreur lors de la désactivation du conseil: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue lors de la désactivation du conseil'], 500);
         }
     }
 
@@ -154,6 +157,7 @@ class AdviceController extends Controller
     {
         try {
             $advices = Advice::where('min_formule', '<=', $formule)
+                ->where('is_active', true)
                 ->with('category', 'tags', 'media')
                 ->where('is_published', true)
                 ->where(function($query) {
@@ -214,6 +218,68 @@ class AdviceController extends Controller
             return response()->json(['data' => $tags], 200);
         } catch (\Exception $e) {
             Log::error('API: Erreur lors de la récupération des tags: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue'], 500);
+        }
+    }
+
+    // GET /api/advices/scheduled
+    public function scheduled()
+    {
+        try {
+            $scheduledAdvices = \App\Models\AdviceSchedule::with('advice')
+                ->orderBy('scheduled_date', 'asc')
+                ->get();
+            return response()->json(['data' => $scheduledAdvices], 200);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la récupération des conseils programmés: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue'], 500);
+        }
+    }
+
+    // POST /api/advices/{id}/schedule
+    public function saveSchedule(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'scheduled_date' => 'required|date|after:today',
+                'target_audience' => 'required|in:All,Specific',
+                'target_criteria' => 'nullable|required_if:target_audience,Specific',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            }
+
+            $schedule = new \App\Models\AdviceSchedule([
+                'advice_id' => $id,
+                'scheduled_date' => $request->scheduled_date,
+                'target_audience' => $request->target_audience,
+                'target_criteria' => $request->target_criteria
+            ]);
+
+            $schedule->save();
+
+            return response()->json(['message' => 'Conseil programmé avec succès', 'data' => $schedule], 201);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors de la programmation du conseil: ' . $e->getMessage());
+            return response()->json(['message' => 'Une erreur est survenue'], 500);
+        }
+    }
+
+    // PATCH /api/advices/schedule/{id}/toggle
+    public function toggleSchedule($id)
+    {
+        try {
+            $schedule = \App\Models\AdviceSchedule::findOrFail($id);
+            $schedule->is_disabled = !$schedule->is_disabled;
+            $schedule->save();
+
+            return response()->json([
+                'message' => 'Statut de la programmation modifié avec succès',
+                'data' => $schedule
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('API: Erreur lors du changement de statut: ' . $e->getMessage());
             return response()->json(['message' => 'Une erreur est survenue'], 500);
         }
     }

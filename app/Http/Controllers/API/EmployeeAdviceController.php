@@ -45,6 +45,11 @@ class EmployeeAdviceController extends Controller
             ]);
 
             $advices = Advice::where('min_formule', '<=', $formula)
+                ->whereHas('schedules', function($query) {
+                    $query->where('is_sent', true)
+                          ->where('is_disabled', 0)  // Changé de false à 0 pour correspondre au tinyint
+                          ->whereNotNull('sent_at');
+                })
                 ->where(function ($query) use ($preferences) {
                     if ($preferences) {
                         $query->whereIn('category_id', $preferences->preferred_categories ?? [])
@@ -53,7 +58,10 @@ class EmployeeAdviceController extends Controller
                               });
                     }
                 })
-                ->with('category', 'tags', 'media') // Removed 'adviceMedia'
+                ->with(['category', 'tags', 'media', 'schedules' => function($query) {
+                    $query->where('is_sent', true)
+                          ->whereNotNull('sent_at');
+                }])
                 ->get();
 
             Log::info('Conseils récupérés', ['count' => $advices->count()]);

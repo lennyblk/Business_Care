@@ -393,3 +393,6 @@ Route::middleware(['check.auth'])->group(function () {
         Route::get('/evaluations', [ProviderEvaluationController::class, 'index'])->name('provider.evaluations.index');
     });
 });
+
+Route::patch('/admin/advice/schedule/{id}/toggle', [\App\Http\Controllers\AdminAdviceController::class, 'toggleSchedule'])
+    ->name('admin.advice.schedule.toggle');

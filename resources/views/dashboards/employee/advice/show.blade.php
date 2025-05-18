@@ -56,18 +56,22 @@
                     @endforelse
                 </div>
             </div>
-            <div class="mt-5">
-                <button class="btn btn-link text-decoration-none" type="button" 
-                        data-bs-toggle="collapse" 
-                        data-bs-target="#feedbackForm" 
-                        aria-expanded="false" 
-                        aria-controls="feedbackForm">
-                    <i class="fas fa-comment"></i> Dites-nous ce que vous pensez de ce conseil...
-                </button>
-                
-                <div class="collapse" id="feedbackForm">
-                    <div class="card card-body bg-light mt-2">
-                        <h5 class="text-muted mb-3">Votre avis nous intéresse</h5>
+            
+            <!-- Section Feedback -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3>Feedback</h3>
+                </div>
+                <div class="card-body">
+                    @if($feedback)
+                        <div class="alert alert-info">
+                            Vous avez déjà donné votre feedback pour ce conseil:
+                            <br>
+                            Note: {{ $feedback->rating }}/5
+                            <br>
+                            Commentaire: {{ $feedback->comment }}
+                        </div>
+                    @else
                         <form action="{{ route('employee.advice.feedback', $advice->id) }}" method="POST">
                             @csrf
                             <div class="mb-3">
@@ -87,7 +91,7 @@
                             </div>
                             <button type="submit" class="btn btn-success">Envoyer mon avis</button>
                         </form>
-                    </div>
+                    @endif
                 </div>
             </div>
         </div>

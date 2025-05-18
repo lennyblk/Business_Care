@@ -41,18 +41,16 @@ class AdminContractController extends Controller
                 $invoice = new \App\Models\Invoice();
                 $invoice->contract_id = $contract->id;
                 $invoice->company_id = $contract->company_id;
-                $invoice->invoice_number = 'F' . date('Ymd') . '-' . $contract->id;
                 $invoice->issue_date = now();
                 $invoice->due_date = now()->addDays(15);
-                $invoice->period_start = \Carbon\Carbon::parse($contract->start_date);
-                $invoice->period_end = \Carbon\Carbon::parse($contract->end_date);
-                $invoice->amount = $contract->amount;
-                $invoice->status = 'pending';
+                $invoice->total_amount = $contract->amount;
+                $invoice->payment_status = 'Pending';
+                $invoice->details = "Facture initiale pour le contrat #" . $contract->id;
                 $invoice->save();
 
                 Log::info('Facture générée pour le contrat approuvé', [
                     'invoice_id' => $invoice->id,
-                    'invoice_number' => $invoice->invoice_number
+                    'contract_id' => $contract->id
                 ]);
             } catch (\Exception $invoiceError) {
                 Log::error('Erreur lors de la génération de la facture pour le contrat approuvé: ' . $invoiceError->getMessage());

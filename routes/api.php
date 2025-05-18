@@ -293,6 +293,9 @@ Route::prefix('advices')->group(function () {
     Route::get('/categories', [\App\Http\Controllers\API\AdviceController::class, 'categories']);
     Route::get('/tags', [\App\Http\Controllers\API\AdviceController::class, 'tags']);
     Route::get('/{id}', [\App\Http\Controllers\API\AdviceController::class, 'show']);
+    Route::get('/scheduled', [AdviceController::class, 'scheduled']);
+    Route::post('/{id}/schedule', [AdviceController::class, 'saveSchedule']);
+    Route::patch('/schedule/{id}/toggle', [AdviceController::class, 'toggleSchedule']);
 });
 
 // Routes pour les catégories de conseils

@@ -38,19 +38,6 @@
             <label for="password_confirmation">Confirmer le mot de passe</label>
             <input type="password" name="password_confirmation" id="password_confirmation" class="form-control">
         </div>
-        <div class="form-group">
-            <label for="preferences_langue">Préférences de langue</label>
-            <select name="preferences_langue" id="preferences_langue" class="form-control">
-                <option value="fr" {{ $employee->preferences_langue == 'fr' ? 'selected' : '' }}>Français</option>
-                <option value="en" {{ $employee->preferences_langue == 'en' ? 'selected' : '' }}>Anglais</option>
-                <option value="es" {{ $employee->preferences_langue == 'es' ? 'selected' : '' }}>Espagnol</option>
-                <option value="de" {{ $employee->preferences_langue == 'de' ? 'selected' : '' }}>Allemand</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="id_carte_nfc">ID Carte NFC</label>
-            <input type="text" name="id_carte_nfc" id="id_carte_nfc" class="form-control" value="{{ $employee->id_carte_nfc }}">
-        </div>
         <button type="submit" class="btn btn-primary">Mettre à jour</button>
         <button onclick="window.history.back()" type="button" class="btn btn-secondary">Retour</button>
     </form>

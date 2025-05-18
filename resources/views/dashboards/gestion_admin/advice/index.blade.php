@@ -43,7 +43,9 @@
                     <form action="{{ route('admin.advice.destroy', $advice['id']) }}" method="POST" style="display:inline;">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir désactiver ce conseil ?')">
+                            Désactiver
+                        </button>
                     </form>
                 </td>
             </tr>

@@ -41,8 +41,14 @@ class EmployeeAdviceController extends Controller
     {
         try {
             $advice = \App\Models\Advice::with('category', 'tags')->findOrFail($id);
+            
+            // Vérifier si l'employé a déjà donné un feedback
+            $feedback = \App\Models\AdviceFeedback::where([
+                'employee_id' => session('user_id'),
+                'advice_id' => $id
+            ])->first();
 
-            return view('dashboards.employee.advice.show', compact('advice'));
+            return view('dashboards.employee.advice.show', compact('advice', 'feedback'));
         } catch (\Exception $e) {
             Log::error('Erreur lors de la récupération du conseil: ' . $e->getMessage());
             return redirect()->route('employee.advice.index')->with('error', 'Conseil non trouvé.');
@@ -53,16 +59,34 @@ class EmployeeAdviceController extends Controller
     {
         try {
             $employeeId = session('user_id');
-
-            \App\Models\AdviceFeedback::create([
+            
+            // Chercher un feedback existant
+            $feedback = \App\Models\AdviceFeedback::where([
                 'employee_id' => $employeeId,
-                'advice_id' => $id,
-                'rating' => $request->input('rating'),
-                'comment' => $request->input('comment'),
-                'is_helpful' => $request->input('is_helpful', false),
-            ]);
+                'advice_id' => $id
+            ])->first();
 
-            return redirect()->route('employee.advice.show', $id)->with('success', 'Feedback soumis avec succès.');
+            if ($feedback) {
+                // Mettre à jour le feedback existant
+                $feedback->update([
+                    'rating' => $request->input('rating'),
+                    'comment' => $request->input('comment'),
+                    'is_helpful' => $request->input('is_helpful', false),
+                ]);
+                $message = 'Feedback mis à jour avec succès.';
+            } else {
+                // Créer un nouveau feedback
+                \App\Models\AdviceFeedback::create([
+                    'employee_id' => $employeeId,
+                    'advice_id' => $id,
+                    'rating' => $request->input('rating'),
+                    'comment' => $request->input('comment'),
+                    'is_helpful' => $request->input('is_helpful', false),
+                ]);
+                $message = 'Feedback soumis avec succès.';
+            }
+
+            return redirect()->route('employee.advice.show', $id)->with('success', $message);
         } catch (\Exception $e) {
             Log::error('Erreur lors de la soumission du feedback: ' . $e->getMessage());
             return redirect()->route('employee.advice.show', $id)->with('error', 'Une erreur est survenue lors de la soumission du feedback.');
