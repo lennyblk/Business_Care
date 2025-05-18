@@ -156,11 +156,6 @@
                                             <i class="bi bi-credit-card"></i> Payer le contrat
                                         </a>
                                     </div>
-                                    <div class="col-md-4 mb-3">
-                                        <a href="{{ route('contracts.edit', $contract->id) }}" class="btn btn-warning w-100">
-                                            <i class="bi bi-pencil"></i> Modifier le contrat
-                                        </a>
-                                    </div>
                                 @elseif($contract->payment_status === 'processing')
                                     <div class="col-12 text-center">
                                         <p class="text-info">Paiement en cours de traitement</p>

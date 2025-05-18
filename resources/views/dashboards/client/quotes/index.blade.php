@@ -68,17 +68,14 @@
                                     <td>
                                         <div class="btn-group">
                                             <a href="{{ route('quotes.show', $quote->id) }}" class="btn btn-info btn-sm">
-                                                <i class="fas fa-eye"></i>
+                                                <i class="fas fa-eye">Détails</i>
                                             </a>
                                             @if($quote->status == 'Pending')
-                                                <a href="{{ route('quotes.edit', $quote->id) }}" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
                                                 <form action="{{ route('quotes.destroy', $quote->id) }}" method="POST" class="d-inline">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce devis ?')">
-                                                        <i class="fas fa-trash"></i>
+                                                        <i class="fas fa-trash">Supprimer</i>
                                                     </button>
                                                 </form>
                                             @endif
@@ -89,7 +86,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div class="mt-4">
                     {{ $quotes->links() }}
                 </div>

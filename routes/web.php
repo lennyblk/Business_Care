@@ -202,25 +202,19 @@ Route::middleware(['check.auth'])->group(function () {
         ->name('contracts.terminate');
 });
 
-// Routes pour les devis
+// Dans routes/web.php
 Route::middleware(['check.auth'])->group(function () {
-    // Routes existantes des devis
-    Route::resource('quotes', QuoteController::class);
+    // La route de création doit être avant la route avec le paramètre {quote}
+    Route::get('/quotes/create', [App\Http\Controllers\QuoteController::class, 'create'])->name('quotes.create');
+    Route::post('/quotes', [App\Http\Controllers\QuoteController::class, 'store'])->name('quotes.store');
 
-    // Routes supplémentaires pour les devis
-    Route::get('/quotes/{quote}/download', [QuoteController::class, 'download'])->name('quotes.download');
-    Route::get('/quotes/{quote}/preview', [QuoteController::class, 'preview'])->name('quotes.preview');
-    Route::post('/quotes/{quote}/accept', [QuoteController::class, 'accept'])->name('quotes.accept');
-    Route::post('/quotes/{quote}/reject', [QuoteController::class, 'reject'])->name('quotes.reject');
-    Route::post('/quotes/{quote}/convert-to-contract', [QuoteController::class, 'convertToContract'])
-        ->name('quotes.convert-to-contract');
-
-    // Routes pour la gestion des devis côté admin
-    Route::prefix('admin')->group(function () {
-        Route::get('/quotes', [AdminQuoteController::class, 'index'])->name('admin.quotes.index');
-        Route::get('/quotes/{quote}', [AdminQuoteController::class, 'show'])->name('admin.quotes.show');
-        Route::post('/quotes/{quote}/validate', [AdminQuoteController::class, 'validate'])->name('admin.quotes.validate');
-    });
+    // Ensuite les autres routes
+    Route::get('/quotes', [App\Http\Controllers\QuoteController::class, 'index'])->name('quotes.index');
+    Route::get('/quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'show'])->name('quotes.show');
+    Route::delete('/quotes/{quote}', [App\Http\Controllers\QuoteController::class, 'destroy'])->name('quotes.destroy');
+    Route::post('/quotes/{quote}/accept', [App\Http\Controllers\QuoteController::class, 'accept'])->name('quotes.accept');
+    Route::post('/quotes/{quote}/reject', [App\Http\Controllers\QuoteController::class, 'reject'])->name('quotes.reject');
+    Route::get('/quotes/{quote}/download', [App\Http\Controllers\QuoteController::class, 'download'])->name('quotes.download');
 });
 
 // Gestion Employee en tant que client
