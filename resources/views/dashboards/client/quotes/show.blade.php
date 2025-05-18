@@ -55,7 +55,7 @@
                             <p><strong>Date de création:</strong> {{ \Carbon\Carbon::parse($quote->creation_date)->format('d/m/Y') }}</p>
                             <p><strong>Date d'expiration:</strong> {{ \Carbon\Carbon::parse($quote->expiration_date)->format('d/m/Y') }}</p>
                             <p>
-                                <strong>Statut:</strong> 
+                                <strong>Statut:</strong>
                                 <span class="text-dark">
                                     @if($quote->status == 'Pending')
                                         En attente
@@ -72,14 +72,14 @@
                             <p><strong>Nom:</strong> {{ $quote->company->name ?? 'Votre société' }}</p>
                             <p><strong>Effectif:</strong> {{ $quote->company_size }} salariés</p>
                             <p>
-                                <strong>Formule:</strong> 
+                                <strong>Formule:</strong>
                                 <span class="text-dark">{{ $quote->formule_abonnement }}</span>
                             </p>
                         </div>
                     </div>
-                    
+
                     <hr>
-                    
+
                     <h5 class="font-weight-bold mb-3">Détails de l'abonnement</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered">
@@ -163,7 +163,7 @@
                             </tbody>
                         </table>
                     </div>
-                    
+
                     @if(!empty($quote->services_details))
                         <div class="mt-4">
                             <h5 class="font-weight-bold">Description complémentaire</h5>
@@ -174,7 +174,7 @@
                             </div>
                         </div>
                     @endif
-                    
+
                     <div class="row mt-4">
                         <div class="col-md-6">
                             <!-- Espace réservé pour les informations supplémentaires -->
@@ -218,7 +218,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="col-lg-4">
             @if($quote->status === 'Pending')
                 <div class="card shadow mb-4 border-left-warning">
@@ -231,13 +231,13 @@
                             <form action="{{ route('quotes.reject', $quote->id) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-danger">
-                                    <i class="fas fa-times mr-1"></i> Rejeter
+                                    <i class="fas fa-times mr-1"></i> Annuler
                                 </button>
                             </form>
                             <form action="{{ route('quotes.accept', $quote->id) }}" method="POST">
                                 @csrf
                                 <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-check mr-1"></i> Accepter
+                                    <i class="fas fa-check mr-1"></i> En faire une demande de contrat
                                 </button>
                             </form>
                             <a href="{{ route('quotes.download', $quote) }}" class="btn btn-info">
@@ -265,19 +265,19 @@
                     </div>
                 </div>
             @endif
-            
+
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Validité du devis</h6>
                 </div>
                 <div class="card-body">
                     <p><strong>Date d'expiration:</strong> {{ \Carbon\Carbon::parse($quote->expiration_date)->format('d/m/Y') }}</p>
-                    
+
                     @php
                         $expirationDate = \Carbon\Carbon::parse($quote->expiration_date);
                         $now = \Carbon\Carbon::now();
                     @endphp
-                    
+
                     @if($expirationDate->isPast())
                         <div class="alert alert-danger mt-3">
                             <i class="fas fa-exclamation-triangle mr-1"></i> Ce devis a expiré.

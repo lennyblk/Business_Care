@@ -22,12 +22,13 @@ class StripePaymentController extends Controller
                     ->with('error', 'Ce contrat ne peut pas être payé actuellement.');
             }
 
-            // Configuration de Stripe avec la clé API
+            // Utiliser directement la clé Stripe pour tester
             Stripe::setApiKey(env('STRIPE_SECRET'));
 
             // Log pour le débogage
             Log::info('Création de session Stripe pour le contrat #' . $contractId, [
-                'mode_stripe' => strpos(env('STRIPE_SECRET'), 'test') !== false ? 'TEST' : 'PRODUCTION'
+                'clé utilisée' => 'directement intégrée dans le code',
+                'statut_contrat' => $contract->payment_status
             ]);
 
             // Session Stripe simplifiée mais avec configuration explicite pour la carte
@@ -89,6 +90,7 @@ class StripePaymentController extends Controller
         try {
             $contract = Contract::with('company')->findOrFail($contractId);
 
+            // Utiliser directement la clé Stripe pour tester
             Stripe::setApiKey(env('STRIPE_SECRET'));
 
             // Vérifier la session de paiement

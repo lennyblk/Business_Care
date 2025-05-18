@@ -17,6 +17,7 @@ use App\Http\Controllers\API\AdviceFeedbackController;
 use App\Http\Controllers\AdminContract2Controller;
 use App\Http\Controllers\API\ProviderEvaluationController;
 use App\Http\Controllers\AssociationApiController;
+use App\Http\Controllers\API\QuoteController;
 
 Route::get('/test', function() {
     return response()->json(['message' => 'API fonctionne correctement']);
@@ -160,6 +161,14 @@ Route::prefix('associations')->group(function () {
     Route::get('/', [App\Http\Controllers\API\AssociationApiController::class, 'index']);
     Route::get('/{id}', [App\Http\Controllers\API\AssociationApiController::class, 'show']);
     Route::post('/{id}/donate', [App\Http\Controllers\API\AssociationApiController::class, 'processDonation']);
+});
+
+// Routes API pour les devis
+Route::prefix('quotes')->group(function () {
+    Route::get('/{id}', [App\Http\Controllers\API\QuoteController::class, 'show'])->name('api.quotes.show');
+    Route::delete('/{id}', [App\Http\Controllers\API\QuoteController::class, 'destroy'])->name('api.quotes.destroy');
+    Route::post('/{id}/accept', [App\Http\Controllers\API\QuoteController::class, 'accept'])->name('api.quotes.accept');
+    Route::post('/{id}/reject', [App\Http\Controllers\API\QuoteController::class, 'reject'])->name('api.quotes.reject');
 });
 
 // ROUTES POUR APP MOBILE ==========================================================================================================================
