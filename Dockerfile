@@ -20,7 +20,12 @@ FROM php:7.4-fpm-alpine
 
 # Installer les extensions PHP nécessaires et les outils
 RUN docker-php-ext-install pdo pdo_mysql
-RUN apk add --no-cache nginx supervisor
+RUN apk add --no-cache nginx supervisor dcron
+
+# Setup supervisor directories
+RUN mkdir -p /var/run/supervisor \
+    && mkdir -p /var/log/supervisor \
+    && chmod -R 777 /var/run/supervisor
 
 COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
 
@@ -39,7 +44,36 @@ COPY --from=build /app .
 # Change le propriétaire des répertoires à l'utilisateur www-data (utilisateur standard du serveur web)
 RUN mkdir -p storage/framework/{sessions,views,cache} \
     && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && mkdir -p /var/log/supervisor \
+    && mkdir -p /var/run \
+    && mkdir -p /var/www/html/storage/logs/scheduler \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chmod -R 775 /var/www/html/storage
+
+# Installation des outils nécessaires en une seule commande
+RUN apk add --no-cache nginx supervisor dcron
+
+# Configuration des répertoires et permissions en une seule étape
+RUN mkdir -p /var/run/supervisor \
+    && mkdir -p /var/log/supervisor \
+    && mkdir -p /var/www/html/storage/logs/scheduler \
+    && touch /var/www/html/storage/logs/scheduler/advice-scheduled.log \
+    && chown -R www-data:www-data /var/www/html/storage \
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 777 /var/run/supervisor \
+    && touch /var/log/supervisor/cron.log \
+    && touch /var/log/supervisor/cron.err
+
+# Configuration de l'environnement cron
+RUN chmod +x /var/www/html/artisan \
+    && echo '#!/bin/sh\n/usr/local/bin/php /var/www/html/artisan "$@"' > /usr/local/bin/artisan \
+    && chmod +x /usr/local/bin/artisan
+
+# Configuration du crontab
+COPY crontab /etc/crontabs/root
+RUN chmod 0644 /etc/crontabs/root \
+    && touch /var/log/crond.log
 
 # Exposer le port 80
 EXPOSE 80

@@ -1,0 +1,1 @@
+* * * * * php /var/www/html/artisan advices:send-scheduled >> /var/www/html/storage/logs/scheduler/advice-scheduled.log 2>&1
