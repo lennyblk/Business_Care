@@ -36,26 +36,6 @@ class AdminContractController extends Controller
 
             $this->sendApprovalEmail($contract);
 
-            // Nous créons également une facture en statut "pending" qui sera marquée comme payée plus tard
-            try {
-                $invoice = new \App\Models\Invoice();
-                $invoice->contract_id = $contract->id;
-                $invoice->company_id = $contract->company_id;
-                $invoice->issue_date = now();
-                $invoice->due_date = now()->addDays(15);
-                $invoice->total_amount = $contract->amount;
-                $invoice->payment_status = 'Pending';
-                $invoice->details = "Facture initiale pour le contrat #" . $contract->id;
-                $invoice->save();
-
-                Log::info('Facture générée pour le contrat approuvé', [
-                    'invoice_id' => $invoice->id,
-                    'contract_id' => $contract->id
-                ]);
-            } catch (\Exception $invoiceError) {
-                Log::error('Erreur lors de la génération de la facture pour le contrat approuvé: ' . $invoiceError->getMessage());
-            }
-
             return response()->json([
                 'message' => 'Contrat approuvé avec succès',
                 'data' => $contract
