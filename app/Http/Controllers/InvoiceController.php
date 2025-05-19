@@ -48,10 +48,14 @@ class InvoiceController extends Controller
     public function download($id)
     {
         try {
-            // Récupérer la facture
+            // Récupérer la facture avec son contrat si ce n'est pas un don
             $invoice = Invoice::with(['company', 'contract'])->findOrFail($id);
-            $contract = $invoice->contract;
             $company = $invoice->company;
+
+            // Si ce n'est pas un don, on vérifie que le contrat existe
+            if (!$invoice->is_donation && !$invoice->contract) {
+                throw new \Exception('Contrat non trouvé pour cette facture');
+            }
 
             // Créer un PDF avec support UTF-8
             $pdf = new \FPDF('P', 'mm', 'A4');
@@ -76,7 +80,9 @@ class InvoiceController extends Controller
             $pdf->SetFont('Arial', '', 10);
             $pdf->Cell(0, 7, utf8_to_latin('Date d\'émission : ' . date('d/m/Y')), 0, 1, 'R');
             $pdf->Cell(0, 7, utf8_to_latin('Date d\'échéance : ' . date('d/m/Y', strtotime('+30 days'))), 0, 1, 'R');
-            $pdf->Cell(0, 7, utf8_to_latin('Référence : CONT-' . $contract->id), 0, 1, 'R');
+            if (!$invoice->is_donation) {
+                $pdf->Cell(0, 7, utf8_to_latin('Référence : CONT-' . $invoice->contract_id), 0, 1, 'R');
+            }
             $pdf->Ln(5);
 
             // Bloc Business Care (émetteur)
@@ -117,48 +123,70 @@ class InvoiceController extends Controller
 
             // Description du service
             $pdf->SetFont('Arial', 'B', 12);
-            $pdf->Cell(0, 10, utf8_to_latin('DESCRIPTION DES SERVICES'), 0, 1);
+            if ($invoice->is_donation) {
+                $pdf->Cell(0, 10, utf8_to_latin('DÉTAILS DU DON'), 0, 1);
+            } else {
+                $pdf->Cell(0, 10, utf8_to_latin('DESCRIPTION DES SERVICES'), 0, 1);
+            }
 
             // En-têtes du tableau
             $pdf->SetFont('Arial', 'B', 9);
             $pdf->SetFillColor(240, 240, 240);
             $pdf->Cell(90, 8, utf8_to_latin('Description'), 1, 0, 'C', true);
             $pdf->Cell(25, 8, utf8_to_latin('Quantité'), 1, 0, 'C', true);
-            $pdf->Cell(35, 8, utf8_to_latin('Prix unitaire HT'), 1, 0, 'C', true);
-            $pdf->Cell(40, 8, utf8_to_latin('Montant HT'), 1, 1, 'C', true);
+            $pdf->Cell(35, 8, utf8_to_latin('Prix unitaire'), 1, 0, 'C', true);
+            $pdf->Cell(40, 8, utf8_to_latin('Montant'), 1, 1, 'C', true);
 
             // Contenu du tableau
             $pdf->SetFont('Arial', '', 9);
 
-            // Abonnement de base (80% du montant)
-            $baseAmount = $contract->amount * 0.8;
-            $pdf->Cell(90, 8, utf8_to_latin('Abonnement ' . $contract->formule_abonnement), 1, 0);
-            $pdf->Cell(25, 8, '1', 1, 0, 'C');
-            $pdf->Cell(35, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 1, 'R');
+            if ($invoice->is_donation) {
+                // Cas d'un don
+                $pdf->Cell(90, 8, utf8_to_latin($invoice->details), 1, 0);
+                $pdf->Cell(25, 8, '1', 1, 0, 'C');
+                $pdf->Cell(35, 8, utf8_to_latin(number_format($invoice->total_amount, 2, ',', ' ') . ' €'), 1, 0, 'R');
+                $pdf->Cell(40, 8, utf8_to_latin(number_format($invoice->total_amount, 2, ',', ' ') . ' €'), 1, 1, 'R');
 
-            // Services inclus (20% du montant)
-            $servicesAmount = $contract->amount * 0.2;
-            $pdf->Cell(90, 8, utf8_to_latin('Services inclus'), 1, 0);
-            $pdf->Cell(25, 8, '1', 1, 0, 'C');
-            $pdf->Cell(35, 8, utf8_to_latin(number_format($servicesAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($servicesAmount, 2, ',', ' ') . ' €'), 1, 1, 'R');
+                // Total pour un don (pas de TVA)
+                $pdf->Ln(5);
+                $pdf->Cell(115, 8, '', 0, 0);
+                $pdf->SetFont('Arial', 'B', 11);
+                $pdf->Cell(35, 8, utf8_to_latin('Total'), 1, 0, 'L', true);
+                $pdf->Cell(40, 8, utf8_to_latin(number_format($invoice->total_amount, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+            } else {
+                // Cas d'une facture normale
+                $contract = $invoice->contract;
 
-            // Sous-total, TVA et total
-            $pdf->Ln(5);
-            $pdf->Cell(115, 8, '', 0, 0);
-            $pdf->SetFont('Arial', 'B', 9);
-            $pdf->Cell(35, 8, utf8_to_latin('Total HT'), 1, 0, 'L', true);
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+                // Abonnement de base (80% du montant)
+                $baseAmount = $contract->amount * 0.8;
+                $pdf->Cell(90, 8, utf8_to_latin('Abonnement ' . $contract->formule_abonnement), 1, 0);
+                $pdf->Cell(25, 8, '1', 1, 0, 'C');
+                $pdf->Cell(35, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
+                $pdf->Cell(40, 8, utf8_to_latin(number_format($baseAmount, 2, ',', ' ') . ' €'), 1, 1, 'R');
 
-            $pdf->Cell(115, 8, '', 0, 0);
-            $pdf->Cell(35, 8, utf8_to_latin('TVA (20%)'), 1, 0, 'L', true);
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 0.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+                // Services inclus (20% du montant)
+                $servicesAmount = $contract->amount * 0.2;
+                $pdf->Cell(90, 8, utf8_to_latin('Services inclus'), 1, 0);
+                $pdf->Cell(25, 8, '1', 1, 0, 'C');
+                $pdf->Cell(35, 8, utf8_to_latin(number_format($servicesAmount, 2, ',', ' ') . ' €'), 1, 0, 'R');
+                $pdf->Cell(40, 8, utf8_to_latin(number_format($servicesAmount, 2, ',', ' ') . ' €'), 1, 1, 'R');
 
-            $pdf->Cell(115, 8, '', 0, 0);
-            $pdf->SetFont('Arial', 'B', 11);
-            $pdf->Cell(35, 8, utf8_to_latin('Total TTC'), 1, 0, 'L', true);
-            $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 1.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+                // Sous-total, TVA et total
+                $pdf->Ln(5);
+                $pdf->Cell(115, 8, '', 0, 0);
+                $pdf->SetFont('Arial', 'B', 9);
+                $pdf->Cell(35, 8, utf8_to_latin('Total HT'), 1, 0, 'L', true);
+                $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+
+                $pdf->Cell(115, 8, '', 0, 0);
+                $pdf->Cell(35, 8, utf8_to_latin('TVA (20%)'), 1, 0, 'L', true);
+                $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 0.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+
+                $pdf->Cell(115, 8, '', 0, 0);
+                $pdf->SetFont('Arial', 'B', 11);
+                $pdf->Cell(35, 8, utf8_to_latin('Total TTC'), 1, 0, 'L', true);
+                $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount * 1.2, 2, ',', ' ') . ' €'), 1, 1, 'R', true);
+            }
 
             $pdf->Ln(10);
 

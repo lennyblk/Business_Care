@@ -12,7 +12,7 @@ class Invoice extends Model
     protected $table = 'invoice';
     public $timestamps = false;
     protected $fillable = [
-        'company_id', 'contract_id', 'issue_date', 'due_date', 'total_amount', 'payment_status', 'pdf_path', 'details'
+        'company_id', 'contract_id', 'issue_date', 'due_date', 'total_amount', 'payment_status', 'pdf_path', 'details', 'is_donation'
     ];
 
     public function company()

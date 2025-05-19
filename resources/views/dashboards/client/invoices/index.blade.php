@@ -121,7 +121,9 @@
                     </div>
 
                     <!-- Pagination -->
-                    {{ $invoices->links() }}
+                    <div class="d-flex justify-content-center mt-4">
+                        {{ $invoices->links() }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -176,6 +178,27 @@
 
     .bg-info {
         background-color: #0dcaf0 !important;
+    }
+
+    /* Styles pour la pagination */
+    .pagination {
+        margin-bottom: 0;
+        font-size: 0.85rem;
+    }
+    
+    .page-item {
+        margin: 0 1px;
+    }
+
+    .page-link {
+        padding: 0.25rem 0.5rem;
+        min-width: 32px;
+        text-align: center;
+    }
+
+    .page-item:first-child .page-link,
+    .page-item:last-child .page-link {
+        font-size: 0.8rem;
     }
 </style>
 @endsection

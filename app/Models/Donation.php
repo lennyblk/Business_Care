@@ -8,10 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class Donation extends Model
 {
     use HasFactory;
-    public $timestamps = false;
     protected $table = 'donation';
+    public $timestamps = false;
+
     protected $fillable = [
-        'association_id', 'employee_id', 'donation_type', 'amount_or_description', 'donation_date', 'status'
+        'association_id',
+        'company_id',
+        'donation_type',
+        'amount_or_description',
+        'donation_date',
+        'status'
     ];
 
     public function association()
@@ -19,8 +25,8 @@ class Donation extends Model
         return $this->belongsTo(Association::class);
     }
 
-    public function employee()
+    public function company()
     {
-        return $this->belongsTo(Employee::class);
+        return $this->belongsTo(Company::class);
     }
 }

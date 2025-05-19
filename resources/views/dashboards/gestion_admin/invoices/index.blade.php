@@ -41,6 +41,7 @@
                             <th>Contrat</th>
                             <th>Montant TTC</th>
                             <th>Statut</th>
+                            <th>Type</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -63,7 +64,13 @@
                                     N/A
                                 @endif
                             </td>
-                            <td>{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
+                            <td>
+                                @if($invoice->is_donation)
+                                    {{ number_format($invoice->total_amount, 2, ',', ' ') }} €
+                                @else
+                                    {{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €
+                                @endif
+                            </td>
                             <td>
                                 @if($invoice->payment_status === 'Paid')
                                     <span class="badge bg-success">Payée</span>
@@ -71,6 +78,13 @@
                                     <span class="badge bg-warning">En attente</span>
                                 @elseif($invoice->payment_status === 'Overdue')
                                     <span class="badge bg-danger">En retard</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($invoice->is_donation)
+                                    <span class="badge bg-info">Don</span>
+                                @else
+                                    <span class="badge bg-secondary">Facture</span>
                                 @endif
                             </td>
                             <td>
@@ -103,7 +117,9 @@
             </div>
 
             <!-- Pagination -->
-            {{ $invoices->links() }}
+            <div class="d-flex justify-content-center mt-4">
+                {{ $invoices->links() }}
+            </div>
         </div>
     </div>
 </div>
@@ -120,4 +136,36 @@
         });
     });
 </script>
+@endsection
+
+@section('styles')
+<style>
+    /* Badges */
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.2rem;
+    }
+
+    /* Styles pour la pagination */
+    .pagination {
+        margin-bottom: 0;
+        font-size: 0.85rem;
+    }
+    
+    .page-item {
+        margin: 0 1px;
+    }
+
+    .page-link {
+        padding: 0.25rem 0.5rem;
+        min-width: 32px;
+        text-align: center;
+    }
+
+    .page-item:first-child .page-link,
+    .page-item:last-child .page-link {
+        font-size: 0.8rem;
+    }
+</style>
 @endsection

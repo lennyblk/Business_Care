@@ -43,28 +43,45 @@ class AssociationApiController extends Controller
         ]);
 
         $association = Association::findOrFail($id);
-        $companyId = session('company_id');
+        $companyId = session('user_id');
+        
 
-        // Ici, vous ajouteriez la logique pour traiter le paiement via Stripe
-        // et enregistrer la donation dans votre base de données
+        if (!$companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Impossible de déterminer l\'entreprise de l\'employé'
+            ], 400);
+        }
 
         try {
-            // Simulation de traitement de paiement
-            // Dans un cas réel, vous intégreriez Stripe ici
-
-            // Enregistrer la donation
+            // Enregistrer la donation avec company_id au lieu de employee_id
             $donation = \App\Models\Donation::create([
                 'association_id' => $id,
                 'company_id' => $companyId,
-                'amount' => $request->amount,
-                'payment_status' => 'completed',
-                'payment_date' => now()
+                'donation_type' => 'Financial',
+                'amount_or_description' => $request->amount,
+                'donation_date' => now(),
+                'status' => 'Validated'
+            ]);
+
+            // Créer la facture pour le don
+            $invoice = \App\Models\Invoice::create([
+                'company_id' => $companyId,
+                'issue_date' => now(),
+                'due_date' => now(),
+                'total_amount' => $request->amount,
+                'payment_status' => 'Paid',
+                'details' => "Don à l'association: " . $association->name,
+                'is_donation' => 1
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Don effectué avec succès',
-                'data' => $donation
+                'data' => [
+                    'donation' => $donation,
+                    'invoice' => $invoice
+                ]
             ]);
 
         } catch (\Exception $e) {

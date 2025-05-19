@@ -101,6 +101,7 @@
                                             <th>Montant HT:</th>
                                             <td>{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
                                         </tr>
+                                        @if(!$invoice->is_donation)
                                         <tr>
                                             <th>TVA (20%):</th>
                                             <td>{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
@@ -111,22 +112,28 @@
                                                 {{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €
                                             </td>
                                         </tr>
+                                        @else
+                                        <tr>
+                                            <th>Montant total du don:</th>
+                                            <td class="fw-bold text-primary">
+                                                {{ number_format($invoice->total_amount, 2, ',', ' ') }} €
+                                            </td>
+                                        </tr>
+                                        @endif
+                                        @if($invoice->contract_id)
                                         <tr>
                                             <th>Contrat associé:</th>
                                             <td>
-                                                <a href="{{ route('contracts.show', $invoice->contract_id) }}">
+                                                <a href="{{ route('contracts.show', ['contract' => $invoice->contract_id]) }}">
                                                     Contrat #{{ $invoice->contract_id }}
                                                 </a>
                                             </td>
                                         </tr>
+                                        @endif
                                         @if($invoice->payment_status === 'Paid')
                                         <tr>
                                             <th>Date de paiement:</th>
-                                            <td>{{ isset($invoice->payment_date) ? \Carbon\Carbon::parse($invoice->payment_date)->format('d/m/Y') : 'N/A' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Méthode de paiement:</th>
-                                            <td>{{ $invoice->payment_method ?? 'N/A' }}</td>
+                                            <td>{{ isset($invoice->issue_date) ? \Carbon\Carbon::parse($invoice->payment_date)->format('d/m/Y') : 'N/A' }}</td>
                                         </tr>
                                         @endif
                                     </table>
@@ -138,7 +145,11 @@
                     <!-- Détails des services facturés -->
                     <div class="card mb-4">
                         <div class="card-header">
-                            Services facturés
+                            @if($invoice->is_donation)
+                                Détails du don
+                            @else
+                                Services facturés
+                            @endif
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
@@ -148,10 +159,18 @@
                                             <th>Description</th>
                                             <th>Quantité</th>
                                             <th class="text-end">Prix unitaire</th>
-                                            <th class="text-end">Montant HT</th>
+                                            <th class="text-end">Montant</th>
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @if($invoice->is_donation)
+                                        <tr>
+                                            <td>Don à l'association</td>
+                                            <td>1</td>
+                                            <td class="text-end">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
+                                            <td class="text-end">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
+                                        </tr>
+                                        @else
                                         <tr>
                                             <td>Abonnement {{ $invoice->contract->formule_abonnement }}</td>
                                             <td>1</td>
@@ -164,8 +183,15 @@
                                             <td class="text-end">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
                                             <td class="text-end">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
                                         </tr>
+                                        @endif
                                     </tbody>
                                     <tfoot>
+                                        @if($invoice->is_donation)
+                                        <tr>
+                                            <th colspan="3" class="text-end">Montant total du don</th>
+                                            <td class="text-end fw-bold">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
+                                        </tr>
+                                        @else
                                         <tr>
                                             <th colspan="3" class="text-end">Total HT</th>
                                             <td class="text-end">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
@@ -178,43 +204,12 @@
                                             <th colspan="3" class="text-end">Total TTC</th>
                                             <td class="text-end fw-bold">{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
                                         </tr>
+                                        @endif
                                     </tfoot>
                                 </table>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Historique des paiements -->
-                    @if($invoice->payment_status === 'Paid')
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            Historique des paiements
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Méthode</th>
-                                            <th>Référence</th>
-                                            <th class="text-end">Montant</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>{{ isset($invoice->payment_date) ? \Carbon\Carbon::parse($invoice->payment_date)->format('d/m/Y') : 'N/A' }}</td>
-                                            <td>{{ $invoice->payment_method ?? 'N/A' }}</td>
-                                            <td>{{ $invoice->payment_reference ?? '-' }}</td>
-                                            <td class="text-end">{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                    @endif
-
                     <!-- Actions disponibles -->
                     <div class="card">
                         <div class="card-header">

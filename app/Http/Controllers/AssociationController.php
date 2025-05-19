@@ -160,103 +160,35 @@ class AssociationController extends Controller
             }
 
             $session = Session::retrieve($sessionId);
-            Log::info('Session de don récupérée', [
-                'session_id' => $sessionId,
-                'payment_status' => $session->payment_status
-            ]);
-
+            
             if ($session->payment_status === 'paid') {
-                // Récupérer l'employé et sa société
-                $employee = Employee::findOrFail($employeeId);
-                $companyId = $employee->company_id;
+                // Appel au controller API pour traiter le don
+                $apiResponse = app(\App\Http\Controllers\API\AssociationApiController::class)->processDonation(
+                    new Request([
+                        'amount' => $amount,
+                        'payment_method_id' => $sessionId
+                    ]), 
+                    $id
+                );
 
-                // Ajouter un log pour vérifier ces valeurs
-                Log::info('Données employé et société récupérées', [
-                    'employee_id' => $employeeId,
-                    'employee_name' => $employee->first_name . ' ' . $employee->last_name,
-                    'company_id' => $companyId
-                ]);
+                $result = json_decode($apiResponse->getContent(), true);
 
-                // Enregistrer le don
-                $donation = new Donation();
-                $donation->association_id = $id;
-                $donation->employee_id = $employeeId;
-                $donation->donation_type = 'financial';
-                $donation->amount_or_description = $amount;
-                $donation->donation_date = now();
-                $donation->status = '1'; // Valeur simple qui devrait fonctionner
-                $donation->save();
+                if ($result['success']) {
+                    $this->sendDonationConfirmationEmail($result['data']['donation'], $association, Employee::findOrFail($employeeId));
 
-                Log::info('Don enregistré avec succès', [
-                    'donation_id' => $donation->id,
-                    'amount' => $donation->amount_or_description
-                ]);
-
-                // Générer un numéro de facture unique
-                $invoiceNumber = 'DON-' . date('Ymd') . '-' . $donation->id;
-
-                // Créer une facture pour ce don
-                $invoice = new Invoice();
-                $invoice->company_id = $companyId; // Assurez-vous que cette valeur est correcte
-                $invoice->contract_id = null; // Don sans contrat
-                $invoice->issue_date = now();
-                $invoice->due_date = now()->addDays(15);
-                $invoice->total_amount = $amount;
-                $invoice->payment_status = 'paid';
-
-                // Créer le détail de la facture
-                $details = [
-                    'type' => 'donation',
-                    'association_id' => $id,
-                    'association_name' => $association->name,
-                    'donation_id' => $donation->id,
-                    'employee_id' => $employeeId,
-                    'employee_name' => $employee->first_name . ' ' . $employee->last_name,
-                    'payment_method' => 'Carte bancaire via Stripe',
-                    'transaction_id' => $sessionId,
-                    'invoice_number' => $invoiceNumber
-                ];
-
-                $invoice->details = json_encode($details);
-
-                // Générer un chemin de PDF
-                $pdfPath = 'invoices/donation_' . $donation->id . '_' . date('YmdHis') . '.pdf';
-                $invoice->pdf_path = $pdfPath;
-
-                $invoice->save();
-
-                // Ajouter un log pour vérifier la création de la facture
-                Log::info('Facture générée pour le don', [
-                    'invoice_id' => $invoice->id,
-                    'company_id' => $invoice->company_id,
-                    'payment_status' => $invoice->payment_status,
-                    'amount' => $invoice->total_amount
-                ]);
-
-                // Vérification supplémentaire après sauvegarde
-                $savedInvoice = Invoice::find($invoice->id);
-                if (!$savedInvoice) {
-                    Log::error('La facture ne peut pas être retrouvée après sauvegarde');
-                } else {
-                    Log::info('Facture vérifiée après sauvegarde', [
-                        'invoice_id' => $savedInvoice->id,
-                        'company_id' => $savedInvoice->company_id,
-                        'payment_status' => $savedInvoice->payment_status
-                    ]);
+                    return redirect()->route('client.associations.index')
+                        ->with('success', 'Votre don a été effectué avec succès. Merci pour votre générosité ! La facture est disponible dans votre espace de facturation.');
                 }
 
-                $this->sendDonationConfirmationEmail($donation, $association, $employee);
-
-                return redirect()->route('client.associations.index')
-                    ->with('success', 'Votre don a été effectué avec succès. Merci pour votre générosité ! La facture est disponible dans votre espace de facturation.');
+                return redirect()->route('client.associations.show', $id)
+                    ->with('error', 'Erreur lors du traitement du don: ' . ($result['message'] ?? 'Erreur inconnue'));
             }
 
             return redirect()->route('client.associations.show', $id)
                 ->with('error', 'Le don n\'a pas été complété. Statut: ' . $session->payment_status);
+
         } catch (\Exception $e) {
-            Log::error('Erreur de confirmation don Stripe: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
-            ]);
+            Log::error('Erreur de confirmation don Stripe: ' . $e->getMessage());
             return redirect()->route('client.associations.show', $id)
                 ->with('error', 'Une erreur est survenue lors de la confirmation du don: ' . $e->getMessage());
         }
