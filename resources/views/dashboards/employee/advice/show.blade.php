@@ -21,42 +21,8 @@
                     @endforeach
                 </p>
             </div>
-            <div class="mb-4">
-                <h5 class="text-muted">Médias:</h5>
-                <div class="row">
-                    @forelse($advice->media as $media)
-                        @if($media->media_type === 'image')
-                            <div class="col-md-4 mb-3">
-                                <div class="card">
-                                    <img src="{{ Storage::url(str_replace('storage/', '', $media->media_url)) }}" 
-                                         class="card-img-top img-fluid" 
-                                         alt="{{ $media->title ?? 'Image du conseil' }}"
-                                         style="object-fit: cover; height: 200px;">
-                                    <div class="card-body">
-                                        @if($media->title)
-                                            <h6 class="card-title">{{ $media->title }}</h6>
-                                        @endif
-                                        @if($media->description)
-                                            <p class="card-text small">{{ $media->description }}</p>
-                                        @endif
-                                        <a href="{{ Storage::url(str_replace('storage/', '', $media->media_url)) }}" 
-                                           class="btn btn-sm btn-primary"
-                                           target="_blank"
-                                           title="Voir l'image en taille réelle">
-                                            Agrandir
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    @empty
-                        <div class="col">
-                            <p class="text-muted">Aucun média disponible</p>
-                        </div>
-                    @endforelse
-                </div>
             </div>
-            
+
             <!-- Section Feedback -->
             <div class="card mt-4">
                 <div class="card-header">
@@ -86,7 +52,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="comment" class="form-label">Commentaire</label>
-                                <textarea class="form-control" id="comment" name="comment" rows="3" 
+                                <textarea class="form-control" id="comment" name="comment" rows="3"
                                     placeholder="Partagez votre expérience..."></textarea>
                             </div>
                             <button type="submit" class="btn btn-success">Envoyer mon avis</button>
