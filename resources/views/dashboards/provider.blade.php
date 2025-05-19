@@ -14,10 +14,6 @@
                     <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
                     <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action">Profil prestataire</a>
                     <a href="{{ route('provider.evaluations.index') }}" class="list-group-item list-group-item-action">Suivi des évaluations</a>
-                    <a href="#" class="list-group-item list-group-item-action">Clients</a>
-                    <a href="#" class="list-group-item list-group-item-action">Calendrier</a>
-                    <a href="#" class="list-group-item list-group-item-action">Facturation</a>
-                    <a href="#" class="list-group-item list-group-item-action">Services</a>
                     <a href="{{ route('provider.assignments.index') }}" class="list-group-item list-group-item-action">Activités</a>
                 </div>
             </div>
