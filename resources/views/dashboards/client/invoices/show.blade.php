@@ -98,28 +98,11 @@
                                 <div class="card-body">
                                     <table class="table table-borderless">
                                         <tr>
-                                            <th>Montant HT:</th>
-                                            <td>{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
-                                        </tr>
-                                        @if(!$invoice->is_donation)
-                                        <tr>
-                                            <th>TVA (20%):</th>
-                                            <td>{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
-                                        </tr>
-                                        <tr>
-                                            <th>Montant TTC:</th>
-                                            <td class="fw-bold text-primary">
-                                                {{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €
-                                            </td>
-                                        </tr>
-                                        @else
-                                        <tr>
-                                            <th>Montant total du don:</th>
+                                            <th>Montant total:</th>
                                             <td class="fw-bold text-primary">
                                                 {{ number_format($invoice->total_amount, 2, ',', ' ') }} €
                                             </td>
                                         </tr>
-                                        @endif
                                         @if($invoice->contract_id)
                                         <tr>
                                             <th>Contrat associé:</th>
@@ -172,39 +155,18 @@
                                         </tr>
                                         @else
                                         <tr>
-                                            <td>Abonnement {{ $invoice->contract->formule_abonnement }}</td>
+                                            <td>{{ $invoice->contract->formule_abonnement }}</td>
                                             <td>1</td>
-                                            <td class="text-end">{{ number_format($invoice->total_amount * 0.8, 2, ',', ' ') }} €</td>
-                                            <td class="text-end">{{ number_format($invoice->total_amount * 0.8, 2, ',', ' ') }} €</td>
-                                        </tr>
-                                        <tr>
-                                            <td>Services inclus</td>
-                                            <td>1</td>
-                                            <td class="text-end">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
-                                            <td class="text-end">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
+                                            <td class="text-end">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
+                                            <td class="text-end">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
                                         </tr>
                                         @endif
                                     </tbody>
                                     <tfoot>
-                                        @if($invoice->is_donation)
                                         <tr>
-                                            <th colspan="3" class="text-end">Montant total du don</th>
+                                            <th colspan="3" class="text-end">Montant total</th>
                                             <td class="text-end fw-bold">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
                                         </tr>
-                                        @else
-                                        <tr>
-                                            <th colspan="3" class="text-end">Total HT</th>
-                                            <td class="text-end">{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
-                                        </tr>
-                                        <tr>
-                                            <th colspan="3" class="text-end">TVA (20%)</th>
-                                            <td class="text-end">{{ number_format($invoice->total_amount * 0.2, 2, ',', ' ') }} €</td>
-                                        </tr>
-                                        <tr>
-                                            <th colspan="3" class="text-end">Total TTC</th>
-                                            <td class="text-end fw-bold">{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
-                                        </tr>
-                                        @endif
                                     </tfoot>
                                 </table>
                             </div>
