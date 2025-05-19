@@ -132,6 +132,10 @@ Route::middleware(['check.auth'])->group(function () {
         Route::get('/{id}', [App\Http\Controllers\AdminContractController::class, 'show'])->name('admin.contracts.show');
         Route::post('/{id}/approve', [App\Http\Controllers\AdminContractController::class, 'approve'])->name('admin.contracts.approve');
         Route::post('/{id}/reject', [App\Http\Controllers\AdminContractController::class, 'reject'])->name('admin.contracts.reject');
+        Route::post('/{id}/approve-termination', [App\Http\Controllers\AdminContractController::class, 'approveTermination'])
+            ->name('admin.contracts.approve-termination');
+        Route::post('/{id}/reject-termination', [App\Http\Controllers\AdminContractController::class, 'rejectTermination'])
+            ->name('admin.contracts.reject-termination');
     });
 });
 

@@ -19,7 +19,8 @@ class Contract extends Model
         'formule_abonnement',
         'stripe_checkout_id',
         'stripe_subscription_id',
-        'payment_status'
+        'payment_status',
+        'is_termination_request'
     ];
 
     public function company()

@@ -48,21 +48,39 @@
                                    class="btn btn-info btn-sm">
                                     <i class="fas fa-eye"></i> Voir
                                 </a>
-                                <form action="{{ route('admin.contracts.approve', $contract->id) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success btn-sm">
-                                        <i class="fas fa-check"></i> Approuver
-                                    </button>
-                                </form>
-                                <form action="{{ route('admin.contracts.reject', $contract->id) }}"
-                                      method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Êtes-vous sûr de vouloir rejeter ce contrat ?')">
-                                        <i class="fas fa-times"></i> Rejeter
-                                    </button>
-                                </form>
+                                @if($contract->is_termination_request)
+                                    <form action="{{ route('admin.contracts.approve-termination', $contract->id) }}"
+                                          method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check"></i> Approuver la résiliation
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.contracts.reject-termination', $contract->id) }}"
+                                          method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Êtes-vous sûr de vouloir rejeter cette demande de résiliation ?')">
+                                            <i class="fas fa-times"></i> Rejeter la résiliation
+                                        </button>
+                                    </form>
+                                @else
+                                    <form action="{{ route('admin.contracts.approve', $contract->id) }}"
+                                          method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-success btn-sm">
+                                            <i class="fas fa-check"></i> Approuver
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('admin.contracts.reject', $contract->id) }}"
+                                          method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger btn-sm"
+                                                onclick="return confirm('Êtes-vous sûr de vouloir rejeter ce contrat ?')">
+                                            <i class="fas fa-times"></i> Rejeter
+                                        </button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                         @endforeach

@@ -84,6 +84,8 @@
                                                 <span class="badge bg-info">Paiement en cours</span>
                                             @elseif($contract->payment_status === 'active')
                                                 <span class="badge bg-success">Actif</span>
+                                            @elseif($contract->payment_status === 'terminated')
+                                                <span class="badge bg-secondary">Résilié</span>
                                             @endif
                                         </td>
 

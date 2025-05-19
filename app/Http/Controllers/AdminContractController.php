@@ -86,6 +86,42 @@ class AdminContractController extends Controller
         }
     }
 
+    public function approveTermination($id)
+    {
+        try {
+            $response = $this->apiController->approveTermination($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                return back()->with('error', $data['message'] ?? 'Erreur lors de l\'approbation de la résiliation');
+            }
+
+            return redirect()->route('admin.contracts.index')
+                ->with('success', 'La résiliation a été approuvée avec succès');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de l\'approbation de la résiliation: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
+    public function rejectTermination($id)
+    {
+        try {
+            $response = $this->apiController->rejectTermination($id);
+            $data = json_decode($response->getContent(), true);
+
+            if ($response->getStatusCode() !== 200) {
+                return back()->with('error', $data['message'] ?? 'Erreur lors du rejet de la résiliation');
+            }
+
+            return redirect()->route('admin.contracts.index')
+                ->with('success', 'La demande de résiliation a été rejetée');
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du rejet de la résiliation: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue');
+        }
+    }
+
     private function arrayToObject($array)
     {
         if (!is_array($array)) {

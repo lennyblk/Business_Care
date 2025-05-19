@@ -403,28 +403,23 @@ class ContractController extends Controller
                     ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
             }
 
-            // Approche directe pour mettre à jour contrat et société
             $contract = Contract::findOrFail($id);
-
-            // Mettre le contrat en statut 'pending' pour signifier qu'il est résilié
+            
+            // Marquer comme demande de résiliation
             $contract->payment_status = 'pending';
+            $contract->is_termination_request = 1;
             $contract->save();
 
-            // Mettre à jour le statut du compte de l'entreprise avec la valeur correcte
-            $company = Company::findOrFail($contract->company_id);
-            $company->statut_compte = 'Inactif'; // La valeur correcte selon la structure de la table
-            $company->save();
-
-            Log::info('Contrat résilié et compte désactivé', [
+            Log::info('Demande de résiliation soumise', [
                 'contract_id' => $id,
-                'company_id' => $contract->company_id,
-                'new_account_status' => $company->statut_compte
+                'company_id' => $contract->company_id
             ]);
 
-            return redirect()->route('contracts.index')->with('success', 'Contrat résilié avec succès.');
+            return redirect()->route('contracts.index')
+                ->with('success', 'Votre demande de résiliation a été soumise et est en attente d\'approbation.');
         } catch (\Exception $e) {
             Log::error('Exception lors de la résiliation d\'un contrat: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de la résiliation du contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la demande de résiliation du contrat');
         }
     }
 }
