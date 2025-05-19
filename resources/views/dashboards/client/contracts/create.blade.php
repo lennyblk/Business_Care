@@ -77,11 +77,15 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="amount" class="form-label">Montant mensuel (€)</label>
+                                <label for="amount" class="form-label">Montant annuel (€)</label>
                                 <div class="input-group">
-                                    <input type="number" class="form-control @error('amount') is-invalid @enderror" id="amount" name="amount" value="{{ old('amount') }}" step="0.01" min="0" required>
+                                    <input type="number" class="form-control @error('amount') is-invalid @enderror" 
+                                           id="amount" name="amount" value="{{ old('amount') }}" 
+                                           step="0.01" min="0" required readonly
+                                           style="background-color: #e9ecef;">
                                     <span class="input-group-text">€</span>
                                 </div>
+                                <div class="form-text">Le montant est calculé automatiquement selon le nombre de collaborateurs.</div>
                                 @error('amount')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -90,8 +94,7 @@
                                 <label for="payment_method" class="form-label">Méthode de paiement</label>
                                 <select class="form-select @error('payment_method') is-invalid @enderror" id="payment_method" name="payment_method" required>
                                     <option value="">Sélectionnez une méthode</option>
-                                    <option value="Direct Debit" {{ old('payment_method') == 'Direct Debit' ? 'selected' : '' }}>Prélèvement automatique</option>
-                                    <option value="Invoice" {{ old('payment_method') == 'Invoice' ? 'selected' : '' }}>Facture mensuelle</option>
+                                    <option value="Invoice" {{ old('payment_method') == 'Invoice' ? 'selected' : '' }}>Paiement en ligne</option>
                                 </select>
                                 @error('payment_method')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -195,7 +198,6 @@
                                 <div class="row">
                                     <div class="col-md-6">
                                         <p><strong>Durée du contrat:</strong> <span id="contract-duration">12</span> mois</p>
-                                        <p><strong>Montant mensuel:</strong> <span id="monthly-amount">0,00</span> €</p>
                                     </div>
                                     <div class="col-md-6">
                                         <p><strong>Total du contrat:</strong> <span id="total-amount">0,00</span> €</p>
@@ -240,7 +242,6 @@
 
         // Éléments du récapitulatif
         const contractDuration = document.getElementById('contract-duration');
-        const monthlyAmount = document.getElementById('monthly-amount');
         const totalAmount = document.getElementById('total-amount');
         const paymentMethodText = document.getElementById('payment-method-text');
 
@@ -303,10 +304,10 @@
                 pricePerEmployee = 100;
             }
 
-            // montant total
+            // Calcul du montant annuel total
             const totalPrice = pricePerEmployee * employeeCount;
 
-            // Mettre à jour le champ montant
+            // Mettre à jour le champ montant avec le montant total du contrat
             amountInput.value = totalPrice.toFixed(2);
 
             // Mettre à jour le récapitulatif
@@ -330,13 +331,9 @@
             // Mise à jour de la durée
             contractDuration.textContent = diffMonths;
 
-            // Mise à jour du montant mensuel
-            const amount = parseFloat(amountInput.value) || 0;
-            monthlyAmount.textContent = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
             // Mise à jour du montant total
-            const total = amount * diffMonths;
-            totalAmount.textContent = total.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const amount = parseFloat(amountInput.value) || 0;
+            totalAmount.textContent = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             // Mise à jour de la méthode de paiement
             const paymentMethod = paymentMethodSelect.options[paymentMethodSelect.selectedIndex]?.text || '-';

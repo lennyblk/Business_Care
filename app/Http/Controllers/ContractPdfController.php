@@ -143,15 +143,8 @@ class ContractPdfController extends Controller
             $pdf->Cell(0, 10, utf8_to_latin('Tarification'), 0, 1);
 
             $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(90, 7, utf8_to_latin('Montant mensuel :'), 1);
+            $pdf->Cell(90, 7, utf8_to_latin('Montant total du contrat :'), 1);
             $pdf->Cell(0, 7, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 1, 'R');
-
-            $pdf->Cell(90, 7, utf8_to_latin('Nombre de mois :'), 1);
-            $pdf->Cell(0, 7, utf8_to_latin($duration), 1, 1, 'R');
-
-            $pdf->Cell(90, 7, utf8_to_latin('Total du contrat :'), 1);
-            $total = $contract->amount * $duration;
-            $pdf->Cell(0, 7, utf8_to_latin(number_format($total, 2, ',', ' ') . ' €'), 1, 1, 'R');
 
             $pdf->Ln(10);
 
@@ -163,7 +156,7 @@ class ContractPdfController extends Controller
             $terms = "Le présent contrat de services est établi entre Business Care et la société mentionnée ci-dessus. ";
             $terms .= "Il définit les modalités de fourniture des services pour la formule " . $contract->formule_abonnement . ". ";
             $terms .= "Le contrat prend effet à la date de début indiquée et se termine à la date de fin, sauf résiliation anticipée conformément aux conditions générales de vente. ";
-            $terms .= "Le paiement s'effectue mensuellement selon la méthode de paiement choisie. ";
+            $terms .= "Le paiement s'effectue en une seule fois pour la totalité de la durée du contrat. ";
             $terms .= "Toute résiliation anticipée peut entraîner des frais selon les termes du contrat.";
 
             $pdf->MultiCell(0, 5, utf8_to_latin($terms), 0);
@@ -330,15 +323,8 @@ class ContractPdfController extends Controller
             $pdf->Cell(0, 10, utf8_to_latin('Tarification'), 0, 1);
 
             $pdf->SetFont('Arial', '', 10);
-            $pdf->Cell(90, 7, utf8_to_latin('Montant mensuel :'), 1);
+            $pdf->Cell(90, 7, utf8_to_latin('Montant total du contrat :'), 1);
             $pdf->Cell(0, 7, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 1, 'R');
-
-            $pdf->Cell(90, 7, utf8_to_latin('Nombre de mois :'), 1);
-            $pdf->Cell(0, 7, utf8_to_latin($duration), 1, 1, 'R');
-
-            $pdf->Cell(90, 7, utf8_to_latin('Total du contrat :'), 1);
-            $total = $contract->amount * $duration;
-            $pdf->Cell(0, 7, utf8_to_latin(number_format($total, 2, ',', ' ') . ' €'), 1, 1, 'R');
 
             $pdf->Ln(10);
 
@@ -350,7 +336,7 @@ class ContractPdfController extends Controller
             $terms = "Le présent contrat de services est établi entre Business Care et la société mentionnée ci-dessus. ";
             $terms .= "Il définit les modalités de fourniture des services pour la formule " . $contract->formule_abonnement . ". ";
             $terms .= "Le contrat prend effet à la date de début indiquée et se termine à la date de fin, sauf résiliation anticipée conformément aux conditions générales de vente. ";
-            $terms .= "Le paiement s'effectue mensuellement selon la méthode de paiement choisie. ";
+            $terms .= "Le paiement s'effectue en une seule fois pour la totalité de la durée du contrat. ";
             $terms .= "Toute résiliation anticipée peut entraîner des frais selon les termes du contrat.";
 
             $pdf->MultiCell(0, 5, utf8_to_latin($terms), 0);
@@ -371,12 +357,16 @@ class ContractPdfController extends Controller
             $pdf->SetFont('Arial', 'I', 8);
             $pdf->Cell(0, 10, utf8_to_latin('Business Care - Contrat de services #' . $contract->id . ' - Page ' . $pdf->PageNo()), 0, 0, 'C');
 
-            // Afficher le PDF dans le navigateur
-            return $pdf->Output('I', 'contrat_' . $contract->id . '.pdf');
+            // Nom du fichier à télécharger
+            $filename = 'contrat_' . $contract->id . '_' . date('Ymd') . '.pdf';
+
+            // Télécharger le PDF
+            return $pdf->Output('D', $filename);
 
         } catch (\Exception $e) {
-            Log::error('Erreur lors de l\'affichage du PDF du contrat: ' . $e->getMessage());
-            return back()->with('error', 'Une erreur est survenue lors de l\'affichage du PDF du contrat.');
+            Log::error('Erreur lors de la génération du PDF du contrat: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la génération du PDF du contrat.');
         }
     }
+
 }

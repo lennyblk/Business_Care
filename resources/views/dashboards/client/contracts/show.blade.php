@@ -104,14 +104,14 @@
                                             <td class="fw-bold">{{ number_format($contract->amount, 2, ',', ' ') }} €</td>
                                         </tr>
                                         <tr>
-                                            <th>Fréquence:</th>
-                                            <td>Mensuelle</td>
-                                        </tr>
-                                        <tr>
                                             <th>Total du contrat:</th>
                                             <td class="fw-bold text-primary">
-                                                {{ number_format($contract->amount * \Carbon\Carbon::parse($contract->start_date)->diffInMonths($contract->end_date), 2, ',', ' ') }} €
+                                                {{ number_format($contract->amount, 2, ',', ' ') }} €
                                             </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Durée:</th>
+                                            <td>{{ \Carbon\Carbon::parse($contract->start_date)->diffInMonths($contract->end_date) }} mois</td>
                                         </tr>
                                         <tr>
                                             <th>Prochain paiement:</th>

@@ -56,10 +56,10 @@ class StripePaymentController extends Controller
                         'currency' => 'eur',
                         'product_data' => [
                             'name' => 'Contrat Business Care - ' . $contract->formule_abonnement,
-                            'description' => 'Période: ' . \Carbon\Carbon::parse($contract->start_date)->format('d/m/Y') .
+                            'description' => 'Durée: ' . \Carbon\Carbon::parse($contract->start_date)->format('d/m/Y') .
                                            ' - ' . \Carbon\Carbon::parse($contract->end_date)->format('d/m/Y'),
                         ],
-                        'unit_amount' => (int)($contract->amount * 100), // Conversion en centimes
+                        'unit_amount' => (int)($contract->amount * 100), // Le montant est déjà le total du contrat
                     ],
                     'quantity' => 1,
                 ]],
@@ -111,7 +111,7 @@ class StripePaymentController extends Controller
                 $contract->save();
 
                 try {
-                    // Créer et enregistrer la facture avec les colonnes existantes
+                    // Créer et enregistrer la facture
                     $invoice = new \App\Models\Invoice();
                     $invoice->contract_id = $contract->id;
                     $invoice->company_id = $contract->company_id;

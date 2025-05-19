@@ -50,7 +50,7 @@
                                     <th>N° Facture</th>
                                     <th>Date</th>
                                     <th>Type</th>
-                                    <th>Montant TTC</th>
+                                    <th>Montant</th>
                                     <th>Statut</th>
                                     <th>Actions</th>
                                 </tr>
@@ -79,7 +79,7 @@
                                                 <span class="badge bg-info">{{ $donType }}</span>
                                             @endif
                                         </td>
-                                        <td>{{ number_format($invoice->total_amount * 1.2, 2, ',', ' ') }} €</td>
+                                        <td>{{ number_format($invoice->total_amount, 2, ',', ' ') }} €</td>
                                         <td>
                                             @if($invoice->payment_status === 'Paid' || $invoice->payment_status === 'paid')
                                                 <span class="badge bg-success">Payée</span>
