@@ -22,8 +22,8 @@ class StripePaymentController extends Controller
                     ->with('error', 'Ce contrat ne peut pas être payé actuellement.');
             }
 
-            // Configuration de Stripe avec la clé API
-            Stripe::setApiKey(env('STRIPE_SECRET'));
+            Log::info('Clé Stripe utilisée: ' . (empty(env('STRIPE_SECRET')) ? 'VIDE' : 'PRÉSENTE'));
+            Stripe::setApiKey('sk_test_51RJaodCBigEWbFDKy1ZUFlMNoljc5GuwMW8vtcAf6CqTqB11Iskm8LJ5IyrLisMpQbifdyl7CG2pv5KSRY4AsB0N00YBpKyVV7'); // CLé en blanc parce que le .env marche pas
 
             // Log pour le débogage
             Log::info('Création de session Stripe pour le contrat #' . $contractId, [
@@ -89,7 +89,7 @@ class StripePaymentController extends Controller
         try {
             $contract = Contract::with('company')->findOrFail($contractId);
 
-            Stripe::setApiKey(env('STRIPE_SECRET'));
+            Stripe::setApiKey('sk_test_51RJaodCBigEWbFDKy1ZUFlMNoljc5GuwMW8vtcAf6CqTqB11Iskm8LJ5IyrLisMpQbifdyl7CG2pv5KSRY4AsB0N00YBpKyVV7'); // CLé en blanc parce que le .env marche pas
 
             // Vérifier la session de paiement
             $sessionId = $request->get('session_id');
@@ -111,21 +111,23 @@ class StripePaymentController extends Controller
                 $contract->save();
 
                 try {
-                    // Créer et enregistrer la facture
-                    $invoice = new \App\Models\Invoice();
-                    $invoice->contract_id = $contract->id;
-                    $invoice->company_id = $contract->company_id;
-                    $invoice->issue_date = now();
-                    $invoice->due_date = now()->addDays(15);
-                    $invoice->total_amount = $contract->amount;
-                    $invoice->payment_status = 'Paid';
-                    $invoice->details = "Paiement Stripe - Session ID: " . $sessionId . "\n" .
-                                      "Date de paiement: " . now()->format('d/m/Y H:i:s') . "\n" .
-                                      "Méthode: Carte bancaire via Stripe";
+                // Créer et enregistrer la facture
+                $invoice = new \App\Models\Invoice();
+                $invoice->contract_id = $contract->id;
+                $invoice->company_id = $contract->company_id;
+                $invoice->issue_date = now();
+                $invoice->due_date = now()->addDays(15);
+                $invoice->total_amount = $contract->amount;
+                $invoice->payment_status = 'Paid';
 
-                    if (!$invoice->save()) {
-                        throw new \Exception('Échec de la sauvegarde de la facture');
-                    }
+                // Modifiez cette partie pour éviter les caractères accentués
+                $invoice->details = "Paiement Stripe - Session ID: " . $sessionId . "\n" .
+                                "Date de paiement: " . now()->format('d/m/Y H:i:s') . "\n" .
+                                "Mode de paiement: Carte bancaire via Stripe"; // "Méthode" remplacé par "Mode de paiement"
+
+                if (!$invoice->save()) {
+                    throw new \Exception('Échec de la sauvegarde de la facture');
+                }
 
                     Log::info('Facture créée avec succès', [
                         'invoice_id' => $invoice->id,
