@@ -23,6 +23,8 @@ services:
     command: >
       sh -c "chmod +x /scripts/init.sh &&
              /scripts/init.sh"
+              sh -c "chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache &&
+        chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache &&/usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf"
     depends_on:
       - db
     ports:
