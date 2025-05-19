@@ -37,9 +37,6 @@ class Advice extends Model
         return $this->belongsToMany(AdviceTag::class, 'advice_has_tag', 'advice_id', 'tag_id');
     }
 
-    /**
-     * Get the schedules for this advice
-     */
     public function schedules()
     {
         return $this->hasMany(AdviceSchedule::class, 'advice_id');
