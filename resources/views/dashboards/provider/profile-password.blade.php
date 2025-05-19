@@ -11,11 +11,10 @@
                     Menu
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="{{ route('dashboard.provider') }}" class="list-group-item list-group-item-action">Tableau de bord</a>
-                    <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action active">Profil</a>
-                    <a href="{{ route('provider.assignments.index') }}" class="list-group-item list-group-item-action">Missions</a>
-                    <a href="#" class="list-group-item list-group-item-action">Disponibilités</a>
-                    <a href="#" class="list-group-item list-group-item-action">Facturation</a>
+                    <a href="#" class="list-group-item list-group-item-action active">Tableau de bord</a>
+                    <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action">Profil prestataire</a>
+                    <a href="{{ route('provider.evaluations.index') }}" class="list-group-item list-group-item-action">Suivi des évaluations</a>
+                    <a href="{{ route('provider.assignments.index') }}" class="list-group-item list-group-item-action">Activités</a>
                     <!-- Autres liens spécifiques aux prestataires -->
                 </div>
             </div>
