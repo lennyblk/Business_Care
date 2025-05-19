@@ -148,6 +148,24 @@
                                 </td>
                             </tr>
                             <tr>
+                                <th>Document justificatif</th>
+                                <td>
+                                    @php
+                                        $additionalData = json_decode($registration->additional_data, true) ?? [];
+                                        $documentPath = $additionalData['document_justificatif'] ?? null;
+                                    @endphp
+
+                                    @if($documentPath)
+                                        <!-- Utilisez la nouvelle route au lieu du lien direct -->
+                                        <a href="{{ route('download.file', ['path' => $documentPath]) }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-download"></i> Télécharger
+                                        </a>
+                                    @else
+                                        <span class="text-danger">Aucun document fourni</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Tarif horaire</th>
                                 <td>{{ $registration->tarif_horaire }} €</td>
                             </tr>

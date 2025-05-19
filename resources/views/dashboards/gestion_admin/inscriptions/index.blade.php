@@ -34,46 +34,53 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($pendingRegistrations as $registration)
-                        <tr>
-                            <td>{{ $registration->id }}</td>
-                            <td>
-                                @if($registration->user_type == 'societe')
-                                    Société
-                                @elseif($registration->user_type == 'employe')
-                                    Employé
-                                @elseif($registration->user_type == 'prestataire')
-                                    Prestataire
-                                @endif
-                            </td>
-                            <td>
-                                @if($registration->user_type == 'societe')
-                                    {{ $registration->company_name }}
-                                @else
-                                    {{ $registration->first_name }} {{ $registration->last_name }}
-                                @endif
-                            </td>
-                            <td>{{ $registration->email }}</td>
-                            <td>{{ $registration->created_at->format('d/m/Y H:i') }}</td>
-                            <td>
-                            <a href="{{ route('admin.inscriptions.show', $registration->id) }}" class="btn btn-info btn-sm">
-                                <i class="fas fa-eye"></i> Voir
-                            </a>
-                            <form action="{{ route('admin.inscriptions.approve', $registration->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-success btn-sm">
-                                    <i class="fas fa-check"></i> Approuver
-                                </button>
-                            </form>
-                            <form action="{{ route('admin.inscriptions.reject', $registration->id) }}" method="POST" class="d-inline">
-                                @csrf
-                                <button type="submit" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-times"></i> Rejeter
-                                </button>
-                            </form>
-                            </td>
-                        </tr>
-                        @endforeach
+                        @forelse($pendingRegistrations as $registration)
+                            {{-- Vérifier à nouveau que le statut est bien 'pending' --}}
+                            @if($registration->status == 'pending')
+                            <tr>
+                                <td>{{ $registration->id }}</td>
+                                <td>
+                                    @if($registration->user_type == 'societe')
+                                        Société
+                                    @elseif($registration->user_type == 'employe')
+                                        Employé
+                                    @elseif($registration->user_type == 'prestataire')
+                                        Prestataire
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($registration->user_type == 'societe')
+                                        {{ $registration->company_name }}
+                                    @else
+                                        {{ $registration->first_name }} {{ $registration->last_name }}
+                                    @endif
+                                </td>
+                                <td>{{ $registration->email }}</td>
+                                <td>{{ $registration->created_at->format('d/m/Y H:i') }}</td>
+                                <td>
+                                <a href="{{ route('admin.inscriptions.show', $registration->id) }}" class="btn btn-info btn-sm">
+                                    <i class="fas fa-eye"></i> Voir
+                                </a>
+                                <form action="{{ route('admin.inscriptions.approve', $registration->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="fas fa-check"></i> Approuver
+                                    </button>
+                                </form>
+                                <form action="{{ route('admin.inscriptions.reject', $registration->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-times"></i> Rejeter
+                                    </button>
+                                </form>
+                                </td>
+                            </tr>
+                            @endif
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center">Aucune demande d'inscription en attente</td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\API\AdminPendingRegistrationController as APIPendingReg
 use App\Models\PendingRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class AdminPendingRegistrationController extends Controller
 {
@@ -19,6 +20,7 @@ class AdminPendingRegistrationController extends Controller
     public function index()
     {
         try {
+            // S'assurer que seules les demandes en attente sont affichées
             $pendingRegistrations = PendingRegistration::where('status', 'pending')
                                                       ->orderBy('created_at', 'desc')
                                                       ->get();
@@ -44,8 +46,6 @@ class AdminPendingRegistrationController extends Controller
     public function approve($id)
     {
         try {
-            Log::info('Web: Tentative d\'approbation pour l\'inscription #'.$id);
-
             // Vérifier que l'inscription existe et est en attente
             $registration = PendingRegistration::findOrFail($id);
 
@@ -54,14 +54,14 @@ class AdminPendingRegistrationController extends Controller
             }
 
             // Appel au contrôleur API
-            $request = new Request(['id' => $id]);
             $response = $this->apiController->approve($id);
 
             // Si c'est une réponse JSON (format API), la convertir
             if (is_object($response) && method_exists($response, 'getContent')) {
                 $jsonResponse = json_decode($response->getContent(), true);
                 if (isset($jsonResponse['success'])) {
-                    return redirect()->route('admin.inscriptions.index')
+                    // Forcer un refresh pour éviter les problèmes de cache
+                    return redirect()->route('admin.inscriptions.index', ['refresh' => time()])
                         ->with('success', $jsonResponse['message'] ?? 'Demande d\'inscription approuvée avec succès.');
                 }
 
@@ -80,7 +80,6 @@ class AdminPendingRegistrationController extends Controller
                 ->with('success', 'Demande d\'inscription approuvée avec succès.');
         } catch (\Exception $e) {
             Log::error('Erreur lors de l\'approbation de l\'inscription #'.$id.': ' . $e->getMessage());
-            Log::error($e->getTraceAsString());
             return redirect()->back()->withErrors(['error' => 'Une erreur est survenue lors de l\'approbation: ' . $e->getMessage()]);
         }
     }
@@ -88,8 +87,6 @@ class AdminPendingRegistrationController extends Controller
     public function reject($id)
     {
         try {
-            Log::info('Web: Tentative de rejet pour l\'inscription #'.$id);
-
             // Vérifier que l'inscription existe et est en attente
             $registration = PendingRegistration::findOrFail($id);
 
@@ -98,14 +95,13 @@ class AdminPendingRegistrationController extends Controller
             }
 
             // Appel au contrôleur API
-            $request = new Request(['id' => $id]);
             $response = $this->apiController->reject($id);
 
             // Si c'est une réponse JSON (format API), la convertir
             if (is_object($response) && method_exists($response, 'getContent')) {
                 $jsonResponse = json_decode($response->getContent(), true);
                 if (isset($jsonResponse['success'])) {
-                    return redirect()->route('admin.inscriptions.index')
+                    return redirect()->route('admin.inscriptions.index', ['refresh' => time()])
                         ->with('success', $jsonResponse['message'] ?? 'Demande d\'inscription rejetée avec succès.');
                 }
 
@@ -125,6 +121,75 @@ class AdminPendingRegistrationController extends Controller
         } catch (\Exception $e) {
             Log::error('Erreur lors du rejet de l\'inscription #'.$id.': ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Une erreur est survenue lors du rejet: ' . $e->getMessage()]);
+        }
+    }
+
+    // Méthodes pour télécharger et visualiser les documents
+    public function downloadDocument($id)
+    {
+        try {
+            $registration = PendingRegistration::findOrFail($id);
+            $additionalData = json_decode($registration->additional_data, true) ?? [];
+
+            if (!isset($additionalData['document_justificatif'])) {
+                return back()->with('error', 'Aucun document justificatif disponible.');
+            }
+
+            $path = $additionalData['document_justificatif'];
+            $fullPath = storage_path('app/public/' . $path);
+
+            if (!file_exists($fullPath)) {
+                Log::error('Document justificatif introuvable: ' . $fullPath);
+                return back()->with('error', 'Le document demandé est introuvable.');
+            }
+
+            return response()->download($fullPath);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors du téléchargement du document: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors du téléchargement du document.');
+        }
+    }
+
+    public function viewDocument($id)
+    {
+        try {
+            $registration = PendingRegistration::findOrFail($id);
+            $additionalData = json_decode($registration->additional_data, true) ?? [];
+
+            if (!isset($additionalData['document_justificatif'])) {
+                return back()->with('error', 'Aucun document justificatif disponible.');
+            }
+
+            $path = $additionalData['document_justificatif'];
+            $fullPath = storage_path('app/public/' . $path);
+
+            if (!file_exists($fullPath)) {
+                Log::error('Document justificatif introuvable: ' . $fullPath);
+                return back()->with('error', 'Le document demandé est introuvable.');
+            }
+
+            // Déterminer le type de contenu
+            $extension = pathinfo($fullPath, PATHINFO_EXTENSION);
+            $contentType = '';
+            switch (strtolower($extension)) {
+                case 'pdf':
+                    $contentType = 'application/pdf';
+                    break;
+                case 'jpg':
+                case 'jpeg':
+                    $contentType = 'image/jpeg';
+                    break;
+                case 'png':
+                    $contentType = 'image/png';
+                    break;
+                default:
+                    $contentType = 'application/octet-stream';
+            }
+
+            return response()->file($fullPath, ['Content-Type' => $contentType]);
+        } catch (\Exception $e) {
+            Log::error('Erreur lors de la visualisation du document: ' . $e->getMessage());
+            return back()->with('error', 'Une erreur est survenue lors de la visualisation du document.');
         }
     }
 }

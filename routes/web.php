@@ -390,3 +390,22 @@ Route::middleware(['check.auth'])->group(function () {
 
 Route::patch('/admin/advice/schedule/{id}/toggle', [\App\Http\Controllers\AdminAdviceController::class, 'toggleSchedule'])
     ->name('admin.advice.schedule.toggle');
+
+// routes pour le téléchargement de fichiers
+Route::get('download/file/{path}', function($path) {
+// Vérifier que le fichier existe
+$fullPath = storage_path('app/public/' . $path);
+if (!file_exists($fullPath)) {
+    abort(404);
+}
+
+// Retourner le fichier en tant que téléchargement
+return response()->download($fullPath);
+})->where('path', '.*')->name('download.file');
+
+
+// Routes pour télécharger et visualiser les documents des demandes d'inscription
+Route::get('admin/inscriptions/{id}/download-document', [App\Http\Controllers\AdminPendingRegistrationController::class, 'downloadDocument'])
+    ->name('admin.inscriptions.download-document');
+Route::get('admin/inscriptions/{id}/view-document', [App\Http\Controllers\AdminPendingRegistrationController::class, 'viewDocument'])
+    ->name('admin.inscriptions.view-document');

@@ -24,52 +24,49 @@
             <div class="row">
                 <div class="col-md-6">
                     <h2 class="h5 mb-3">Informations générales</h2>
-                    <p><strong>Entreprise:</strong> {{ $assignment->eventProposal->company->name }}</p>
-                    <p><strong>Type d'activité:</strong> {{ $assignment->eventProposal->eventType->title }}</p>
-                    <p><strong>Description:</strong> {{ $assignment->eventProposal->eventType->description }}</p>
-                    <p><strong>Date proposée:</strong> {{ date('d/m/Y', strtotime($assignment->eventProposal->proposed_date)) }}</p>
+                    <p><strong>Entreprise:</strong> {{ $assignment['event_proposal']['company']['name'] }}</p>
+                    <p><strong>Type d'activité:</strong> {{ $assignment['event_proposal']['event_type']['title'] }}</p>
+                    <p><strong>Description:</strong> {{ $assignment['event_proposal']['event_type']['description'] }}</p>
+                    <p><strong>Date proposée:</strong> {{ date('d/m/Y', strtotime($assignment['event_proposal']['proposed_date'])) }}</p>
                     <p><strong>Statut:</strong>
-                        @if($assignment->status == 'Proposed')
+                        @if($assignment['status'] == 'Proposed')
                             <span class="badge bg-warning">En attente</span>
-                        @elseif($assignment->status == 'Accepted')
+                        @elseif($assignment['status'] == 'Accepted')
                             <span class="badge bg-success">Acceptée</span>
-                        @elseif($assignment->status == 'Rejected')
+                        @elseif($assignment['status'] == 'Rejected')
                             <span class="badge bg-danger">Refusée</span>
                         @endif
                     </p>
-                    <p><strong>Montant:</strong> {{ number_format($assignment->payment_amount, 2, ',', ' ') }} €</p>
+                    <p><strong>Montant:</strong> {{ number_format($assignment['payment_amount'], 2, ',', ' ') }} €</p>
                 </div>
                 <div class="col-md-6">
-                <div class="col-md-6">
-                <h2 class="h5 mb-3">Lieu</h2>
-                <p><strong>Nom:</strong> {{ $assignment->eventProposal->location->name }}</p>
-                <p><strong>Adresse:</strong> {{ $assignment->eventProposal->location->address }}</p>
-                <p><strong>Code postal:</strong> {{ $assignment->eventProposal->location->postal_code }}</p>
-                <p><strong>Ville:</strong> {{ $assignment->eventProposal->location->city }}</p>
-                <p><strong>Pays:</strong> {{ $assignment->eventProposal->location->country }}</p>
-                <p><strong>Durée:</strong>
-                    @if($assignment->eventProposal->duration >= 60)
-                        {{ floor($assignment->eventProposal->duration / 60) }} h
-                        @if($assignment->eventProposal->duration % 60 > 0)
-                            {{ $assignment->eventProposal->duration % 60 }} min
+                    <h2 class="h5 mb-3">Lieu</h2>
+                    <p><strong>Nom:</strong> {{ $assignment['event_proposal']['location']['name'] }}</p>
+                    <p><strong>Adresse:</strong> {{ $assignment['event_proposal']['location']['address'] }}</p>
+                    <p><strong>Code postal:</strong> {{ $assignment['event_proposal']['location']['postal_code'] }}</p>
+                    <p><strong>Ville:</strong> {{ $assignment['event_proposal']['location']['city'] }}</p>
+                    <p><strong>Pays:</strong> {{ $assignment['event_proposal']['location']['country'] }}</p>
+                    <p><strong>Durée:</strong>
+                        @if($assignment['event_proposal']['duration'] >= 60)
+                            {{ floor($assignment['event_proposal']['duration'] / 60) }} h
+                            @if($assignment['event_proposal']['duration'] % 60 > 0)
+                                {{ $assignment['event_proposal']['duration'] % 60 }} min
+                            @endif
+                        @else
+                            {{ $assignment['event_proposal']['duration'] }} min
                         @endif
-                    @else
-                        {{ $assignment->eventProposal->duration }} min
-                    @endif
-                </p>
+                    </p>
+                </div>
             </div>
 
-            @if($assignment->status == 'Proposed')
+            @if($assignment['status'] == 'Proposed')
                 <div class="mt-4">
                     <h2 class="h5 mb-3">Actions</h2>
                     <div class="d-flex gap-2">
-                        <form method="POST" action="{{ route('provider.assignments.accept', $assignment->id) }}">
+                        <form method="POST" action="{{ route('provider.assignments.accept', $assignment['id']) }}">
                             @csrf
-                            <button type="submit" class="btn btn-success" onclick="return confirm('Êtes-vous sûr de vouloir accepter cette activité?')">
-                                <i class="fas fa-check"></i> Accepter cette activité
-                            </button>
                         </form>
-                        <form method="POST" action="{{ route('provider.assignments.reject', $assignment->id) }}">
+                        <form method="POST" action="{{ route('provider.assignments.reject', $assignment['id']) }}">
                             @csrf
                             <button type="submit" class="btn btn-danger" onclick="return confirm('Êtes-vous sûr de vouloir refuser cette activité?')">
                                 <i class="fas fa-times"></i> Refuser cette activité

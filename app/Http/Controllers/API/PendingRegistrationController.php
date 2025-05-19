@@ -7,13 +7,13 @@ use App\Models\PendingRegistration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
 class PendingRegistrationController extends Controller
 {
-
-
     public function register(Request $request)
     {
         \Log::info('Données reçues dans PendingRegistrationController', $request->all());
@@ -57,6 +57,7 @@ class PendingRegistrationController extends Controller
                 'code_postal_provider' => 'nullable|string|max:10',
                 'ville_provider' => 'nullable|string|max:100',
                 'siret_provider' => 'nullable|string|max:14',
+                'document_justificatif' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
             ],
         ];
 
@@ -70,8 +71,6 @@ class PendingRegistrationController extends Controller
             \Log::warning('Validation échouée', ['errors' => $validator->errors()]);
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
-
-        // Le reste du code reste inchangé...
 
         try {
             // Hashage du mot de passe
@@ -91,12 +90,24 @@ class PendingRegistrationController extends Controller
                 $data['ville'] = $data['ville_provider'];
                 $data['siret'] = $data['siret_provider'];
 
-                // Gestion de l'activité personnalisée
-                if (isset($data['activity_type']) && $data['activity_type'] === 'autre' && !empty($data['other_activity'])) {
-                    // Stocker dans additional_data (format JSON)
-                    $additionalData = [
-                        'custom_activity' => $data['other_activity']
-                    ];
+                // Traitement du document justificatif
+                if ($request->hasFile('document_justificatif')) {
+                    $file = $request->file('document_justificatif');
+                    $fileName = 'justificatif_' . Str::random(10) . '_' . time() . '.' . $file->getClientOriginalExtension();
+                    $filePath = $file->storeAs('justificatifs', $fileName, 'public');
+
+                    // Préparation des données additionnelles
+                    $additionalData = isset($data['additional_data']) ? json_decode($data['additional_data'], true) : [];
+
+                    // Gestion de l'activité personnalisée
+                    if (isset($data['activity_type']) && $data['activity_type'] === 'autre' && !empty($data['other_activity'])) {
+                        $additionalData['custom_activity'] = $data['other_activity'];
+                    }
+
+                    // Ajout du chemin du fichier
+                    $additionalData['document_justificatif'] = $filePath;
+
+                    // Mise à jour du champ additional_data
                     $data['additional_data'] = json_encode($additionalData);
                 }
             }

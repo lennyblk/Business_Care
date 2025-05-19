@@ -8,6 +8,7 @@ use App\Models\Company;
 use App\Models\Provider;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -38,16 +39,10 @@ class AdminPendingRegistrationController extends Controller
 
     public function approve($id)
     {
-        \Log::info('API: Début de la méthode approve', ['id' => $id]);
+        \Log::info('API: Approbation de l\'inscription #'.$id);
 
         try {
             $pendingRegistration = PendingRegistration::findOrFail($id);
-
-            \Log::info('PendingRegistration trouvé', [
-                'id' => $id,
-                'status' => $pendingRegistration->status,
-                'type' => $pendingRegistration->user_type
-            ]);
 
             // Vérifier que la demande est toujours en attente
             if ($pendingRegistration->status !== 'pending') {
@@ -74,8 +69,6 @@ class AdminPendingRegistrationController extends Controller
                     $company->date_debut_contrat = now();
                     $company->date_fin_contrat = now()->addYear();
                     $company->save();
-
-                    \Log::info('Société créée avec succès', ['company_id' => $company->id]);
                     break;
 
                 case 'prestataire':
@@ -95,18 +88,21 @@ class AdminPendingRegistrationController extends Controller
                     $provider->ville = $pendingRegistration->ville;
                     $provider->siret = $pendingRegistration->siret;
                     $provider->tarif_horaire = $pendingRegistration->tarif_horaire;
-                    $provider->activity_type = $pendingRegistration->activity_type; // S'assurer que cette valeur est bien définie
+                    $provider->activity_type = $pendingRegistration->activity_type;
 
                     // Si l'activité est "autre", enregistrer l'activité personnalisée
                     if ($activityType === 'autre' && isset($additionalData['custom_activity'])) {
                         $provider->other_activity = $additionalData['custom_activity'];
                     }
 
+                    // Pour le document justificatif, nous ne l'enregistrons pas dans additional_data
+                    // puisque cette colonne n'existe pas dans la table provider
+                    // Nous pouvons simplement enregistrer le provider sans cette donnée
+                    // Le document reste accessible dans la table pending_registration si nécessaire
+
                     $provider->statut_prestataire = 'Validé';
                     $provider->date_validation = now();
                     $provider->save();
-
-                    \Log::info('Prestataire créé avec succès', ['provider_id' => $provider->id]);
                     break;
 
                 default:
@@ -117,13 +113,9 @@ class AdminPendingRegistrationController extends Controller
                     break;
             }
 
+            // Important : Mettre à jour le statut de la demande d'inscription
             $pendingRegistration->status = 'approved';
             $pendingRegistration->save();
-
-            \Log::info('Statut de la demande mis à jour avec succès', [
-                'id' => $id,
-                'nouveau_status' => 'approved'
-            ]);
 
             $this->sendUserNotification($pendingRegistration, true);
 
@@ -133,11 +125,7 @@ class AdminPendingRegistrationController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Erreur lors de l\'approbation de l\'inscription', [
-                'id' => $id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
+            \Log::error('Erreur approbation: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -153,6 +141,15 @@ class AdminPendingRegistrationController extends Controller
 
             if ($registration->status !== 'pending') {
                 return response()->json(['error' => 'Cette demande a déjà été traitée.'], 400);
+            }
+
+            // Récupérer les données supplémentaires stockées en JSON
+            $additionalData = json_decode($registration->additional_data, true) ?? [];
+
+            // Si la demande est rejetée et qu'il y a un document justificatif, on peut le supprimer
+            if (isset($additionalData['document_justificatif'])) {
+                Storage::disk('public')->delete($additionalData['document_justificatif']);
+                \Log::info('Document justificatif supprimé', ['path' => $additionalData['document_justificatif']]);
             }
 
             $registration->status = 'rejected';

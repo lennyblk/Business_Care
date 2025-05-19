@@ -25,7 +25,7 @@
                 </div>
             @endif
 
-            <form action="{{ route('register.pending') }}" method="POST">
+            <form action="{{ route('register.pending') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="mb-3">
                     <label for="user_type" class="form-label">Type d'utilisateur</label>
@@ -81,9 +81,20 @@
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="ville" class="form-label">Ville *</label>
-                                <input type="text" id="ville" name="ville" class="form-control" required>
+                                <select id="ville" name="ville" class="form-select" required>
+                                    <option value="">Sélectionnez une ville</option>
+                                    <option value="Paris">Paris</option>
+                                    <option value="Nice">Nice</option>
+                                    <option value="Biarritz">Biarritz</option>
+                                    <option value="Troyes">Troyes</option>
+                                </select>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mb-3 other-ville-field" style="display: none;">
+                        <label for="autre_ville" class="form-label">Précisez votre ville *</label>
+                        <input type="text" id="autre_ville" name="autre_ville" class="form-control">
                     </div>
 
                     <div class="mb-3">
@@ -170,9 +181,27 @@
                         <div class="col-md-8">
                             <div class="mb-3">
                                 <label for="ville_provider" class="form-label">Ville</label>
-                                <input type="text" id="ville_provider" name="ville_provider" class="form-control">
+                                <select id="ville_provider" name="ville_provider" class="form-select">
+                                    <option value="">Sélectionnez une ville</option>
+                                    <option value="Paris">Paris</option>
+                                    <option value="Nice">Nice</option>
+                                    <option value="Biarritz">Biarritz</option>
+                                    <option value="Troyes">Troyes</option>
+                                    <option value="autre">Autre ville</option>
+                                </select>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="mb-3 other-ville-provider-field" style="display: none;">
+                        <label for="autre_ville_provider" class="form-label">Précisez votre ville</label>
+                        <input type="text" id="autre_ville_provider" name="autre_ville_provider" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="document_justificatif" class="form-label">Document justificatif (diplôme ou certification) *</label>
+                        <input type="file" id="document_justificatif" name="document_justificatif" class="form-control" accept=".pdf,.jpg,.jpeg,.png" required>
+                        <div class="form-text">Formats acceptés : PDF, JPG, PNG (Max: 5 Mo)</div>
                     </div>
 
                     <div class="mb-3">
@@ -220,7 +249,8 @@
             document.getElementById('telephone_provider'),
             document.getElementById('activity_type'),
             document.getElementById('bio'),
-            document.getElementById('tarif_horaire')
+            document.getElementById('tarif_horaire'),
+            document.getElementById('document_justificatif')
         ];
 
         function toggleFields() {
@@ -258,7 +288,7 @@
             }
         }
 
-        // Nouveaux champs pour le type d'activité
+        // Gestion de l'activité personnalisée
         const activityTypeSelect = document.getElementById('activity_type');
         const otherActivityField = document.querySelector('.other-activity-field');
         const otherActivityInput = document.getElementById('other_activity');
@@ -277,8 +307,47 @@
             }
         }
 
+        // Gestion des villes personnalisées
+        const villeSelect = document.getElementById('ville');
+        const otherVilleField = document.querySelector('.other-ville-field');
+        const otherVilleInput = document.getElementById('autre_ville');
+
+        function toggleOtherVilleField() {
+            if (villeSelect.value === 'autre') {
+                otherVilleField.style.display = 'block';
+                if (otherVilleInput) {
+                    otherVilleInput.setAttribute('required', 'required');
+                }
+            } else {
+                otherVilleField.style.display = 'none';
+                if (otherVilleInput) {
+                    otherVilleInput.removeAttribute('required');
+                }
+            }
+        }
+
+        const villeProviderSelect = document.getElementById('ville_provider');
+        const otherVilleProviderField = document.querySelector('.other-ville-provider-field');
+        const otherVilleProviderInput = document.getElementById('autre_ville_provider');
+
+        function toggleOtherVilleProviderField() {
+            if (villeProviderSelect.value === 'autre') {
+                otherVilleProviderField.style.display = 'block';
+                if (otherVilleProviderInput) {
+                    otherVilleProviderInput.setAttribute('required', 'required');
+                }
+            } else {
+                otherVilleProviderField.style.display = 'none';
+                if (otherVilleProviderInput) {
+                    otherVilleProviderInput.removeAttribute('required');
+                }
+            }
+        }
+
         // Initialiser l'affichage
         toggleFields();
+        toggleOtherVilleField();
+        toggleOtherVilleProviderField();
 
         // Ajouter les écouteurs d'événements
         userTypeSelect.addEventListener('change', toggleFields);
@@ -286,10 +355,18 @@
         if (activityTypeSelect) {
             activityTypeSelect.addEventListener('change', toggleOtherActivityField);
         }
+
+        if (villeSelect) {
+            villeSelect.addEventListener('change', toggleOtherVilleField);
+        }
+
+        if (villeProviderSelect) {
+            villeProviderSelect.addEventListener('change', toggleOtherVilleProviderField);
+        }
     });
 
     // Validation du SIRET
-    const siretInputs = document.querySelectorAll('input[name="siret"]');
+    const siretInputs = document.querySelectorAll('input[name="siret"], input[name="siret_provider"]');
     siretInputs.forEach(input => {
         input.addEventListener('input', function(e) {
             let value = e.target.value;
@@ -326,6 +403,19 @@
             if (!companyName || !codePostal || !ville || !telephone) {
                 e.preventDefault();
                 alert('Veuillez remplir tous les champs obligatoires pour l\'inscription d\'une société.');
+            }
+
+            // Si "autre ville" est sélectionné, vérifier que le champ est rempli
+            if (ville === 'autre' && document.getElementById('autre_ville').value.trim() === '') {
+                e.preventDefault();
+                alert('Veuillez préciser votre ville.');
+            }
+        } else if (document.getElementById('user_type').value === 'prestataire') {
+            // Vérifier si le formulaire prestataire a l'option "autre ville" sélectionnée
+            const villeProvider = document.getElementById('ville_provider').value.trim();
+            if (villeProvider === 'autre' && document.getElementById('autre_ville_provider').value.trim() === '') {
+                e.preventDefault();
+                alert('Veuillez préciser votre ville.');
             }
         }
     });
