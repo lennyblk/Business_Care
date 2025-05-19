@@ -39,10 +39,9 @@ WORKDIR /var/www/html
 # Va chercher les fichiers qui se trouvent dans le répertoire /app de l'étape nommée build qui a installé les dépendances
 COPY --from=build /app .
 
-# Crée les répertoires pour les sessions, les vues et le cache
-# Modifie les permissions pour permettre l'écriture dans ces répertoires
-# Change le propriétaire des répertoires à l'utilisateur www-data (utilisateur standard du serveur web)
+# Crée les répertoires pour les sessions, les vues, le cache et les logs
 RUN mkdir -p storage/framework/{sessions,views,cache} \
+    && mkdir -p storage/logs \
     && chmod -R 775 storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
     && mkdir -p /var/log/supervisor \
