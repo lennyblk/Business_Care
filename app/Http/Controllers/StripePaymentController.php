@@ -120,10 +120,9 @@ class StripePaymentController extends Controller
                 $invoice->total_amount = $contract->amount;
                 $invoice->payment_status = 'Paid';
 
-                // Modifiez cette partie pour éviter les caractères accentués
                 $invoice->details = "Paiement Stripe - Session ID: " . $sessionId . "\n" .
                                 "Date de paiement: " . now()->format('d/m/Y H:i:s') . "\n" .
-                                "Mode de paiement: Carte bancaire via Stripe"; // "Méthode" remplacé par "Mode de paiement"
+                                "Mode de paiement: Carte bancaire via Stripe"; 
 
                 if (!$invoice->save()) {
                     throw new \Exception('Échec de la sauvegarde de la facture');
@@ -143,29 +142,24 @@ class StripePaymentController extends Controller
                     ]);
                 }
 
-                // Log des informations du contrat pour débogage
                 Log::info('Informations du contrat avant mise à jour de l\'entreprise', [
                     'contract_id' => $contract->id,
                     'formule_abonnement' => $contract->formule_abonnement,
                     'end_date' => $contract->end_date
                 ]);
 
-                // Mettre à jour la date de fin de contrat et la formule dans la table company
                 try {
                     $company = Company::findOrFail($contract->company_id);
 
-                    // Log de l'état actuel de l'entreprise
                     Log::info('État actuel de l\'entreprise', [
                         'company_id' => $company->id,
                         'current_formule' => $company->formule_abonnement,
                         'current_date_fin' => $company->date_fin_contrat
                     ]);
 
-                    // Mettre à jour explicitement chaque champ
                     $company->date_fin_contrat = $contract->end_date;
                     $company->statut_compte = 'Actif';
 
-                    // Vérifier que la formule est une valeur autorisée
                     $allowedFormules = ['Starter', 'Basic', 'Premium'];
                     if (in_array($contract->formule_abonnement, $allowedFormules)) {
                         $company->formule_abonnement = $contract->formule_abonnement;
@@ -174,10 +168,8 @@ class StripePaymentController extends Controller
                         Log::warning('Formule non valide: ' . $contract->formule_abonnement);
                     }
 
-                    // Sauvegarder et vérifier le résultat
                     $saved = $company->save();
 
-                    // Log de confirmation de la mise à jour
                     Log::info('Résultat de la mise à jour de l\'entreprise', [
                         'saved' => $saved ? 'Oui' : 'Non',
                         'company_id' => $company->id,
@@ -185,7 +177,6 @@ class StripePaymentController extends Controller
                         'new_date_fin' => $company->date_fin_contrat
                     ]);
 
-                    // Double vérification
                     $refreshedCompany = Company::find($company->id);
                     Log::info('État de l\'entreprise après rafraîchissement', [
                         'formule_abonnement' => $refreshedCompany->formule_abonnement,

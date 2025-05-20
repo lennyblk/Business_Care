@@ -54,14 +54,11 @@ class QuoteController extends Controller
                 ], 400);
             }
 
-            // Marquer le devis comme accepté
             $quote->status = 'Accepted';
             $quote->save();
 
-            // Générer la description des services en fonction de la formule
             $services = $this->generateServicesDescription($quote);
 
-            // Créer un contrat en attente d'approbation en utilisant une valeur d'enum valide
             $contract = Contract::create([
                 'company_id' => $quote->company_id,
                 'quote_id' => $quote->id,
@@ -69,12 +66,11 @@ class QuoteController extends Controller
                 'services' => $services,
                 'start_date' => now(),
                 'end_date' => now()->addYear(),
-                'amount' => $quote->total_amount / 12, // Montant mensuel
-                'payment_method' => 'Direct Debit', // Utiliser une valeur d'enum valide
-                'payment_status' => 'pending' // En attente d'approbation
+                'amount' => $quote->total_amount / 12,
+                'payment_method' => 'Direct Debit',
+                'payment_status' => 'pending' 
             ]);
 
-            // Enregistrement des activités si la classe existe
             if (class_exists('App\Models\Activity')) {
                 Activity::create([
                     'company_id' => $quote->company_id,
@@ -174,7 +170,6 @@ class QuoteController extends Controller
             $services .= "- Événements / Communautés : Accès illimité\n";
         }
 
-        // Ajouter les détails supplémentaires s'ils existent
         if (!empty($quote->services_details)) {
             $services .= "\nDétails complémentaires :\n" . $quote->services_details;
         }

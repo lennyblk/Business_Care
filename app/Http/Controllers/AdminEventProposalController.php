@@ -179,7 +179,6 @@ class AdminEventProposalController extends Controller
         $eventProposal->status = 'Rejected';
         $eventProposal->save();
 
-        // Envoyer une notification à l'entreprise
         $this->notifyCompanyRejection($eventProposal);
 
         return redirect()->route('admin.event_proposals.index')
@@ -197,7 +196,6 @@ class AdminEventProposalController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -207,11 +205,9 @@ class AdminEventProposalController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (prestataire)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($provider->email);
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Nouvelle proposition d\'activité';
 
@@ -249,7 +245,6 @@ class AdminEventProposalController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -259,11 +254,9 @@ class AdminEventProposalController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (company)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($company->email);
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Demande d\'activité en cours de traitement';
 
@@ -301,7 +294,6 @@ class AdminEventProposalController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -311,11 +303,9 @@ class AdminEventProposalController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (company)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($company->email);
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Demande d\'activité refusée';
 

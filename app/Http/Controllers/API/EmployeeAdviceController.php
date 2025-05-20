@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Log;
 
 class EmployeeAdviceController extends Controller
 {
-    // Lister les conseils disponibles pour un salarié
     public function index(Request $request)
     {
         try {
@@ -47,7 +46,7 @@ class EmployeeAdviceController extends Controller
             $advices = Advice::where('min_formule', '<=', $formula)
                 ->whereHas('schedules', function($query) {
                     $query->where('is_sent', true)
-                          ->where('is_disabled', 0)  // Changé de false à 0 pour correspondre au tinyint
+                          ->where('is_disabled', 0)  
                           ->whereNotNull('sent_at');
                 })
                 ->where(function ($query) use ($preferences) {
@@ -95,7 +94,6 @@ class EmployeeAdviceController extends Controller
         }
     }
 
-    // Soumettre des feedbacks
     public function storeFeedback(Request $request, $adviceId)
     {
         try {
@@ -116,7 +114,6 @@ class EmployeeAdviceController extends Controller
         }
     }
 
-    // Définir des préférences de conseils
     public function storePreferences(Request $request)
     {
         try {
@@ -138,7 +135,6 @@ class EmployeeAdviceController extends Controller
         }
     }
 
-    // Obtenir des conseils personnalisés
     public function personalized(Request $request)
     {
         try {

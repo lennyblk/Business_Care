@@ -49,7 +49,6 @@ class SendScheduledAdvices extends Command
 
             foreach ($scheduledAdvices as $schedule) {
                 try {
-                    // Marquer comme envoyé
                     $schedule->update([
                         'is_sent' => true,
                         'sent_at' => now()

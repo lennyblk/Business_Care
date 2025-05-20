@@ -76,7 +76,6 @@ class ProfileController extends Controller
         $userType = session('user_type');
         $userId = session('user_id');
 
-        // Récupérer les données du profil via l'API
         $response = $this->apiController->getProfile($userId, $userType);
         $result = json_decode($response->getContent());
 
@@ -86,7 +85,6 @@ class ProfileController extends Controller
 
         $profile = $result->data;
 
-        // Rediriger vers la vue appropriée selon le type d'utilisateur
         switch($userType) {
             case 'employe':
             case 'employee':
@@ -107,7 +105,6 @@ class ProfileController extends Controller
     public function update(Request $request)
     {
         try {
-            // Vérifier que l'utilisateur est connecté
             if (!session('user_type') || !session('user_id')) {
                 return redirect()->route('login')
                     ->with('error', 'Vous devez être connecté pour accéder à cette page.');
@@ -116,7 +113,6 @@ class ProfileController extends Controller
             $userType = session('user_type');
             $userId = session('user_id');
 
-            // Appel à l'API pour mettre à jour les informations du profil
             $response = $this->apiController->updateProfile($request, $userId, $userType);
             $data = json_decode($response->getContent(), true);
 
@@ -137,7 +133,6 @@ class ProfileController extends Controller
     public function editPassword()
     {
         try {
-            // Vérifier que l'utilisateur est connecté
             if (!session('user_type') || !session('user_id')) {
                 return redirect()->route('login')
                     ->with('error', 'Vous devez être connecté pour accéder à cette page.');
@@ -145,7 +140,6 @@ class ProfileController extends Controller
 
             $userType = session('user_type');
 
-            // Rediriger vers la vue adaptée au type d'utilisateur
             switch ($userType) {
                 case 'societe':
                     return view('dashboards.client.profile-password');
@@ -172,7 +166,6 @@ class ProfileController extends Controller
             $userId = session('user_id');
             $userType = session('user_type');
 
-            // Conversion du type d'utilisateur pour l'API
             switch ($userType) {
                 case 'prestataire':
                     $type = 'provider';

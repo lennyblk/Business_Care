@@ -18,18 +18,15 @@ class CheckExpiredContracts extends Command
     {
         $today = Carbon::today();
 
-        // Trouver les contrats actifs dont la date de fin est passée
         $expiredContracts = Contract::where('payment_status', 'active')
             ->whereDate('end_date', '<', $today)
             ->with('company')
             ->get();
 
         foreach ($expiredContracts as $contract) {
-            // Mettre à jour le statut
             $contract->payment_status = 'unpaid';
             $contract->save();
 
-            // Envoyer un email
             $this->sendExpirationEmail($contract);
 
             $this->info("Contract #{$contract->id} expired and status updated.");

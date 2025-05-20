@@ -44,12 +44,10 @@ class AdminPendingRegistrationController extends Controller
         try {
             $pendingRegistration = PendingRegistration::findOrFail($id);
 
-            // Vérifier que la demande est toujours en attente
             if ($pendingRegistration->status !== 'pending') {
                 return response()->json(['error' => 'Cette demande a déjà été traitée.'], 400);
             }
 
-            // Récupérer les données supplémentaires stockées en JSON
             $additionalData = json_decode($pendingRegistration->additional_data, true) ?? [];
 
             switch ($pendingRegistration->user_type) {
@@ -72,7 +70,6 @@ class AdminPendingRegistrationController extends Controller
                     break;
 
                 case 'prestataire':
-                    // Déterminer le type d'activité à partir des données
                     $activityType = $pendingRegistration->activity_type;
 
                     $provider = new Provider();
@@ -90,15 +87,10 @@ class AdminPendingRegistrationController extends Controller
                     $provider->tarif_horaire = $pendingRegistration->tarif_horaire;
                     $provider->activity_type = $pendingRegistration->activity_type;
 
-                    // Si l'activité est "autre", enregistrer l'activité personnalisée
                     if ($activityType === 'autre' && isset($additionalData['custom_activity'])) {
                         $provider->other_activity = $additionalData['custom_activity'];
                     }
 
-                    // Pour le document justificatif, nous ne l'enregistrons pas dans additional_data
-                    // puisque cette colonne n'existe pas dans la table provider
-                    // Nous pouvons simplement enregistrer le provider sans cette donnée
-                    // Le document reste accessible dans la table pending_registration si nécessaire
 
                     $provider->statut_prestataire = 'Validé';
                     $provider->date_validation = now();
@@ -106,14 +98,12 @@ class AdminPendingRegistrationController extends Controller
                     break;
 
                 default:
-                    // Pour les autres types, simplement mettre à jour le statut
                     \Log::info('Type d\'utilisateur non géré, uniquement mise à jour du statut', [
                         'type' => $pendingRegistration->user_type
                     ]);
                     break;
             }
 
-            // Important : Mettre à jour le statut de la demande d'inscription
             $pendingRegistration->status = 'approved';
             $pendingRegistration->save();
 
@@ -143,10 +133,8 @@ class AdminPendingRegistrationController extends Controller
                 return response()->json(['error' => 'Cette demande a déjà été traitée.'], 400);
             }
 
-            // Récupérer les données supplémentaires stockées en JSON
             $additionalData = json_decode($registration->additional_data, true) ?? [];
 
-            // Si la demande est rejetée et qu'il y a un document justificatif, on peut le supprimer
             if (isset($additionalData['document_justificatif'])) {
                 Storage::disk('public')->delete($additionalData['document_justificatif']);
                 \Log::info('Document justificatif supprimé', ['path' => $additionalData['document_justificatif']]);
@@ -174,7 +162,6 @@ class AdminPendingRegistrationController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -184,11 +171,9 @@ class AdminPendingRegistrationController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (utilisateur)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($registration->email);
 
-            // Contenu
             $mail->isHTML(true);
 
             if ($approved) {

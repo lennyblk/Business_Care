@@ -20,7 +20,6 @@ class AdminPendingRegistrationController extends Controller
     public function index()
     {
         try {
-            // S'assurer que seules les demandes en attente sont affichées
             $pendingRegistrations = PendingRegistration::where('status', 'pending')
                                                       ->orderBy('created_at', 'desc')
                                                       ->get();

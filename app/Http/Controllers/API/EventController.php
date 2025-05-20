@@ -158,12 +158,10 @@ class EventController extends Controller
     public function getRegisteredEmployees($employeeId)
     {
         try {
-            // Retrieve events where the employee is registered
             $events = Event::whereHas('registeredEmployees', function ($query) use ($employeeId) {
                 $query->where('employee_id', $employeeId);
             })->get();
 
-            // Convert events to objects
             $events = $events->map(function ($event) {
                 return $this->arrayToObject($event->toArray());
             });

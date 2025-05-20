@@ -19,14 +19,12 @@ class PendingRegistrationController extends Controller
         \Log::info('Données reçues dans PendingRegistrationController', $request->all());
         \Log::info('Début de la demande d\'inscription', $request->all());
 
-        // Validation commune pour tous les types d'utilisateurs
         $commonRules = [
             'email' => 'required|email',
             'password' => 'required|min:6',
             'user_type' => 'required|in:societe,employe,prestataire',
         ];
 
-        // Règles par type d'utilisateur
         $typeRules = [
             'societe' => [
                 'company_name' => 'required|string|max:255',
@@ -61,7 +59,6 @@ class PendingRegistrationController extends Controller
             ],
         ];
 
-        // on récupère les règles spécifiques au type d'utilisateur
         $userType = $request->input('user_type');
         $validationRules = array_merge($commonRules, $typeRules[$userType] ?? []);
 
@@ -73,14 +70,11 @@ class PendingRegistrationController extends Controller
         }
 
         try {
-            // Hashage du mot de passe
             $data = $request->all();
             $data['password'] = Hash::make($data['password']);
             $data['status'] = 'pending';
 
-            // Pour les prestataires, gérer correctement les champs spécifiques
             if ($userType === 'prestataire') {
-                // Adaptation explicite des noms de champs
                 $data['first_name'] = $data['prenom'];
                 $data['last_name'] = $data['name'];
                 $data['domains'] = $data['specialite'];
@@ -90,16 +84,13 @@ class PendingRegistrationController extends Controller
                 $data['ville'] = $data['ville_provider'];
                 $data['siret'] = $data['siret_provider'];
 
-                // Traitement du document justificatif
                 if ($request->hasFile('document_justificatif')) {
                     $file = $request->file('document_justificatif');
                     $fileName = 'justificatif_' . Str::random(10) . '_' . time() . '.' . $file->getClientOriginalExtension();
                     $filePath = $file->storeAs('justificatifs', $fileName, 'public');
 
-                    // Préparation des données additionnelles
                     $additionalData = isset($data['additional_data']) ? json_decode($data['additional_data'], true) : [];
 
-                    // Gestion de l'activité personnalisée
                     if (isset($data['activity_type']) && $data['activity_type'] === 'autre' && !empty($data['other_activity'])) {
                         $additionalData['custom_activity'] = $data['other_activity'];
                     }
@@ -107,19 +98,16 @@ class PendingRegistrationController extends Controller
                     // Ajout du chemin du fichier
                     $additionalData['document_justificatif'] = $filePath;
 
-                    // Mise à jour du champ additional_data
                     $data['additional_data'] = json_encode($additionalData);
                 }
             }
 
             \Log::info('Données préparées pour insertion', ['data' => array_diff_key($data, ['password' => ''])]);
 
-            // Stockage de la demande d'inscription en attente
             $pendingRegistration = PendingRegistration::create($data);
 
             \Log::info('Inscription en attente créée', ['id' => $pendingRegistration->id]);
 
-            // Envoi d'email à l'administrateur et aux utilisateurs
             $this->sendAdminNotification($pendingRegistration);
             $this->sendUserConfirmation($pendingRegistration);
 
@@ -150,7 +138,6 @@ class PendingRegistrationController extends Controller
             \Log::info("PHPMailer Debug: $str");
             };
 
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -160,15 +147,12 @@ class PendingRegistrationController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (admin)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress(env('ADMIN_EMAIL', 'len06blackett@gmail.com'), 'Administrateur');
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Nouvelle demande d\'inscription';
 
-            // Corps du message selon le type d'utilisateur
             $userType = $pendingRegistration->user_type;
             $userName = '';
 
@@ -193,7 +177,6 @@ class PendingRegistrationController extends Controller
             $mail->send();
             return true;
         } catch (Exception $e) {
-            // Log l'erreur mais ne pas échouer le processus d'inscription
             \Log::error("Erreur d'envoi d'email: {$mail->ErrorInfo}");
             return false;
         }
@@ -204,7 +187,6 @@ class PendingRegistrationController extends Controller
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration du serveur
             $mail->isSMTP();
             $mail->CharSet = 'UTF-8';
             $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
@@ -214,11 +196,9 @@ class PendingRegistrationController extends Controller
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = env('MAIL_PORT', 587);
 
-            // Destinataire (utilisateur)
             $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
             $mail->addAddress($pendingRegistration->email);
 
-            // Contenu
             $mail->isHTML(true);
             $mail->Subject = 'Confirmation de votre demande d\'inscription';
 

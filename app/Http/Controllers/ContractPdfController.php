@@ -19,12 +19,10 @@ class ContractPdfController extends Controller
 
             $contract = Contract::with('company')->findOrFail($id);
 
-            // Vérifier que l'utilisateur a accès à ce contrat
             if (session('user_type') === 'societe' && session('user_id') != $contract->company_id) {
                 return back()->with('error', 'Vous n\'avez pas accès à ce contrat.');
             }
 
-            // Récupérer la société associée au contrat
             $company = $contract->company;
 
             // Créer un PDF avec support UTF-8
@@ -32,7 +30,6 @@ class ContractPdfController extends Controller
             $pdf->AddPage();
             $pdf->SetAutoPageBreak(true, 15);
 
-            // Fonction pour gérer l'UTF-8
             function utf8_to_latin($text) {
                 $text = iconv('UTF-8', 'windows-1252//TRANSLIT//IGNORE', $text);
                 return $text ? $text : 'Error encoding text';

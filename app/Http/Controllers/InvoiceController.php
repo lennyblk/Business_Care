@@ -13,7 +13,6 @@ class InvoiceController extends Controller
 
     public function index()
     {
-        // Vérifier le type d'utilisateur connecté
         if (session('user_type') === 'societe') {
             $company_id = session('user_id');
             $invoices = Invoice::where('company_id', $company_id)
@@ -33,10 +32,8 @@ class InvoiceController extends Controller
     public function show($id)
     {
 
-        // Récupérer la facture
         $invoice = Invoice::findOrFail($id);
 
-        // Vérifier les droits d'accès
         if (session('user_type') === 'societe' && session('user_id') != $invoice->company_id) {
             return back()->with('error', 'Vous n\'avez pas accès à cette facture.');
         }
@@ -48,11 +45,9 @@ class InvoiceController extends Controller
     public function download($id)
     {
         try {
-            // Récupérer la facture avec son contrat si ce n'est pas un don
             $invoice = Invoice::with(['company', 'contract'])->findOrFail($id);
             $company = $invoice->company;
 
-            // Si ce n'est pas un don, on vérifie que le contrat existe
             if (!$invoice->is_donation && !$invoice->contract) {
                 throw new \Exception('Contrat non trouvé pour cette facture');
             }
@@ -163,7 +158,7 @@ class InvoiceController extends Controller
                 $pdf->Cell(35, 8, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 0, 'R');
                 $pdf->Cell(40, 8, utf8_to_latin(number_format($contract->amount, 2, ',', ' ') . ' €'), 1, 1, 'R');
 
-                // Total (pas besoin de TVA ou autre calcul)
+                // Total
                 $pdf->Ln(5);
                 $pdf->SetFont('Arial', 'B', 11);
                 $pdf->Cell(115, 8, '', 0, 0);
@@ -213,22 +208,17 @@ class InvoiceController extends Controller
     {
         try {
 
-            // Récupérer la facture
             $invoice = Invoice::findOrFail($id);
 
-            // Vérifier les droits d'accès
             if (session('user_type') === 'societe' && session('user_id') != $invoice->company_id) {
                 return back()->with('error', 'Vous n\'avez pas accès à cette facture.');
             }
 
-            // Récupérer le contrat associé
             $contract = Contract::findOrFail($invoice->contract_id);
 
-            // Générer le PDF
             $pdfGenerator = new InvoicePdfGenerator($contract, $invoice->invoice_number);
             $pdf = $pdfGenerator->generate();
 
-            // Afficher le PDF dans le navigateur
             return $pdf->Output('I', 'facture_' . $invoice->invoice_number . '.pdf');
 
         } catch (\Exception $e) {
@@ -241,26 +231,21 @@ class InvoiceController extends Controller
     public function pay($id)
     {
         try {
-            // Vérifier que l'utilisateur est connecté en tant que société
             if (session('user_type') !== 'societe') {
                 return redirect()->route('login')
                     ->with('error', 'Vous devez être connecté en tant que société pour effectuer cette action.');
             }
 
-            // Récupérer la facture
             $invoice = Invoice::findOrFail($id);
 
-            // Vérifier les droits d'accès
             if (session('user_id') != $invoice->company_id) {
                 return back()->with('error', 'Vous n\'avez pas accès à cette facture.');
             }
 
-            // Vérifier que la facture n'est pas déjà payée
             if ($invoice->status === 'paid') {
                 return back()->with('error', 'Cette facture a déjà été payée.');
             }
 
-            // Rediriger vers la page de paiement
             return redirect()->route('payments.process', ['invoice' => $invoice->id]);
 
         } catch (\Exception $e) {

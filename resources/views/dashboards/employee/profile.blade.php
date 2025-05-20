@@ -14,7 +14,6 @@
                     <a href="{{ route('dashboard.employee') }}" class="list-group-item list-group-item-action">Tableau de bord</a>
                     <a href="{{ route('profile.index') }}" class="list-group-item list-group-item-action active">Profil</a>
                     <a href="{{ route('employee.events.index') }}" class="list-group-item list-group-item-action">Événements</a>
-                    <!-- Autres liens spécifiques aux employés -->
                 </div>
             </div>
         </div>
@@ -80,41 +79,6 @@
                                 <p><strong>Ville:</strong> {{ $profile->company['ville'] ?? 'Non disponible' }}</p>
                                 <p><strong>Pays:</strong> {{ $profile->company['pays'] ?? 'Non disponible' }}</p>
                             @endif
-                        </div>
-                    </div>
-
-                    <!-- Statistiques d'activité -->
-                    <div class="card mb-4">
-                        <div class="card-header">
-                            Statistiques d'activité
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 text-center mb-3">
-                                    <div class="card bg-primary text-white h-100">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Événements auxquels vous êtes inscrit</h5>
-                                            <p class="display-4">{{ $profile->events_count ?? 0 }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-center mb-3">
-                                    <div class="card bg-success text-white h-100">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Consultations médicales</h5>
-                                            <p class="display-4">{{ $profile->medical_appointments_count ?? 0 }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 text-center mb-3">
-                                    <div class="card bg-info text-white h-100">
-                                        <div class="card-body">
-                                            <h5 class="card-title">Communautés</h5>
-                                            <p class="display-4">{{ $profile->communities_count ?? 0 }}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>

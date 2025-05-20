@@ -56,7 +56,6 @@ class EventController extends Controller
                 json_decode($companyEventsResponse->getContent(), true)['data'] ?? []
             );
 
-            // Filtrer les événements actuels/futurs
             $currentEvents = $allEvents->filter(function($event) {
                 return \Carbon\Carbon::parse($event->date) >= now();
             });
@@ -66,7 +65,6 @@ class EventController extends Controller
                 json_decode($myEventsResponse->getContent(), true)['data'] ?? []
             );
 
-            // Filtrer les événements actuels/futurs pour myEvents
             $currentMyEvents = $myEvents->filter(function($event) {
                 return \Carbon\Carbon::parse($event->date) >= now();
             });

@@ -405,7 +405,6 @@ class ContractController extends Controller
 
             $contract = Contract::findOrFail($id);
             
-            // Marquer comme demande de résiliation
             $contract->payment_status = 'pending';
             $contract->is_termination_request = 1;
             $contract->save();

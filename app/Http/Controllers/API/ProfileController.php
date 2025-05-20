@@ -24,7 +24,6 @@ class ProfileController extends Controller
             switch ($userType) {
                 case 'employe':
                 case 'employee':
-                    // Charger l'employé avec sa relation company
                     $profile = Employee::with('company')->findOrFail($id);
                     $company = $profile->company;
                     
@@ -123,7 +122,6 @@ class ProfileController extends Controller
     public function updateProfile(Request $request, $id, $userType)
     {
         try {
-            // Normalisation du type d'utilisateur
             switch ($userType) {
                 case 'employe':
                 case 'employee':
@@ -145,13 +143,11 @@ class ProfileController extends Controller
                     ], 400);
             }
 
-            // Validation commune à tous les types d'utilisateurs
             $commonRules = [
                 'email' => 'required|email|max:255',
                 'telephone' => 'required|string|max:20',
             ];
 
-            // Validation spécifique selon le type d'utilisateur
             switch ($type) {
                 case 'societe':
                     $validationRules = array_merge($commonRules, [
@@ -193,7 +189,6 @@ class ProfileController extends Controller
                     ], 400);
             }
 
-            // Validation des données
             $validator = Validator::make($request->all(), $validationRules);
 
             if ($validator->fails()) {
@@ -204,7 +199,6 @@ class ProfileController extends Controller
                 ], 422);
             }
 
-            // Mise à jour selon le type d'utilisateur
             switch ($type) {
                 case 'societe':
                     $profile = Company::findOrFail($id);
@@ -242,7 +236,6 @@ class ProfileController extends Controller
                     break;
             }
 
-            // Enregistrement des modifications
             $profile->save();
 
             return response()->json([
@@ -288,7 +281,6 @@ class ProfileController extends Controller
                     ], 400);
             }
 
-            // Validation des données
             $validator = Validator::make($request->all(), [
                 'current_password' => 'required|string',
                 'new_password' => 'required|string|min:8|confirmed',
@@ -302,7 +294,6 @@ class ProfileController extends Controller
                 ], 422);
             }
 
-            // Récupération du profil selon le type d'utilisateur normalisé
             switch ($type) {
                 case 'societe':
                     $profile = Company::findOrFail($id);
@@ -320,7 +311,6 @@ class ProfileController extends Controller
                     ], 400);
             }
 
-            // Vérification du mot de passe actuel
             if (!Hash::check($request->current_password, $profile->password)) {
                 return response()->json([
                     'success' => false,
@@ -328,7 +318,6 @@ class ProfileController extends Controller
                 ], 422);
             }
 
-            // Mise à jour du mot de passe
             $profile->password = Hash::make($request->new_password);
             $profile->save();
 

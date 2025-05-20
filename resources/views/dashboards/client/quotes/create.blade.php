@@ -95,11 +95,9 @@ function selectFormula(formula, price) {
     selectedFormula = formula;
     selectedPrice = price;
     
-    // Mise à jour des champs cachés
     document.getElementById('formule_abonnement').value = formula;
     document.getElementById('price_per_employee').value = price;
     
-    // Mise à jour du récapitulatif de la formule
     document.getElementById('recap-formula').textContent = formula;
     document.getElementById('recap-price').textContent = price;
     
@@ -112,7 +110,6 @@ function calculateTotal() {
     const size = parseInt(document.getElementById('company_size').value) || 0;
     const duration = parseInt(document.getElementById('duration').value) || 1;
     
-    // Validation de la taille
     let isValid = true;
     const error = document.getElementById('size-error');
     
@@ -129,15 +126,12 @@ function calculateTotal() {
         error.textContent = '';
     }
     
-    // Calculs
     const totalHT = size * selectedPrice * duration;
     const tva = totalHT * 0.2;
     const totalTTC = totalHT + tva;
     
-    // Mise à jour des champs cachés du formulaire
     document.getElementById('total_amount').value = totalHT;
     
-    // Mise à jour du récapitulatif
     document.getElementById('recap-size').textContent = size;
     document.getElementById('recap-ht').textContent = formatPrice(totalHT);
     document.getElementById('recap-tva').textContent = formatPrice(tva);
@@ -153,7 +147,6 @@ function formatPrice(price) {
     }).format(price);
 }
 
-// Écouteurs d'événements
 document.getElementById('company_size').addEventListener('input', calculateTotal);
 document.getElementById('duration').addEventListener('change', calculateTotal);
 </script>

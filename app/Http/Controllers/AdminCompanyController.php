@@ -87,7 +87,6 @@ class AdminCompanyController extends Controller
     public function store(Request $request)
     {
         try {
-            // Validation côté web pour une meilleure expérience utilisateur
             $request->validate([
                 'name' => 'required|string|max:255',
                 'address' => 'required|string|max:255',
@@ -107,7 +106,6 @@ class AdminCompanyController extends Controller
                 'employee_count' => 'nullable|integer',
             ]);
 
-            // Remapper telephone -> phone si nécessaire (si l'API utilise 'telephone')
             if (!$request->has('telephone') && $request->has('phone')) {
                 $request->merge(['telephone' => $request->phone]);
             }
@@ -205,7 +203,6 @@ class AdminCompanyController extends Controller
     public function update(Request $request, $id)
 {
     try {
-        // Validation adaptée uniquement pour les champs modifiables par l'administrateur
         $request->validate([
             'statut_compte' => 'required|in:Actif,Inactif',
             'formule_abonnement' => 'required|in:Starter,Basic,Premium',

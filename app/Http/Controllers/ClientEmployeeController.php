@@ -56,7 +56,6 @@ class ClientEmployeeController extends Controller
 
     public function index()
     {
-        // Récupérer l'ID de l'entreprise depuis la session
         $companyId = session('user_id');
 
         Log::info('Tentative d\'accès à la liste des collaborateurs', [
@@ -76,7 +75,6 @@ class ClientEmployeeController extends Controller
 
             $response = $this->apiEmployeeController->getByCompany($companyId);
 
-            // Log de la réponse brute
             Log::info('Réponse API brute', [
                 'status_code' => $response->getStatusCode(),
                 'content' => $response->getContent()
@@ -92,7 +90,6 @@ class ClientEmployeeController extends Controller
                 return back()->with('error', 'Erreur lors de la récupération des employés: ' . ($data['message'] ?? 'Erreur inconnue'));
             }
 
-            // Vérifier si 'data' existe dans la réponse
             if (!isset($data['data'])) {
                 Log::error('Format de réponse API inattendu', ['response' => $data]);
                 return back()->with('error', 'Format de réponse inattendu de l\'API');
@@ -122,7 +119,6 @@ class ClientEmployeeController extends Controller
 
     public function store(Request $request)
     {
-        // Récupérer l'ID de l'entreprise directement depuis la session
         $companyId = session('user_id');
 
         if (!$companyId) {
@@ -131,7 +127,6 @@ class ClientEmployeeController extends Controller
         }
 
         try {
-            // Validation côté web
             $request->validate([
                 'first_name' => 'required|string|max:50',
                 'last_name' => 'required|string|max:50',
@@ -144,16 +139,13 @@ class ClientEmployeeController extends Controller
                 'id_carte_nfc' => 'nullable|string|max:50',
             ]);
 
-            // Ajout de l'ID de l'entreprise directement à partir de la session
             $request->merge(['company_id' => $companyId]);
 
-            // Ajouter des logs pour déboguer
             Log::info('Tentative d\'ajout d\'un employé', [
                 'company_id' => $companyId,
                 'employee_data' => $request->except('password')
             ]);
 
-            // Appel au contrôleur API pour créer l'employé
             $response = $this->apiEmployeeController->store($request);
             $data = json_decode($response->getContent(), true);
 
@@ -192,7 +184,6 @@ class ClientEmployeeController extends Controller
      */
     public function importCsv(Request $request)
     {
-        // Récupérer l'ID de l'entreprise directement depuis la session
         $companyId = session('user_id');
 
         Log::info('Début de la méthode importCsv', [
@@ -207,7 +198,6 @@ class ClientEmployeeController extends Controller
         }
 
         try {
-            // Validation du fichier
             Log::info('Validation du fichier');
             $validator = Validator::make($request->all(), [
                 'csv_file' => 'required|file|mimes:csv,txt|max:2048',
@@ -218,7 +208,6 @@ class ClientEmployeeController extends Controller
                 return back()->withErrors($validator)->withInput();
             }
 
-            // Récupérer le contenu du fichier
             $file = $request->file('csv_file');
             Log::info('Fichier reçu', [
                 'original_name' => $file->getClientOriginalName(),
@@ -237,7 +226,6 @@ class ClientEmployeeController extends Controller
             ]);
 
 
-            // Vérifier que le fichier n'est pas vide
             if (count($csvData) <= 1) { // On considère que la première ligne est l'en-tête
                 Log::warning('Fichier CSV vide ou ne contenant que l\'en-tête');
                 return back()->with('error', 'Le fichier CSV est vide ou ne contient que l\'en-tête.');
@@ -256,7 +244,6 @@ class ClientEmployeeController extends Controller
                 return back()->with('error', 'Le fichier CSV ne contient pas tous les champs requis : ' . implode(', ', $missingHeaders));
             }
 
-            // Initialiser les compteurs
             $importedCount = 0;
             $errorCount = 0;
             $errors = [];

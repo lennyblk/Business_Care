@@ -3,6 +3,9 @@
 @section('content')
 <div class="container py-5">
     <div class="card shadow-lg">
+        <head>
+            <meta charset="UTF-8">
+        </head>
         <div class="card-header bg-primary text-white">
             <h1 class="mb-0">{{ $advice->title }}</h1>
         </div>
@@ -20,41 +23,6 @@
                         <span class="badge bg-success">{{ $tag->name }}</span>
                     @endforeach
                 </p>
-            </div>
-            <div class="mb-4">
-                <h5 class="text-muted">Médias:</h5>
-                <div class="row">
-                    @forelse($advice->media as $media)
-                        @if($media->media_type === 'image')
-                            <div class="col-md-4 mb-3">
-                                <div class="card">
-                                    <img src="{{ Storage::url(str_replace('storage/', '', $media->media_url)) }}" 
-                                         class="card-img-top img-fluid" 
-                                         alt="{{ $media->title ?? 'Image du conseil' }}"
-                                         style="object-fit: cover; height: 200px;">
-                                    <div class="card-body">
-                                        @if($media->title)
-                                            <h6 class="card-title">{{ $media->title }}</h6>
-                                        @endif
-                                        @if($media->description)
-                                            <p class="card-text small">{{ $media->description }}</p>
-                                        @endif
-                                        <a href="{{ Storage::url(str_replace('storage/', '', $media->media_url)) }}" 
-                                           class="btn btn-sm btn-primary"
-                                           target="_blank"
-                                           title="Voir l'image en taille réelle">
-                                            Agrandir
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-                    @empty
-                        <div class="col">
-                            <p class="text-muted">Aucun média disponible</p>
-                        </div>
-                    @endforelse
-                </div>
             </div>
             
             <!-- Section Feedback -->

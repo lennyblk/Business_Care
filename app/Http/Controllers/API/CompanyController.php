@@ -50,7 +50,6 @@ class CompanyController extends Controller
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            // Hachage du mot de passe si ce n'est pas déjà fait
             $data = $request->all();
             if ($request->has('password') && !preg_match('/^\$2y\$/', $data['password'])) {
                 $data['password'] = Hash::make($data['password']);
@@ -118,7 +117,6 @@ class CompanyController extends Controller
 
             $data = $request->all();
 
-            // Traitement du mot de passe
             if (empty($data['password'])) {
                 unset($data['password']);
             } elseif (!preg_match('/^\$2y\$/', $data['password'])) {
@@ -209,12 +207,9 @@ class CompanyController extends Controller
 
             $company = Company::findOrFail($id);
 
-            // Mise à jour de la date de fin de contrat
             $company->date_fin_contrat = $request->date_fin_contrat;
 
-            // Mise à jour de la formule d'abonnement si elle est fournie
             if ($request->has('formule_abonnement') && !empty($request->formule_abonnement)) {
-                // Vérifier que la valeur est l'une des valeurs autorisées par l'enum
                 $allowedFormules = ['Starter', 'Basic', 'Premium'];
                 if (in_array($request->formule_abonnement, $allowedFormules)) {
                     $company->formule_abonnement = $request->formule_abonnement;

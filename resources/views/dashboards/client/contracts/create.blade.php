@@ -230,7 +230,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Éléments du formulaire
         const startDateInput = document.getElementById('start_date');
         const endDateInput = document.getElementById('end_date');
         const amountInput = document.getElementById('amount');
@@ -240,36 +239,30 @@
         const formulaSelect = document.getElementById('formule_abonnement');
         const employeeLimitText = document.getElementById('employee_limit_text');
 
-        // Éléments du récapitulatif
         const contractDuration = document.getElementById('contract-duration');
         const totalAmount = document.getElementById('total-amount');
         const paymentMethodText = document.getElementById('payment-method-text');
 
-        // Limites d'employés par formule
         const employeeLimits = {
             'Starter': 30,
             'Basic': 250,
-            'Premium': 10000 // Valeur très élevée pour "à partir de 251"
+            'Premium': 10000 
         };
 
-        // Minimum d'employés par formule
         const employeeMinimums = {
             'Starter': 1,
             'Basic': 31,
             'Premium': 251
         };
 
-        // Fonction pour mettre à jour la limite du nombre d'employés
         function updateEmployeeCountLimit() {
             const formula = formulaSelect.value;
             const maxEmployees = employeeLimits[formula] || 30;
             const minEmployees = employeeMinimums[formula] || 1;
 
-            // Définir les attributs min et max
             employeeCountInput.setAttribute('max', maxEmployees);
             employeeCountInput.setAttribute('min', minEmployees);
 
-            // Ajuster la valeur si elle dépasse les limites
             if (parseInt(employeeCountInput.value) > maxEmployees) {
                 employeeCountInput.value = maxEmployees;
             }
@@ -278,24 +271,20 @@
                 employeeCountInput.value = minEmployees;
             }
 
-            // Mettre à jour le texte d'information
             if (formula === 'Premium') {
                 employeeLimitText.textContent = `Minimum: ${minEmployees} employés`;
             } else {
                 employeeLimitText.textContent = `Limite: ${minEmployees} à ${maxEmployees} employés`;
             }
 
-            // Recalculer le montant du contrat
             calculateContractAmount();
         }
 
-        // Calculs du montant en fonction du nombre d'employés et de la formule
         function calculateContractAmount() {
             const employeeCount = parseInt(employeeCountInput.value) || 0;
             const formula = formulaSelect.value;
             let pricePerEmployee = 0;
 
-            // Déterminer le prix par employé selon la formule
             if (formula === 'Starter') {
                 pricePerEmployee = 180;
             } else if (formula === 'Basic') {
@@ -304,23 +293,17 @@
                 pricePerEmployee = 100;
             }
 
-            // Calcul du montant annuel total
             const totalPrice = pricePerEmployee * employeeCount;
 
-            // Mettre à jour le champ montant avec le montant total du contrat
             amountInput.value = totalPrice.toFixed(2);
 
-            // Mettre à jour le récapitulatif
             updateSummary();
         }
 
-        // Fonction de mise à jour du récapitulatif
         function updateSummary() {
-            // Calcul de la durée en mois
             const startDate = new Date(startDateInput.value);
             const endDate = new Date(endDateInput.value);
 
-            // Vérifier que les dates sont valides
             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
                 return;
             }
@@ -328,19 +311,15 @@
             const diffTime = Math.abs(endDate - startDate);
             const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Approximation
 
-            // Mise à jour de la durée
             contractDuration.textContent = diffMonths;
 
-            // Mise à jour du montant total
             const amount = parseFloat(amountInput.value) || 0;
             totalAmount.textContent = amount.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-            // Mise à jour de la méthode de paiement
             const paymentMethod = paymentMethodSelect.options[paymentMethodSelect.selectedIndex]?.text || '-';
             paymentMethodText.textContent = paymentMethod;
         }
 
-        // Écouteurs d'événements
         startDateInput.addEventListener('change', updateSummary);
         endDateInput.addEventListener('change', updateSummary);
         amountInput.addEventListener('input', updateSummary);
@@ -348,7 +327,6 @@
         employeeCountInput.addEventListener('input', calculateContractAmount);
         formulaSelect.addEventListener('change', updateEmployeeCountLimit);
 
-        // Initialisation du calcul et du récapitulatif
         updateEmployeeCountLimit();
     });
 </script>

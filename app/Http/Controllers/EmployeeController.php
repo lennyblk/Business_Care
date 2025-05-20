@@ -14,7 +14,6 @@ class EmployeeController extends Controller
 
     public function __construct()
     {
-        // Instanciation des contrôleurs API
         $this->apiEmployeeController = new ApiEmployeeController();
         $this->apiEventController = new ApiEventController();
     }
@@ -40,12 +39,10 @@ class EmployeeController extends Controller
         $userType = session('user_type');
 
         if ($userType === 'employe') {
-            // Récupérer l'ID et l'email de l'employé connecté depuis la session
             $userId = (int)session('user_id');
             $userEmail = session('user_email');
 
             try {
-                // Appel direct au contrôleur API pour obtenir l'employé connecté
                 $employeeResponse = $this->apiEmployeeController->show($userId);
                 $employeeData = json_decode($employeeResponse->getContent(), true);
 
@@ -55,7 +52,6 @@ class EmployeeController extends Controller
 
                 $employee = $this->arrayToObject($employeeData['data']);
 
-                // Obtenir tous les événements
                 $allEventsResponse = $this->apiEventController->index();
                 $allEventsData = json_decode($allEventsResponse->getContent(), true);
 
@@ -67,7 +63,6 @@ class EmployeeController extends Controller
                 $allEvents = collect(array_map([$this, 'arrayToObject'], $allEventsData['data']));
                 Log::info('Structure de allEvents:', ['allEvents' => $allEvents]);
 
-                // Obtenir les événements auxquels l'employé est inscrit
                 $myEventsResponse = $this->apiEventController->getRegisteredEmployees($userId);
                 $myEventsData = json_decode($myEventsResponse->getContent(), true);
 
@@ -75,7 +70,6 @@ class EmployeeController extends Controller
                     return redirect()->route('login')->withErrors(['error' => 'Erreur lors de la récupération des événements inscrits.']);
                 }
 
-                // Convertir les événements inscrits en objets
                 $myEvents = collect(array_map([$this, 'arrayToObject'], $myEventsData['data']));
                 Log::info('Structure de myEvents:', ['myEvents' => $myEvents]);
 
@@ -94,11 +88,9 @@ class EmployeeController extends Controller
         $userType = session('user_type');
 
         if ($userType === 'employe') {
-            // On récupère l'ID de l'employé depuis la session
             $userId = (int)session('user_id');
 
             try {
-                // Appel direct au contrôleur API pour inscrire l'employé à l'événement
                 $response = $this->apiEventController->store($request->merge(['employee_id' => $userId, 'event_id' => $id]));
 
                 if ($response->getStatusCode() === 201) {
@@ -108,7 +100,6 @@ class EmployeeController extends Controller
                     $apiData = json_decode($response->getContent(), true);
                     $message = $apiData['message'] ?? 'Erreur lors de l\'inscription à l\'événement.';
 
-                    // Log the API response for debugging
                     Log::error('Erreur lors de l\'inscription à l\'événement', [
                         'status_code' => $response->getStatusCode(),
                         'response' => $apiData
@@ -133,11 +124,9 @@ class EmployeeController extends Controller
         $userType = session('user_type');
 
         if ($userType === 'employe') {
-            // On récupère l'ID de l'employé depuis la session
             $userId = (int)session('user_id');
 
             try {
-                // Appel direct au contrôleur API pour annuler l'inscription
                 $response = $this->apiEventController->destroy(new Request(['employee_id' => $userId]), $id);
 
                 if ($response->getStatusCode() === 200) {

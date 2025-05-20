@@ -45,12 +45,10 @@ class ContractController extends Controller
             ], 422);
         }
 
-        // Créer le contrat avec le statut 'pending'
         $contractData = $request->all();
         $contractData['payment_status'] = 'pending';
         $contract = Contract::create($contractData);
 
-        // Envoyer les emails de notification
         $this->sendContractPendingNotifications($contract);
 
         return response()->json([
@@ -65,10 +63,8 @@ class ContractController extends Controller
 
 private function sendContractPendingNotifications($contract)
 {
-    // Email à l'entreprise
     $this->sendCompanyNotification($contract);
 
-    // Email à l'admin
     $this->sendAdminNotification($contract);
 }
 
@@ -138,7 +134,6 @@ private function sendAdminNotification($contract)
     }
 }
 
-    // GET /api/contracts/{id}
     public function show($id)
     {
         try {
@@ -150,7 +145,6 @@ private function sendAdminNotification($contract)
         }
     }
 
-    // PUT /api/contracts/{id}
     public function update(Request $request, $id)
     {
         try {
@@ -183,7 +177,6 @@ private function sendAdminNotification($contract)
         }
     }
 
-    // DELETE /api/contracts/{id}
     public function destroy($id)
     {
         try {
@@ -197,7 +190,6 @@ private function sendAdminNotification($contract)
         }
     }
 
-    // GET /api/companies/{companyId}/contracts
     public function getByCompany($companyId)
     {
         try {
@@ -224,7 +216,6 @@ private function sendAdminNotification($contract)
                     ->with('error', 'Vous devez être connecté en tant que société pour accéder à cette page.');
             }
 
-            // Appel à l'API
             $response = $this->apiContractController->show($id);
             $data = json_decode($response->getContent(), true);
 
@@ -236,10 +227,8 @@ private function sendAdminNotification($contract)
                 return back()->with('error', 'Contrat non trouvé');
             }
 
-            // Convertir en objet
             $contract = $this->arrayToObject($data['data'] ?? []);
 
-            // Récupérer le nombre d'employés pour les calculs
             $employeeCount = \App\Models\Employee::where('company_id', session('user_id'))->count();
 
             return view('dashboards.client.contracts.edit', compact('contract', 'employeeCount'));
@@ -254,12 +243,10 @@ private function sendAdminNotification($contract)
         try {
             $contract = Contract::with('company')->findOrFail($id);
 
-            // Utiliser 'pending' ou 'unpaid' au lieu de 'terminated'
-            // 'pending' a du sens car ça peut indiquer "en attente de traitement de résiliation"
+           
             $contract->payment_status = 'pending';
             $contract->save();
 
-            // Mettre à jour le statut du compte de l'entreprise
             $company = Company::findOrFail($contract->company_id);
             $company->statut_compte = 'Non Actif';
             $company->save();

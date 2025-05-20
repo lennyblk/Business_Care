@@ -60,14 +60,12 @@ class EmployeeAdviceController extends Controller
         try {
             $employeeId = session('user_id');
             
-            // Chercher un feedback existant
             $feedback = \App\Models\AdviceFeedback::where([
                 'employee_id' => $employeeId,
                 'advice_id' => $id
             ])->first();
 
             if ($feedback) {
-                // Mettre à jour le feedback existant
                 $feedback->update([
                     'rating' => $request->input('rating'),
                     'comment' => $request->input('comment'),
@@ -75,7 +73,6 @@ class EmployeeAdviceController extends Controller
                 ]);
                 $message = 'Feedback mis à jour avec succès.';
             } else {
-                // Créer un nouveau feedback
                 \App\Models\AdviceFeedback::create([
                     'employee_id' => $employeeId,
                     'advice_id' => $id,

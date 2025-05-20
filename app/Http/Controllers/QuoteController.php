@@ -69,14 +69,11 @@ class QuoteController extends Controller
                     ->with('error', 'Ce devis a déjà été traité.');
             }
 
-            // Marquer le devis comme accepté
             $quote->status = 'Accepted';
             $quote->save();
 
-            // Générer la description des services
             $services = $this->generateServicesDescription($quote);
 
-            // Créer un contrat en attente d'approbation avec une valeur d'enum valide
             $contract = new Contract([
                 'company_id' => $quote->company_id,
                 'quote_id' => $quote->id,
@@ -84,14 +81,13 @@ class QuoteController extends Controller
                 'services' => $services,
                 'start_date' => now(),
                 'end_date' => now()->addYear(),
-                'amount' => $quote->total_amount / 12, // Montant mensuel
-                'payment_method' => 'Direct Debit', // Utiliser une valeur d'enum valide
-                'payment_status' => 'pending' // En attente d'approbation
+                'amount' => $quote->total_amount / 12, 
+                'payment_method' => 'Direct Debit', 
+                'payment_status' => 'pending' 
             ]);
 
             $contract->save();
 
-            // Enregistrement des activités si la classe existe
             if (class_exists('App\Models\Activity')) {
                 Activity::create([
                     'company_id' => $quote->company_id,
@@ -189,7 +185,6 @@ class QuoteController extends Controller
         ]);
 
         try {
-            // Définir les caractéristiques de chaque formule
             $formulesDetails = [
                 'Starter' => [
                     'max_employees' => 30,
@@ -230,13 +225,10 @@ class QuoteController extends Controller
                 ]
             ];
 
-            // Récupérer les détails de la formule choisie
             $formuleDetails = $formulesDetails[$request->formule_abonnement];
 
-            // Calculer le montant total
             $totalAmount = $request->company_size * $formuleDetails['price'];
 
-            // Créer le devis avec toutes les informations
             $quote = Quote::create([
                 'company_id' => session('user_id'),
                 'formule_abonnement' => $request->formule_abonnement,
@@ -278,7 +270,6 @@ class QuoteController extends Controller
                 abort(403, 'Vous n\'êtes pas autorisé à accéder à ce devis.');
             }
         } else {
-            // Vérification basée sur la session
             if (!session()->has('user_id') || $quote->company_id !== session('user_id')) {
                 abort(403, 'Vous n\'êtes pas autorisé à accéder à ce devis.');
             }
@@ -289,7 +280,6 @@ class QuoteController extends Controller
     {
         $services = "Formule " . $quote->formule_abonnement . " pour " . $quote->company_size . " salariés.\n\n";
 
-        // Activités
         if ($quote->formule_abonnement == 'Starter') {
             $services .= "- 2 activités avec participation des prestataires\n";
             $services .= "- 1 RDV médical (présentiel/visio)\n";
@@ -316,7 +306,6 @@ class QuoteController extends Controller
             $services .= "- Événements / Communautés : Accès illimité\n";
         }
 
-        // Ajouter les détails supplémentaires s'ils existent
         if (!empty($quote->services_details)) {
             $services .= "\nDétails complémentaires :\n" . $quote->services_details;
         }

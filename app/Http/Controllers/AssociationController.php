@@ -71,26 +71,20 @@ class AssociationController extends Controller
         // Configuration de Stripe avec la clé API
         Stripe::setApiKey('sk_test_51RJaodCBigEWbFDKy1ZUFlMNoljc5GuwMW8vtcAf6CqTqB11Iskm8LJ5IyrLisMpQbifdyl7CG2pv5KSRY4AsB0N00YBpKyVV7');
 
-        // Log pour le débogage
         Log::info('Création de session Stripe pour don à l\'association #' . $id, [
             'montant' => $amount,
             'utilisateur_id' => $companyId,
             'type_utilisateur' => $userType
         ]);
 
-        // Définir correctement les URLs de succès et d'annulation
         $successUrl = route('client.associations.donation.success', ['id' => $id]) . '?session_id={CHECKOUT_SESSION_ID}&amount=' . $amount;
         $cancelUrl = route('client.associations.show', ['id' => $id]);
 
-        // Session Stripe pour le don - ASSUREZ-VOUS QUE TOUS LES PARAMÈTRES REQUIS SONT PRÉSENTS
         $session = Session::create([
-            // Méthodede paiement
             'payment_method_types' => ['card'],
 
-            // Mode de paiement
             'mode' => 'payment',
 
-            // Options pour la carte
             'payment_method_options' => [
                 'card' => [
                     'setup_future_usage' => null,
@@ -98,10 +92,8 @@ class AssociationController extends Controller
                 ],
             ],
 
-            // Création de client
             'customer_creation' => 'always',
 
-            // Articles à payer - OBLIGATOIRE
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'eur',
@@ -109,16 +101,14 @@ class AssociationController extends Controller
                         'name' => 'Don à l\'association ' . $association->name,
                         'description' => 'Soutien à ' . $association->name,
                     ],
-                    'unit_amount' => (int)($amount * 100), // Conversion en centimes
+                    'unit_amount' => (int)($amount * 100),
                 ],
                 'quantity' => 1,
             ]],
 
-            // URLs de redirection - OBLIGATOIRES
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
 
-            // Métadonnées
             'metadata' => [
                 'association_id' => $id,
                 'company_id' => $companyId,
@@ -127,7 +117,6 @@ class AssociationController extends Controller
             ]
         ]);
 
-        // Redirection vers la page de paiement Stripe
         return redirect($session->url);
     } catch (\Exception $e) {
         Log::error('Erreur Stripe pour don: ' . $e->getMessage(), [
@@ -151,7 +140,6 @@ class AssociationController extends Controller
 
         Stripe::setApiKey('sk_test_51RJaodCBigEWbFDKy1ZUFlMNoljc5GuwMW8vtcAf6CqTqB11Iskm8LJ5IyrLisMpQbifdyl7CG2pv5KSRY4AsB0N00YBpKyVV7');
 
-        // Vérifier la session de paiement
         $sessionId = $request->get('session_id');
         if (!$sessionId) {
             Log::error('Session ID manquant dans la requête de succès du don');
@@ -174,14 +162,9 @@ class AssociationController extends Controller
             $result = json_decode($apiResponse->getContent(), true);
 
             if ($result['success']) {
-                // Modifiez cette partie pour ne pas utiliser Employee::findOrFail
-                // Si nécessaire, récupérez les informations de l'entreprise à la place
+            
                 $company = \App\Models\Company::findOrFail($companyId);
 
-                // Remplacez la méthode d'envoi d'email ou adaptez-la
-                // $this->sendDonationConfirmationEmail($result['data']['donation'], $association, $company);
-
-                // Envoyez un email à l'adresse email de l'entreprise
                 $this->sendDonationConfirmationToCompany($result['data']['donation'], $association, $company);
 
                 return redirect()->route('client.associations.index')
@@ -192,13 +175,10 @@ class AssociationController extends Controller
                 ->with('error', 'Erreur lors du traitement du don: ' . ($result['message'] ?? 'Erreur inconnue'));
         }
 
-        // reste inchangé...
     } catch (\Exception $e) {
-        // reste inchangé...
     }
 }
 
-// Nouvelle méthode pour envoyer un email à l'entreprise
 private function sendDonationConfirmationToCompany($donation, $association, $company)
 {
     $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
@@ -213,7 +193,6 @@ private function sendDonationConfirmationToCompany($donation, $association, $com
         $mail->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = env('MAIL_PORT', 587);
 
-        // Utiliser une adresse par défaut si MAIL_FROM_ADDRESS est vide
         $fromAddress = env('MAIL_FROM_ADDRESS');
         if (empty($fromAddress)) {
             $fromAddress = 'noreply@business-care.fr';

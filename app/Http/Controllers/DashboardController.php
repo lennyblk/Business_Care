@@ -48,7 +48,6 @@ class DashboardController extends Controller
             ]);
         }
 
-        // Date actuelle pour calculer les contrats actifs
         $today = Carbon::today()->toDateString();
 
         $data = [
@@ -103,17 +102,13 @@ class DashboardController extends Controller
         }
 
         if ($employee) {
-            // On récupère son entreprise
             $companyId = $employee->company_id;
 
-            // On récupère les événements auxquels l'employé est inscrit
             $eventRegistrations = \App\Models\EventRegistration::where('employee_id', $employee->id)->get();
             $eventsCount = $eventRegistrations->count();
 
-            // On récupère les IDs des événements auxquels l'employé est inscrit
             $eventIds = $eventRegistrations->pluck('event_id')->toArray();
 
-            // On récupère les détails des événements à venir (date >= aujourd'hui)
             $today = date('Y-m-d');
             $upcomingEvents = Event::whereIn('id', $eventIds)
                             ->where('date', '>=', $today)
@@ -154,7 +149,6 @@ class DashboardController extends Controller
 
         $today = Carbon::today()->toDateString();
 
-        // Nouvelles statistiques pour l'admin
         $activeContractsCount = Contract::where('start_date', '<=', $today)
                                         ->where('end_date', '>=', $today)
                                         ->count();

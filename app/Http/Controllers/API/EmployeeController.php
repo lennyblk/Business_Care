@@ -234,12 +234,10 @@ class EmployeeController extends Controller
         try {
             $employee = null;
 
-            // D'abord, essayer avec l'ID
             if ($userId && $userId > 0) {
                 $employee = Employee::find($userId);
             }
 
-            // Si aucun employé n'est trouvé avec l'ID, on essaye avec l'email
             if (!$employee && $userEmail) {
                 $employee = Employee::where('email', $userEmail)->first();
             }
@@ -326,7 +324,6 @@ class EmployeeController extends Controller
 
             $companyId = $employee->company_id;
 
-            // On vérifie que l'événement existe et appartient à l'entreprise
             $event = Event::where('id', $eventId)
                     ->where('company_id', $companyId)
                     ->first();
@@ -338,7 +335,6 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            // On vérifie si l'employé est déjà inscrit
             $existingRegistration = EventRegistration::where('event_id', $eventId)
                                     ->where('employee_id', $employeeId)
                                     ->first();
@@ -350,7 +346,6 @@ class EmployeeController extends Controller
                 ], 422);
             }
 
-            // On vérifie si l'événement n'est pas déjà complet
             if ($event->registrations >= $event->capacity) {
                 return response()->json([
                     'success' => false,
@@ -358,7 +353,6 @@ class EmployeeController extends Controller
                 ], 422);
             }
 
-            // On crée une nouvelle inscription
             $registration = EventRegistration::create([
                 'event_id' => $eventId,
                 'employee_id' => $employeeId,
@@ -366,7 +360,6 @@ class EmployeeController extends Controller
                 'status' => 'confirmed'
             ]);
 
-            // On met à jour le compteur d'inscriptions de l'événement
             $event->registrations = ($event->registrations ?? 0) + 1;
             $event->save();
 
@@ -398,7 +391,6 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            // On cherche l'inscription
             $registration = EventRegistration::where('event_id', $eventId)
                             ->where('employee_id', $employeeId)
                             ->first();
@@ -410,10 +402,8 @@ class EmployeeController extends Controller
                 ], 404);
             }
 
-            // Supprimer l'inscription
             $registration->delete();
 
-            // Mettre à jour le compteur d'inscriptions
             $event = Event::find($eventId);
             if ($event) {
                 $event->registrations = max(0, ($event->registrations ?? 0) - 1);

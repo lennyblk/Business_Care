@@ -26,12 +26,10 @@ class ProviderEvaluationController extends Controller
                 return back()->with('error', $data['message'] ?? 'Une erreur est survenue');
             }
 
-            // Convert API data to objects recursively
             $evaluationsCollection = collect($data['evaluations']['data'])->map(function ($item) {
                 return $this->arrayToObject($item);
             });
 
-            // Create paginator
             $evaluations = new LengthAwarePaginator(
                 $evaluationsCollection,
                 $data['evaluations']['total'],
@@ -63,7 +61,6 @@ class ProviderEvaluationController extends Controller
         
         foreach ($array as $key => $value) {
             if (is_array($value)) {
-                // Recursively convert nested arrays to objects
                 $object->$key = $this->arrayToObject($value);
             } else {
                 $object->$key = $value;

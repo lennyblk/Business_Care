@@ -30,7 +30,6 @@ class AuthController extends Controller
             $responseData = json_decode($response->getContent(), true);
 
             if ($response->getStatusCode() === 200 && $responseData['success']) {
-                // Récupérer les données de l'utilisateur
                 $user = $responseData['user'];
 
                 if ($user['type'] === 'prestataire') {
@@ -57,7 +56,6 @@ class AuthController extends Controller
                     'company_id' => $user['company_id'] ?? null
                 ]);
 
-                // Rediriger selon le type d'utilisateur
                 switch ($user['type']) {
                     case 'admin':
                         return redirect()->route('dashboard.admin');
@@ -72,7 +70,6 @@ class AuthController extends Controller
                 }
             }
 
-            // En cas d'échec
             return back()->withErrors(['email' => $responseData['message'] ?? 'Identifiants invalides'])->withInput();
 
         } catch (\Exception $e) {
@@ -89,7 +86,6 @@ class AuthController extends Controller
         // Appeler le contrôleur API pour la déconnexion
         $this->apiAuthController->logout($request);
 
-        // Vider la session locale
         $request->session()->flush();
 
         return redirect()->route('home');
@@ -111,14 +107,12 @@ class AuthController extends Controller
             $responseData = json_decode($response->getContent(), true);
 
             if ($response->getStatusCode() === 201) {
-                // Succès : redirection vers la page d'accueil avec message
                 return redirect()->route('home')->with('success',
                     'Votre demande d\'inscription a été envoyée avec succès. ' .
                     'Un administrateur l\'examinera prochainement et vous recevrez ' .
                     'une notification par email lorsqu\'elle sera traitée.');
             }
 
-            // Échec : retour au formulaire avec erreurs
             \Log::error('Échec de l\'inscription en attente', $responseData);
             return back()->withErrors(['error' => $responseData['message'] ?? 'Échec de l\'inscription'])
                          ->withInput();
@@ -135,7 +129,6 @@ class AuthController extends Controller
 
     public function registerPending(Request $request)
     {
-        // Rediriger vers la méthode register
         return $this->register($request);
     }
 }

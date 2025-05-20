@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Log;
 
 class ProviderAssignmentController extends Controller
 {
-    // Ajouter cette propriété pour le mapping
     private $activityTypeToEventType = [
         'rencontre sportive' => 'Sport Event',
         'conférence' => 'Conference',
@@ -110,7 +109,6 @@ class ProviderAssignmentController extends Controller
 
             $assignment->save();
 
-            // Charger les relations pour la réponse
             $assignment->load(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location']);
 
             return response()->json([
@@ -150,12 +148,10 @@ class ProviderAssignmentController extends Controller
 
             $assignment = ProviderAssignment::findOrFail($id);
 
-            // Si le statut change de Proposed à autre chose, enregistrer la date de réponse
             if ($assignment->status === 'Proposed' && $request->has('status') && $request->status !== 'Proposed') {
                 $assignment->response_at = now();
             }
 
-            // Mettre à jour les champs si présents dans la requête
             if ($request->has('status')) {
                 $assignment->status = $request->status;
             }
@@ -166,7 +162,6 @@ class ProviderAssignmentController extends Controller
 
             $assignment->save();
 
-            // Charger les relations pour la réponse
             $assignment->load(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location']);
 
             return response()->json([
@@ -292,12 +287,10 @@ class ProviderAssignmentController extends Controller
                 'event_proposal_id' => $assignment->event_proposal_id
             ]);
 
-            // Accepter l'assignation
             $assignment->status = 'Accepted';
             $assignment->response_at = now();
             $assignment->save();
 
-            // Mettre à jour le statut de la proposition
             $eventProposal = EventProposal::findOrFail($assignment->event_proposal_id);
             Log::info("Event Proposal trouvé:", [
                 'proposal_id' => $eventProposal->id,
@@ -307,7 +300,6 @@ class ProviderAssignmentController extends Controller
             $eventProposal->status = 'Accepted';
             $eventProposal->save();
 
-            // Ajoutons event_proposal_id aux fillable dans le modèle Event
             $eventData = [
                 'name' => $eventProposal->eventType->title,
                 'description' => $eventProposal->eventType->description,
@@ -329,7 +321,6 @@ class ProviderAssignmentController extends Controller
                 'event_proposal_id' => $event->event_proposal_id
             ]);
 
-            // Recharger les relations pour la réponse
             $assignment->load(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location']);
 
             return response()->json([
@@ -360,12 +351,10 @@ class ProviderAssignmentController extends Controller
                 ->where('status', 'Proposed')
                 ->firstOrFail();
 
-            // Rejeter l'assignation
             $assignment->status = 'Rejected';
             $assignment->response_at = now();
             $assignment->save();
 
-            // Recharger les relations pour la réponse
             $assignment->load(['provider', 'eventProposal.company', 'eventProposal.eventType', 'eventProposal.location']);
 
             return response()->json([

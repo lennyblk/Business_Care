@@ -14,7 +14,6 @@ class MailController extends Controller
     $mail = new PHPMailer(true);
 
     try {
-        // Configuration du serveur
         $mail->isSMTP();
         $mail->Host = env('MAIL_HOST', 'smtp.gmail.com');
         $mail->SMTPAuth = true;
@@ -23,11 +22,9 @@ class MailController extends Controller
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = env('MAIL_PORT', 587);
 
-        // Destinataires
         $mail->setFrom(env('MAIL_FROM_ADDRESS'), env('MAIL_FROM_NAME', 'Business-Care'));
         $mail->addAddress('len06blackett@gmail.com', 'Destinataire');
 
-        // Contenu
         $mail->isHTML(true);
         $mail->Subject = 'Test d\'envoi d\'email';
         $mail->Body = 'Contenu <b>HTML</b> de l\'email';

@@ -66,12 +66,11 @@ class AdminAdviceController extends Controller
                 return back()->withErrors($data['errors'] ?? ['Une erreur est survenue'])->withInput();
             }
 
-            // Créer automatiquement une programmation pour le conseil
             $advice = Advice::findOrFail($data['data']['id']);
             $schedule = new \App\Models\AdviceSchedule([
                 'advice_id' => $advice->id,
                 'scheduled_date' => $advice->publish_date,
-                'target_audience' => 'All', // Par défaut tous les employés
+                'target_audience' => 'All',
                 'target_criteria' => null
             ]);
             $schedule->save();
@@ -111,7 +110,6 @@ class AdminAdviceController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            // Si publish_date n'est pas fourni, récupérer la valeur existante
             if (!$request->has('publish_date')) {
                 $advice = Advice::findOrFail($id);
                 $request->merge(['publish_date' => $advice->publish_date]);
@@ -149,7 +147,6 @@ class AdminAdviceController extends Controller
                 return back()->with('error', $data['message'] ?? 'Erreur lors de la suppression du conseil');
             }
 
-            // Modifier la valeur de is_disabled à 1 (tinyint) au lieu de true
             \App\Models\AdviceSchedule::where('advice_id', $id)
                 ->update(['is_disabled' => 1]);
 

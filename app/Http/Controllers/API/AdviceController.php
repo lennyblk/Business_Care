@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Storage;
 
 class AdviceController extends Controller
 {
-    // GET /api/advices
     public function index()
     {
         try {
@@ -27,7 +26,6 @@ class AdviceController extends Controller
         }
     }
 
-    // POST /api/advices
     public function store(Request $request)
     {
         try {
