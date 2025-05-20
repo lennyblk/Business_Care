@@ -11,11 +11,9 @@ class AdviceCategory extends Model
 
     protected $table = 'advice_category';
     protected $fillable = ['name', 'description', 'is_active'];
-    
-    // Pas de timestamps dans la table
+
     public $timestamps = false;
 
-    // Cast des attributs
     protected $casts = [
         'is_active' => 'boolean'
     ];

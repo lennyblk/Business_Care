@@ -29,9 +29,7 @@ class AdviceSchedule extends Model
         'is_disabled' => 'integer'  // Changé de 'boolean' à 'integer' pour correspondre au tinyint
     ];
 
-    /**
-     * Get the advice that owns this schedule
-     */
+
     public function advice()
     {
         return $this->belongsTo(Advice::class, 'advice_id');

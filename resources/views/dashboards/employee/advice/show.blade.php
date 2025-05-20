@@ -24,7 +24,6 @@
                     @endforeach
                 </p>
             </div>
-            
             <!-- Section Feedback -->
             <div class="card mt-4">
                 <div class="card-header">
@@ -54,7 +53,7 @@
                             </div>
                             <div class="mb-3">
                                 <label for="comment" class="form-label">Commentaire</label>
-                                <textarea class="form-control" id="comment" name="comment" rows="3" 
+                                <textarea class="form-control" id="comment" name="comment" rows="3"
                                     placeholder="Partagez votre expérience..."></textarea>
                             </div>
                             <button type="submit" class="btn btn-success">Envoyer mon avis</button>
