@@ -16,7 +16,6 @@ class AuthController extends Controller
 {
     public function login(Request $request)
     {
-        // Ajouter des logs pour le debugging
         \Log::info('Tentative de connexion API', $request->all());
 
         $validator = Validator::make($request->all(), [
@@ -35,7 +34,6 @@ class AuthController extends Controller
         $userType = $request->input('user_type');
         $companyName = $request->input('company_name');
 
-        // Recherche de l'utilisateur en fonction de son type
         $user = null;
         $userData = null;
 
@@ -81,7 +79,6 @@ class AuthController extends Controller
             if ($user) {
                 \Log::info('Employé trouvé', ['id' => $user->id]);
 
-                // Pour le debugging, vérifier si le mot de passe correspond
                 $passwordCorrect = Hash::check($credentials['password'], $user->password);
                 \Log::info('Mot de passe correct: ' . ($passwordCorrect ? 'oui' : 'non'));
 
@@ -112,13 +109,10 @@ class AuthController extends Controller
         }
 
         if (isset($userData)) {
-            // Génération d'un token simple (pour l'application mobile)
-            // Dans une application de production, utilisez Sanctum ou Passport
             $token = 'bc_' . Str::random(60);
 
             \Log::info('Connexion réussie', ['user_id' => $userData['id'], 'type' => $userData['type']]);
 
-            // Format de réponse compatible avec l'application Android
             return response()->json([
                 'success' => true,
                 'message' => 'Connexion réussie',
@@ -139,14 +133,12 @@ class AuthController extends Controller
     {
         $userType = $request->input('user_type');
 
-        // Validation commune pour tous les types d'utilisateurs
         $commonRules = [
             'email' => 'required|email',
             'password' => 'required|min:6',
             'user_type' => 'required|in:societe,prestataire',
         ];
 
-        // Règles par type d'utilisateur
         $typeRules = [
             'societe' => [
                 'company_name' => 'required|string|max:255',
@@ -166,7 +158,6 @@ class AuthController extends Controller
             ],
         ];
 
-        // on récupère les règles spécifiques au type d'utilisateur
         $validationRules = array_merge($commonRules, $typeRules[$userType] ?? []);
 
         $validator = Validator::make($request->all(), $validationRules);
@@ -249,19 +240,13 @@ class AuthController extends Controller
         }
     }
 
-    /**
-     * Gère les demandes d'inscription en attente
-     */
     public function registerPending(Request $request)
     {
-        // On réutilise la même logique d'inscription mais avec un statut différent
-        // Cette méthode est utilisée par le contrôleur web
         return $this->register($request);
     }
 
     public function logout(Request $request)
     {
-        // Pour une authentification basée sur les sessions:
         if ($request->session()->has('user_id')) {
             $request->session()->invalidate();
             $request->session()->regenerateToken();
